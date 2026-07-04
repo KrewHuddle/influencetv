@@ -1,46 +1,27 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
-    container_name: apex-postgres
     environment:
-      POSTGRES_DB: apex_dev
       POSTGRES_USER: apex
       POSTGRES_PASSWORD: apex_dev_password
+      POSTGRES_DB: apex_dev
     ports:
-      # Host 5433 avoids clashing with a native Postgres already on 5432.
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - apex_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U apex -d apex_dev"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - postgres_data:/var/lib/postgresql/data
 
   valkey:
     image: valkey/valkey:7.2-alpine
-    container_name: apex-valkey
     ports:
-      # Host 6380 avoids clashing with a native Redis already on 6379.
-      - "6380:6379"
-    command: ["valkey-server", "--appendonly", "yes"]
-    volumes:
-      - apex_valkeydata:/data
+      - "6379:6379"
 
   localstack:
     image: localstack/localstack
-    container_name: apex-localstack
     environment:
       SERVICES: s3,ses
       DEFAULT_REGION: us-east-1
-      DEBUG: "0"
     ports:
       - "4566:4566"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
 
 volumes:
-  apex_pgdata:
-  apex_valkeydata:
+  postgres_data:
