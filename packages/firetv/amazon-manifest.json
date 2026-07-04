@@ -1,0 +1,18 @@
+{
+  "appName": "Apex",
+  "packageName": "tv.apex.firetv",
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "minSdkVersion": 25,
+  "targetSdkVersion": 34,
+  "targetPlatform": "Amazon Fire TV",
+  "fireOs": "6.x+",
+  "category": "Movies & TV",
+  "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE"],
+  "features": [
+    { "name": "android.hardware.touchscreen", "required": false },
+    { "name": "android.software.leanback", "required": true }
+  ],
+  "supportsTvBanner": true,
+  "inputTypes": ["dpad"]
+}

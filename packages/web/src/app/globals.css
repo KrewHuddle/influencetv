@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-syne: "Syne", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --apex-black: #080808;
+  --apex-red: #ff2d2d;
+  --apex-white: #f4f4f4;
+  --surface-1: #111111;
+  --surface-2: #181818;
+  --border: rgba(255, 255, 255, 0.07);
+  --text-secondary: rgba(255, 255, 255, 0.52);
+  --text-muted: rgba(255, 255, 255, 0.28);
+}
+
+html,
+body {
+  background: var(--apex-black);
+  color: var(--apex-white);
+  font-family: var(--font-inter);
+  font-weight: 300;
+}
+
+.font-display {
+  font-family: var(--font-syne);
+  font-weight: 800;
+  text-transform: uppercase;
+}

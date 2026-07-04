@@ -1,0 +1,58 @@
+name: Deploy Apex
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript check
+        run: pnpm -r exec tsc --noEmit
+      - name: Tests
+        run: pnpm test
+
+  deploy-api:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy API over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.API_EC2_HOST }}
+          username: ${{ secrets.API_EC2_USER }}
+          key: ${{ secrets.API_EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/apex
+            git pull origin main
+            pnpm install --frozen-lockfile
+            pnpm --filter @apex/api build
+            pm2 restart apex-api || pm2 start packages/api/dist/index.js --name apex-api
+
+  deploy-web:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Web over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.WEB_EC2_HOST }}
+          username: ${{ secrets.WEB_EC2_USER }}
+          key: ${{ secrets.WEB_EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/apex
+            git pull origin main
+            pnpm install --frozen-lockfile
+            pnpm --filter @apex/web build
+            pm2 restart apex-web || pm2 start "pnpm --filter @apex/web start" --name apex-web

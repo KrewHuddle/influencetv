@@ -1,0 +1,25 @@
+{
+  "name": "apex",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Apex — hybrid broadcast streaming network",
+  "packageManager": "pnpm@9.7.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "infra:synth": "pnpm --filter @apex/infrastructure synth",
+    "infra:deploy": "pnpm --filter @apex/infrastructure deploy",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.9",
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.12"
+  }
+}
