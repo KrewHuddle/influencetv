@@ -31,10 +31,10 @@ output "redis_connection_uri" {
 }
 
 output "spaces_buckets" {
-  description = "Spaces bucket names"
+  description = "Spaces bucket names (managed outside Terraform)"
   value = {
-    videos  = digitalocean_spaces_bucket.videos.name
-    uploads = digitalocean_spaces_bucket.uploads.name
-    assets  = digitalocean_spaces_bucket.assets.name
+    videos  = "itvn-videos"
+    uploads = "itvn-uploads"
+    assets  = "itvn-assets"
   }
 }

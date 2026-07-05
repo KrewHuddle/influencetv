@@ -1,20 +1,5 @@
-variable "do_token" {
-  description = "DigitalOcean API token (read+write: droplets, spaces, databases, load balancers, domains)"
-  type        = string
-  sensitive   = true
-}
-
-variable "spaces_access_id" {
-  description = "DigitalOcean Spaces access key ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "spaces_secret_key" {
-  description = "DigitalOcean Spaces secret key"
-  type        = string
-  sensitive   = true
-}
+# Credentials are supplied via environment variables (see versions.tf):
+#   DIGITALOCEAN_ACCESS_TOKEN, SPACES_ACCESS_KEY_ID, SPACES_SECRET_ACCESS_KEY
 
 variable "region" {
   description = "DigitalOcean region"

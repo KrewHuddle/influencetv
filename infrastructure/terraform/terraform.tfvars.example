@@ -1,8 +1,8 @@
-# Copy to terraform.tfvars and fill in. NEVER commit terraform.tfvars.
-do_token          = "dop_v1_xxxxxxxx"
-spaces_access_id  = "xxxxxxxx"
-spaces_secret_key = "xxxxxxxx"
-region            = "nyc3"
-domain            = "influencetvnetwork.com"
-ssh_key_ids       = ["12345678"] # doctl compute ssh-key list
-admin_ip          = "203.0.113.4/32"
+# Copy to terraform.tfvars. Non-secret values only — credentials come from env:
+#   export DIGITALOCEAN_ACCESS_TOKEN=...
+#   export SPACES_ACCESS_KEY_ID=...
+#   export SPACES_SECRET_ACCESS_KEY=...
+region      = "nyc3"
+domain      = "influencetvnetwork.com"
+ssh_key_ids = ["12345678"] # doctl compute ssh-key list
+admin_ip    = "203.0.113.4/32"

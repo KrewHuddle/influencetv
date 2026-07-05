@@ -80,8 +80,10 @@ terraform apply
 After apply:
 1. Point your registrar's nameservers at DigitalOcean (`ns1/ns2/ns3.digitalocean.com`).
 2. Read connection strings: `terraform output -raw postgres_connection_uri` / `redis_connection_uri`
-   → set `DATABASE_URL` / `REDIS_URL` on the droplet.
+   → set `DATABASE_URL` / `REDIS_URL` on the droplet. **Append `?sslmode=no-verify`**
+   to `DATABASE_URL` (the `pg` driver rejects DO's managed cert chain with `require`).
 3. Fill app secrets (Stripe, Google, JWT, YouTube, SMTP, `DO_SPACES_*`) in the droplet `.env`.
+   Build order: `@apex/shared` must build before `@apex/api` (turbo `^build` handles it).
 4. Add GitHub secrets `DO_API_DROPLET_IP`, `DO_STREAMING_DROPLET_IP`, `DEPLOY_SSH_KEY`.
 5. Push to `main` — GitHub Actions `deploy.yml` ships to both droplets.
 

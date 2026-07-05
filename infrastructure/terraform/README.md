@@ -49,13 +49,26 @@ terraform output -raw postgres_connection_uri
 terraform output -raw redis_connection_uri
 ```
 
+> **DATABASE_URL:** append `?sslmode=no-verify` to the managed-Postgres URI. The
+> `pg` driver throws `SELF_SIGNED_CERT_IN_CHAIN` against DO's managed cert with
+> `sslmode=require`; `no-verify` still encrypts, it just skips chain validation.
+
 ## Notes
 
-- Spaces bucket names are **globally unique**. If `itvn-videos` / `itvn-uploads`
-  / `itvn-assets` are taken, append a suffix in `main.tf` and update the app's
-  `DO_SPACES_*_BUCKET` env vars to match.
+- **Credentials come from the environment**, not tfvars:
+  `DIGITALOCEAN_ACCESS_TOKEN`, `SPACES_ACCESS_KEY_ID`, `SPACES_SECRET_ACCESS_KEY`.
+  `terraform.tfvars` holds only non-secrets (region, domain, ssh keys, admin IP).
+- **Spaces buckets (itvn-videos/uploads/assets) are managed OUTSIDE Terraform** —
+  they hold live video data, so Terraform must never be able to destroy them.
+  Create them once via console/doctl. Set the 24h expiration on `itvn-uploads`
+  manually (Terraform no longer manages it):
+  ```bash
+  aws s3api put-bucket-lifecycle-configuration --bucket itvn-uploads \
+    --endpoint-url https://nyc3.digitaloceanspaces.com \
+    --lifecycle-configuration '{"Rules":[{"ID":"expire-24h","Status":"Enabled","Filter":{},"Expiration":{"Days":1}}]}'
+  ```
 - Let's Encrypt certificates (CDN + load balancer) require the domain to be
   live in DigitalOcean DNS before `apply` can validate them.
-- The uploads Space auto-expires objects after 24h (lifecycle rule).
-- Managed PostgreSQL/Redis firewalls restrict access to the API droplet only.
+- The `admin_ip` var restricts SSH (port 22) to your IP — set it to `<ip>/32`,
+  do not leave it at `0.0.0.0/0` in production.
 - `terraform.tfvars` and state files are gitignored — never commit them.
