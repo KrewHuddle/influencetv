@@ -30,7 +30,7 @@ export default function HomePage() {
         <div className="relative z-10 max-w-lg">
           {featured ? <LiveBadge /> : null}
           <h1 className="mt-3 font-display text-5xl md:text-6xl">
-            {featured?.name ?? "APEX"}
+            {featured?.name ?? "INFLUENCE TV"}
           </h1>
           <p className="mt-2 text-[color:var(--text-secondary)]">
             {featured?.current_show ?? "Live TV, VOD, creators, and live shopping."}

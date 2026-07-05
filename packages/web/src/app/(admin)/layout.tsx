@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex">
       <aside className="hidden w-56 shrink-0 border-r border-apex bg-apex-gray-900 p-4 md:block">
         <p className="mb-4 flex items-center gap-2 px-2 font-display text-sm">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-apex-red" /> APEX ADMIN
+          <span className="h-2 w-2 animate-pulse rounded-full bg-apex-red" /> INFLUENCE TV ADMIN
         </p>
         {SECTIONS.map((s) => (
           <div key={s.label} className="mb-4">

@@ -74,13 +74,13 @@ resource "digitalocean_database_firewall" "redis" {
 
 # ─────────────────────────── Spaces ───────────────────────────
 resource "digitalocean_spaces_bucket" "videos" {
-  name   = "apex-videos"
+  name   = "itvn-videos"
   region = var.region
   acl    = "private"
 }
 
 resource "digitalocean_spaces_bucket" "uploads" {
-  name   = "apex-uploads"
+  name   = "itvn-uploads"
   region = var.region
   acl    = "private"
 
@@ -94,7 +94,7 @@ resource "digitalocean_spaces_bucket" "uploads" {
 }
 
 resource "digitalocean_spaces_bucket" "assets" {
-  name   = "apex-assets"
+  name   = "itvn-assets"
   region = var.region
   acl    = "private"
 }

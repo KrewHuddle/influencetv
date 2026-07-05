@@ -36,7 +36,7 @@ export function BrowseScreen({ navigation }: Props) {
             style={styles.card}
           >
             <Text style={styles.cardTitle}>{v.title}</Text>
-            <Text style={styles.cardMeta}>{v.creator_name ?? "Apex"}</Text>
+            <Text style={styles.cardMeta}>{v.creator_name ?? "Influence TV"}</Text>
           </FocusableCard>
         ))}
         {videos.length === 0 && <Text style={styles.empty}>Nothing to browse yet.</Text>}

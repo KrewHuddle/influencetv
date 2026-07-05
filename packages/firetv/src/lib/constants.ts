@@ -1,7 +1,7 @@
 // Point these at your deployed API for release builds.
-export const API_URL = "https://api.apex.tv";
-export const WS_URL = "https://api.apex.tv";
-export const ACTIVATE_URL = "https://apex.tv/activate";
+export const API_URL = "https://api.influencetvnetwork.com";
+export const WS_URL = "https://api.influencetvnetwork.com";
+export const ACTIVATE_URL = "https://influencetvnetwork.com/activate";
 
 export const COLORS = {
   black: "#080808",

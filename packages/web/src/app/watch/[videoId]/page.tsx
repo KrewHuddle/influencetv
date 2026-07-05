@@ -45,7 +45,7 @@ export default function WatchPage({
       <div className="mt-4">
         <h1 className="font-display text-2xl">{video?.title ?? "Untitled"}</h1>
         <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
-          {video?.creator_name ?? "Apex"} · {formatCount(video?.view_count)} views
+          {video?.creator_name ?? "Influence TV"} · {formatCount(video?.view_count)} views
         </p>
         <div className="mt-3 flex gap-2">
           <Button variant="ghost" className="text-xs">Add to Watchlist</Button>

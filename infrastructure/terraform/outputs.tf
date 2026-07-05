@@ -9,7 +9,7 @@ output "streaming_droplet_ip" {
 }
 
 output "load_balancer_ip" {
-  description = "Load balancer public IP (apex.tv A record target)"
+  description = "Load balancer public IP (influencetvnetwork.com A record target)"
   value       = digitalocean_loadbalancer.api.ip
 }
 

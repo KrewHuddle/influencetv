@@ -32,7 +32,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center px-6">
       <div className="w-full max-w-sm rounded-2xl border border-apex bg-apex-gray-900 p-8">
-        <h1 className="mb-6 text-center font-display text-2xl">APEX</h1>
+        <h1 className="mb-6 text-center font-display text-2xl">INFLUENCE TV</h1>
         <a href={`${API_URL}/api/auth/google`}>
           <Button variant="ghost" className="w-full">
             Continue with Google

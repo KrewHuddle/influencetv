@@ -25,7 +25,7 @@ variable "region" {
 variable "domain" {
   description = "Root domain managed in DigitalOcean DNS"
   type        = string
-  default     = "apex.tv"
+  default     = "influencetvnetwork.com"
 }
 
 variable "ssh_key_ids" {

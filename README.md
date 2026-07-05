@@ -10,7 +10,7 @@ React Native (Fire TV) · DigitalOcean + Terraform.
 
 ```
                               ┌──────────────┐
-      viewers / creators ───▶ │   DO CDN     │  cdn.apex.tv  (HLS + VOD cache)
+      viewers / creators ───▶ │   DO CDN     │  cdn.influencetvnetwork.com  (HLS + VOD cache)
                               └──────┬───────┘
                                      │ origin
                               ┌──────▼────────────┐
@@ -34,7 +34,7 @@ React Native (Fire TV) · DigitalOcean + Terraform.
                                     │ db-s-1vcpu-1gb        │   │ db-s-1vcpu-1gb         │
                                     └───────────────────────┘   └────────────────────────┘
 
-  SMTP (Resend/SendGrid) · nsfwjs moderation (local) · DO DNS (apex.tv) · Let's Encrypt
+  SMTP (Resend/SendGrid) · nsfwjs moderation (local) · DO DNS (influencetvnetwork.com) · Let's Encrypt
 ```
 
 ## Repo layout
@@ -95,11 +95,11 @@ See `infrastructure/terraform/README.md` for full details.
 | apex-streaming Droplet| c-4 (CPU-optimized, 4 vCPU / 8GB), Ubuntu 22.04  |
 | Managed PostgreSQL 16 | db-s-1vcpu-1gb, nyc3, firewalled to API droplet  |
 | Managed Redis 7       | db-s-1vcpu-1gb, nyc3, firewalled to API droplet  |
-| Spaces                | apex-videos (CDN) / apex-uploads (24h) / apex-assets |
-| CDN                   | in front of apex-videos, custom domain cdn.apex.tv |
+| Spaces                | itvn-videos (CDN) / itvn-uploads (24h) / itvn-assets |
+| CDN                   | in front of itvn-videos, custom domain cdn.influencetvnetwork.com |
 | Load Balancer         | :443 → API :3000, redirect 80→443, /health check |
 | Firewalls             | API (LB-only + SSH), streaming (1935/80/443 + SSH) |
-| DNS                   | apex.tv → LB, cdn.apex.tv → CDN, stream.apex.tv → droplet |
+| DNS                   | influencetvnetwork.com → LB, cdn.influencetvnetwork.com → CDN, stream.influencetvnetwork.com → droplet |
 | Certificates          | Let's Encrypt for LB + CDN custom domain          |
 
 ### Estimated monthly cost (nyc3, rough)
