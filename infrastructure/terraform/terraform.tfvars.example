@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and fill in. NEVER commit terraform.tfvars.
+do_token          = "dop_v1_xxxxxxxx"
+spaces_access_id  = "xxxxxxxx"
+spaces_secret_key = "xxxxxxxx"
+region            = "nyc3"
+domain            = "apex.tv"
+ssh_key_ids       = ["12345678"] # doctl compute ssh-key list
+admin_ip          = "203.0.113.4/32"

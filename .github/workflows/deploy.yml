@@ -23,36 +23,41 @@ jobs:
       - name: Tests
         run: pnpm test
 
+  # Deploy the API + web to the DigitalOcean API droplet.
   deploy-api:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy API over SSH
+      - name: Deploy over SSH (DigitalOcean droplet)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.API_EC2_HOST }}
-          username: ${{ secrets.API_EC2_USER }}
-          key: ${{ secrets.API_EC2_SSH_KEY }}
+          host: ${{ secrets.DO_API_DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /home/ec2-user/apex
+            cd /root/apex
             git pull origin main
             pnpm install --frozen-lockfile
             pnpm --filter @apex/api build
+            pnpm --filter @apex/web build
             pm2 restart apex-api || pm2 start packages/api/dist/index.js --name apex-api
+            pm2 restart apex-web || pm2 start "pnpm --filter @apex/web start" --name apex-web
 
-  deploy-web:
+  # Push updated nginx-rtmp config to the streaming droplet + reload.
+  deploy-streaming:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Web over SSH
+      - name: Update streaming droplet over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.WEB_EC2_HOST }}
-          username: ${{ secrets.WEB_EC2_USER }}
-          key: ${{ secrets.WEB_EC2_SSH_KEY }}
+          host: ${{ secrets.DO_STREAMING_DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /home/ec2-user/apex
+            cd /root/apex
             git pull origin main
-            pnpm install --frozen-lockfile
-            pnpm --filter @apex/web build
-            pm2 restart apex-web || pm2 start "pnpm --filter @apex/web start" --name apex-web
+            cp streaming/nginx.conf /etc/nginx/nginx.conf
+            cp streaming/apex-create-master.sh /usr/local/bin/apex-create-master.sh
+            chmod +x /usr/local/bin/apex-create-master.sh
+            nginx -t && systemctl reload nginx

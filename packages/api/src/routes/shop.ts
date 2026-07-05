@@ -42,8 +42,9 @@ router.post(
       throw badRequest("At least one image required");
     }
     const imageUrls = b.imageUrls;
-    // NOTE: Rekognition NSFW check on first image is deferred (needs S3 key,
-    // not the CloudFront URL) — products enter as 'pending' for manual review.
+    // NOTE: NSFW moderation (nsfwjs, see services/moderation.ts) runs at
+    // transcode time for videos. Product images arrive as CDN URLs, not local
+    // bytes, so the check is deferred here — products enter 'pending' for review.
 
     const productId = await transaction(async (c) => {
       const p = await c.query<{ id: string }>(

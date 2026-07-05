@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { Router, type Router as ExpressRouter } from "express";
 import multer from "multer";
 import multerS3 from "multer-s3";
-import { s3Client, buckets } from "../config/aws";
+import { spacesClient, buckets } from "../config/storage";
 import { query } from "../config/database";
 import { redisClient } from "../config/redis";
 import { enqueueTranscode } from "../config/queue";
@@ -27,7 +27,7 @@ const MAX_BYTES = 50 * 1024 * 1024 * 1024; // 50GB
 
 const uploadDirect = multer({
   storage: multerS3({
-    s3: s3Client,
+    s3: spacesClient,
     bucket: buckets.uploads,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, _file, cb) => {

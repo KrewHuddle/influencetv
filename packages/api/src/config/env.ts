@@ -17,13 +17,19 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
 
-  AWS_REGION: z.string().default("us-east-1"),
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
-  S3_VIDEOS_BUCKET: z.string(),
-  S3_UPLOADS_BUCKET: z.string(),
-  S3_ASSETS_BUCKET: z.string(),
-  CLOUDFRONT_DOMAIN: z.string(),
+  // DigitalOcean Spaces (S3-compatible object storage).
+  DO_SPACES_KEY: z.string().optional(),
+  DO_SPACES_SECRET: z.string().optional(),
+  DO_SPACES_ENDPOINT: z
+    .string()
+    .default("https://nyc3.digitaloceanspaces.com"),
+  DO_SPACES_REGION: z.string().default("nyc3"),
+  DO_SPACES_VIDEOS_BUCKET: z.string().default("apex-videos"),
+  DO_SPACES_UPLOADS_BUCKET: z.string().default("apex-uploads"),
+  DO_SPACES_ASSETS_BUCKET: z.string().default("apex-assets"),
+  DO_CDN_ENDPOINT: z
+    .string()
+    .default("https://apex-videos.nyc3.cdn.digitaloceanspaces.com"),
 
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
@@ -43,7 +49,12 @@ const envSchema = z.object({
     .default("http://localhost:3000/api/auth/google/callback"),
   FRONTEND_URL: z.string().default("http://localhost:3001"),
 
-  SES_FROM_ADDRESS: z.string().default("noreply@apex.tv"),
+  // SMTP email (Resend / SendGrid — replaces AWS SES).
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default("noreply@apex.tv"),
   YOUTUBE_API_KEY: z.string().optional(),
 
   ALLOWED_ORIGINS: z.string().default("http://localhost:3001"),

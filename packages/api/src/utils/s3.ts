@@ -10,7 +10,7 @@ import { createReadStream, createWriteStream } from "fs";
 import { readFile, stat } from "fs/promises";
 import { pipeline } from "stream/promises";
 import type { Readable } from "stream";
-import { s3Client } from "../config/aws";
+import { spacesClient } from "../config/storage";
 
 const PRESIGN_TTL = 3600; // 1h
 
@@ -26,7 +26,7 @@ export async function createMultipartUpload(
   contentType: string,
   partCount = 10
 ): Promise<{ uploadId: string; parts: PresignedPart[] }> {
-  const created = await s3Client.send(
+  const created = await spacesClient.send(
     new CreateMultipartUploadCommand({
       Bucket: bucket,
       Key: key,
@@ -37,7 +37,7 @@ export async function createMultipartUpload(
   const parts: PresignedPart[] = [];
   for (let n = 1; n <= partCount; n++) {
     const url = await getSignedUrl(
-      s3Client,
+      spacesClient,
       new UploadPartCommand({
         Bucket: bucket,
         Key: key,
@@ -57,7 +57,7 @@ export async function completeMultipartUpload(
   uploadId: string,
   parts: Array<{ ETag: string; PartNumber: number }>
 ): Promise<void> {
-  await s3Client.send(
+  await spacesClient.send(
     new CompleteMultipartUploadCommand({
       Bucket: bucket,
       Key: key,
@@ -77,7 +77,7 @@ export async function uploadFile(
   contentType: string
 ): Promise<void> {
   const { size } = await stat(filePath);
-  await s3Client.send(
+  await spacesClient.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -99,7 +99,7 @@ export async function downloadToFile(
   key: string,
   destPath: string
 ): Promise<void> {
-  const res = await s3Client.send(
+  const res = await spacesClient.send(
     new GetObjectCommand({ Bucket: bucket, Key: key })
   );
   await pipeline(res.Body as Readable, createWriteStream(destPath));
