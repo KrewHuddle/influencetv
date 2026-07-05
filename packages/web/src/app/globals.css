@@ -1,33 +1,57 @@
-@import url("https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-syne: "Syne", sans-serif;
-  --font-inter: "Inter", sans-serif;
+  /* system font stack only — Syne removed */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
-  --apex-black: #080808;
-  --apex-red: #ff2d2d;
-  --apex-white: #f4f4f4;
+  /* magenta system tokens (mirrors tailwind itv.*) */
+  --itv-bg: #0d0d0d;
+  --itv-surface: #111111;
+  --itv-surface2: #161616;
+  --itv-surface3: #1a1a1a;
+  --itv-border: rgba(255, 255, 255, 0.08);
+  --itv-magenta: #d946ef;
+  --itv-red: #ff3333;
+  --itv-text: #f0f0f0;
+
+  /* legacy var names kept (used by some inline styles) — remapped */
+  --apex-black: #0d0d0d;
+  --apex-red: #d946ef;
+  --apex-white: #f0f0f0;
   --surface-1: #111111;
-  --surface-2: #181818;
-  --border: rgba(255, 255, 255, 0.07);
-  --text-secondary: rgba(255, 255, 255, 0.52);
-  --text-muted: rgba(255, 255, 255, 0.28);
+  --surface-2: #161616;
+  --border: rgba(255, 255, 255, 0.08);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.42);
 }
 
 html,
 body {
-  background: var(--apex-black);
-  color: var(--apex-white);
-  font-family: var(--font-inter);
-  font-weight: 300;
+  background: var(--itv-bg);
+  color: var(--itv-text);
+  font-family: var(--font-sans);
+  font-weight: 400;
 }
 
+*::selection {
+  background: #d946ef;
+  color: #fff;
+}
+
+/* display helper kept for existing class usage — system font, no forced uppercase */
 .font-display {
-  font-family: var(--font-syne);
-  font-weight: 800;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+/* hide scrollbars on horizontal rails */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

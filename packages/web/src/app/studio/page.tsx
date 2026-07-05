@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import useSWR from "swr";
+import { Upload, Radio, PenSquare, Package } from "lucide-react";
 import { swrFetcher } from "@/lib/api";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
 interface Studio {
@@ -20,41 +20,57 @@ export default function StudioDashboard() {
   });
 
   const tiles = [
-    { label: "Views (recent)", value: data?.recentVideos?.reduce((n, v) => n + (v.view_count ?? 0), 0) ?? 0 },
+    { label: "Today's Views", value: data?.recentVideos?.reduce((n, v) => n + (v.view_count ?? 0), 0) ?? 0 },
     { label: "New Patrons", value: data?.today.newPatrons ?? 0 },
-    { label: "Shop Revenue", value: dollars(data?.today.shopRevenueCents ?? 0) },
     { label: "Pending Payout", value: dollars(data?.today.pendingPayoutCents ?? 0) },
+    { label: "Shop Revenue", value: dollars(data?.today.shopRevenueCents ?? 0) },
+  ];
+
+  const actions = [
+    { href: "/studio/upload", label: "Upload Video", Icon: Upload },
+    { href: "/live", label: "Go Live", Icon: Radio },
+    { href: "/studio/community", label: "Post Update", Icon: PenSquare },
+    { href: "/studio/shop/orders", label: "Add Product", Icon: Package },
   ];
 
   return (
     <div className="px-6 py-6">
-      <h1 className="mb-6 font-display text-2xl">Dashboard</h1>
+      <h1 className="mb-6 text-[22px] font-black">Dashboard</h1>
 
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      {/* stat tiles */}
+      <div className="mb-4 grid grid-cols-2 gap-px bg-itv-border md:grid-cols-4">
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-lg border border-apex bg-apex-gray-900 p-4">
-            <p className="text-xs uppercase tracking-wide text-[color:var(--text-muted)]">{t.label}</p>
-            <p className="mt-2 font-display text-2xl">{t.value}</p>
+          <div key={t.label} className="border border-itv-border bg-itv-surface p-4">
+            <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">{t.label}</p>
+            <p className="mt-2 text-[26px] font-black text-white">{t.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mb-8 flex flex-wrap gap-2">
-        <Link href="/studio/upload"><Button className="text-xs">+ Upload Video</Button></Link>
-        <Link href="/studio/community"><Button variant="ghost" className="text-xs">Post Update</Button></Link>
-        <Link href="/studio/patrons"><Button variant="ghost" className="text-xs">Add Tier</Button></Link>
+      {/* quick actions */}
+      <div className="mb-8 grid grid-cols-2 gap-px bg-itv-border md:grid-cols-4">
+        {actions.map(({ href, label, Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className="flex items-center gap-3 border border-itv-border bg-itv-surface px-4 py-[14px] hover:bg-itv-surface2"
+          >
+            <Icon size={20} className="text-itv-magenta" />
+            <span className="text-[11px] font-bold text-white">{label}</span>
+          </Link>
+        ))}
       </div>
 
-      <h2 className="mb-3 font-display text-sm">Recent Uploads</h2>
+      <h2 className="mb-3 text-[13px] font-extrabold">Recent Uploads</h2>
       <div className="space-y-2">
         {(data?.recentVideos ?? []).map((v) => (
-          <div key={v.id} className="flex items-center justify-between rounded-lg border border-apex bg-apex-gray-900 p-3">
+          <div key={v.id} className="flex items-center justify-between border border-itv-border bg-itv-surface p-3">
             <span className="text-sm">{v.title}</span>
             <Badge>{v.status}</Badge>
           </div>
         ))}
         {!data?.recentVideos?.length && (
-          <p className="text-sm text-[color:var(--text-muted)]">No uploads yet.</p>
+          <p className="text-sm text-white/[0.42]">No uploads yet.</p>
         )}
       </div>
     </div>

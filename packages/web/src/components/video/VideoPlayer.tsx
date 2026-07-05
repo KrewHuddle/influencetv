@@ -77,7 +77,7 @@ export function VideoPlayer({
         <select
           aria-label="Quality"
           onChange={(e) => setLevel(Number(e.target.value))}
-          className="absolute right-3 top-3 rounded bg-black/70 px-2 py-1 text-xs text-white"
+          className="absolute bottom-3 right-3 rounded-[2px] bg-black/70 px-2 py-1 text-xs text-white outline-none focus:ring-1 focus:ring-itv-magenta"
         >
           {levels.map((l, i) => (
             <option key={l} value={i}>
@@ -87,7 +87,7 @@ export function VideoPlayer({
         </select>
       )}
       {error && (
-        <div className="absolute inset-0 grid place-items-center bg-black/80 text-sm text-apex-red">
+        <div className="absolute inset-0 grid place-items-center bg-black/80 text-sm text-itv-magenta">
           {error}
         </div>
       )}

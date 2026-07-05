@@ -1,7 +1,5 @@
 "use client";
-import { Check, X } from "lucide-react";
 import { PLANS } from "@/lib/constants";
-import { Button } from "@/components/ui/Button";
 import { apiPost } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -28,45 +26,64 @@ export default function PlansPage() {
   };
 
   return (
-    <div className="px-6 py-10">
-      <h1 className="mb-10 text-center font-display text-3xl">Choose your plan</h1>
-      <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
-        {PLANS.map((plan) => (
-          <div
-            key={plan.id}
-            className={`rounded-2xl border ${plan.accent} bg-apex-gray-900 p-6 ${
-              "featured" in plan && plan.featured ? "ring-1 ring-apex-red" : ""
-            }`}
-          >
-            <h2 className="font-display text-xl">{plan.name}</h2>
-            <p className="my-4">
-              <span className="text-4xl font-semibold">${plan.price}</span>
-              <span className="text-sm text-[color:var(--text-muted)]">/mo</span>
-            </p>
-            <ul className="mb-6 space-y-2 text-sm">
-              {plan.features.map((f) => (
-                <li key={f.label} className="flex items-center gap-2">
-                  {f.included ? (
-                    <Check size={15} className="text-green-400" />
-                  ) : (
-                    <X size={15} className="text-[color:var(--text-muted)]" />
-                  )}
-                  <span className={f.included ? "" : "text-[color:var(--text-muted)]"}>
-                    {f.label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant={"featured" in plan && plan.featured ? "primary" : "ghost"}
-              className="w-full"
-              disabled={user?.plan === plan.id}
-              onClick={() => upgrade(plan.id)}
+    <div className="bg-itv-bg px-5 py-12">
+      <h1 className="mb-2 text-center text-[26px] font-black tracking-[-0.5px]">Pick your plan</h1>
+      <p className="mb-10 text-center text-[12px] text-white/[0.42]">
+        Start free. Upgrade when the network makes you want more.
+      </p>
+
+      <div className="mx-auto grid max-w-4xl gap-px bg-itv-border md:grid-cols-3">
+        {PLANS.map((plan) => {
+          const featured = "featured" in plan && plan.featured;
+          const current = user?.plan === plan.id;
+          return (
+            <div
+              key={plan.id}
+              className="border border-itv-border px-6 py-7"
+              style={
+                featured
+                  ? { borderTop: "2px solid #D946EF", background: "#0d080d" }
+                  : { background: "#0d0d0d" }
+              }
             >
-              {user?.plan === plan.id ? "Current Plan" : plan.id === "free" ? "Get Started" : `Get ${plan.name}`}
-            </Button>
-          </div>
-        ))}
+              <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.45]">
+                {plan.name}
+              </p>
+              <p className="mt-3">
+                <span className="text-[36px] font-black tracking-[-1px]">${plan.price}</span>
+                <span className="ml-1 text-[10px] text-white/[0.38]">
+                  {"period" in plan ? plan.period : "/mo"}
+                </span>
+              </p>
+
+              <div className="my-4 h-px bg-white/[0.06]" />
+
+              <ul className="flex flex-col gap-2 text-[11px] text-white/60">
+                {plan.features.map((f) => (
+                  <li key={f.label} className="flex items-center gap-2">
+                    <span className={f.included ? "text-itv-magenta" : "text-white/20"}>
+                      {f.included ? "✓" : "×"}
+                    </span>
+                    <span className={f.included ? "" : "text-white/[0.35]"}>{f.label}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                onClick={() => upgrade(plan.id)}
+                disabled={current}
+                className="mt-6 w-full px-4 py-[11px] text-[10px] font-extrabold uppercase tracking-[1px] transition disabled:opacity-40"
+                style={
+                  featured
+                    ? { background: "#D946EF", color: "#fff" }
+                    : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }
+                }
+              >
+                {current ? "Current Plan" : plan.id === "free" ? "Get Started" : `Get ${plan.name}`}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
