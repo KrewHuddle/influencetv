@@ -8,8 +8,8 @@ terraform {
   }
 }
 
-provider "digitalocean" {
-  token             = var.do_token
-  spaces_access_id  = var.spaces_access_id
-  spaces_secret_key = var.spaces_secret_key
-}
+# Credentials come from the environment (no secrets in code):
+#   DIGITALOCEAN_ACCESS_TOKEN   — API token
+#   SPACES_ACCESS_KEY_ID        — Spaces access key
+#   SPACES_SECRET_ACCESS_KEY    — Spaces secret
+provider "digitalocean" {}

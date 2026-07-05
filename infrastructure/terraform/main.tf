@@ -1,9 +1,9 @@
 # ─────────────────────────── Droplets ───────────────────────────
 resource "digitalocean_droplet" "api" {
-  name     = "apex-api"
+  name     = "itvn-api"
   region   = var.region
   size     = "s-2vcpu-4gb"
-  image    = "ubuntu-22-04-x64"
+  image    = "ubuntu-24-04-x64"
   ssh_keys = var.ssh_key_ids
 
   user_data = <<-EOF
@@ -12,15 +12,15 @@ resource "digitalocean_droplet" "api" {
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs git
     npm install -g pnpm pm2
-    echo "Apex API droplet provisioned"
+    echo "Influence TV API droplet provisioned"
   EOF
 }
 
 resource "digitalocean_droplet" "streaming" {
-  name     = "apex-streaming"
+  name     = "itvn-streaming"
   region   = var.region
   size     = "c-4" # CPU-optimized, 4 vCPU / 8GB for nginx-rtmp + FFmpeg
-  image    = "ubuntu-22-04-x64"
+  image    = "ubuntu-24-04-x64"
   ssh_keys = var.ssh_key_ids
 
   user_data = <<-EOF
@@ -32,13 +32,13 @@ resource "digitalocean_droplet" "streaming" {
     apt-get install -y nodejs
     npm install -g pm2
     mkdir -p /var/www/hls
-    echo "Apex streaming droplet provisioned"
+    echo "Influence TV streaming droplet provisioned"
   EOF
 }
 
 # ─────────────────────── Managed databases ───────────────────────
 resource "digitalocean_database_cluster" "postgres" {
-  name       = "apex-postgres"
+  name       = "itvn-postgres"
   engine     = "pg"
   version    = "16"
   size       = "db-s-1vcpu-1gb"
@@ -47,7 +47,7 @@ resource "digitalocean_database_cluster" "postgres" {
 }
 
 resource "digitalocean_database_cluster" "redis" {
-  name       = "apex-redis"
+  name       = "itvn-redis"
   engine     = "redis"
   version    = "7"
   size       = "db-s-1vcpu-1gb"
@@ -73,41 +73,24 @@ resource "digitalocean_database_firewall" "redis" {
 }
 
 # ─────────────────────────── Spaces ───────────────────────────
-resource "digitalocean_spaces_bucket" "videos" {
-  name   = "itvn-videos"
-  region = var.region
-  acl    = "private"
-}
-
-resource "digitalocean_spaces_bucket" "uploads" {
-  name   = "itvn-uploads"
-  region = var.region
-  acl    = "private"
-
-  lifecycle_rule {
-    id      = "expire-uploads-24h"
-    enabled = true
-    expiration {
-      days = 1
-    }
-  }
-}
-
-resource "digitalocean_spaces_bucket" "assets" {
-  name   = "itvn-assets"
-  region = var.region
-  acl    = "private"
+# Buckets (itvn-videos / itvn-uploads / itvn-assets) are managed OUTSIDE
+# Terraform on purpose — they hold live video data, so Terraform must not be
+# able to destroy them. Create them once (doctl/console) with the itvn-app-key.
+# Set the 24h expiration lifecycle on itvn-uploads manually:
+#   s3cmd (or aws s3api) put-bucket-lifecycle-configuration on itvn-uploads.
+locals {
+  videos_origin = "itvn-videos.${var.region}.digitaloceanspaces.com"
 }
 
 # ───────────────────────────── CDN ─────────────────────────────
 resource "digitalocean_certificate" "cdn" {
-  name    = "apex-cdn-cert"
+  name    = "itvn-cdn-cert"
   type    = "lets_encrypt"
   domains = ["cdn.${var.domain}"]
 }
 
 resource "digitalocean_cdn" "videos" {
-  origin           = digitalocean_spaces_bucket.videos.bucket_domain_name
+  origin           = local.videos_origin
   custom_domain    = "cdn.${var.domain}"
   certificate_name = digitalocean_certificate.cdn.name
   ttl              = 3600
@@ -115,13 +98,13 @@ resource "digitalocean_cdn" "videos" {
 
 # ─────────────────────── Load balancer ───────────────────────
 resource "digitalocean_certificate" "lb" {
-  name    = "apex-lb-cert"
+  name    = "itvn-lb-cert"
   type    = "lets_encrypt"
   domains = [var.domain]
 }
 
 resource "digitalocean_loadbalancer" "api" {
-  name                   = "apex-api-lb"
+  name                   = "itvn-lb"
   region                 = var.region
   droplet_ids            = [digitalocean_droplet.api.id]
   redirect_http_to_https = true
@@ -143,7 +126,7 @@ resource "digitalocean_loadbalancer" "api" {
 
 # ─────────────────────────── Firewalls ───────────────────────────
 resource "digitalocean_firewall" "api" {
-  name        = "apex-api-fw"
+  name        = "itvn-api-fw"
   droplet_ids = [digitalocean_droplet.api.id]
 
   inbound_rule {
@@ -184,7 +167,7 @@ resource "digitalocean_firewall" "api" {
 }
 
 resource "digitalocean_firewall" "streaming" {
-  name        = "apex-streaming-fw"
+  name        = "itvn-streaming-fw"
   droplet_ids = [digitalocean_droplet.streaming.id]
 
   inbound_rule {
