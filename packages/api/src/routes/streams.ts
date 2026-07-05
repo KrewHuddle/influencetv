@@ -1,7 +1,7 @@
 import express, { Router, type Router as ExpressRouter } from "express";
 import { query } from "../config/database";
 import { redisClient } from "../config/redis";
-import { cloudfrontUrl } from "../config/aws";
+import { cdnUrl } from "../config/storage";
 import { asyncHandler } from "../utils/asyncHandler";
 import { getIo, rooms } from "../sockets";
 
@@ -64,7 +64,7 @@ router.post(
       [req.params.streamKey]
     );
     if (rows[0]) {
-      const hls = cloudfrontUrl(`hls/${rows[0].slug}/master.m3u8`);
+      const hls = cdnUrl(`hls/${rows[0].slug}/master.m3u8`);
       await query("UPDATE channels SET hls_output_url = $1 WHERE id = $2", [
         hls,
         rows[0].id,

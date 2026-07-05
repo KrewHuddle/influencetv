@@ -1,10 +1,7 @@
 // Ensure required env exists before importing modules that validate it.
 process.env.DATABASE_URL ??= "postgresql://apex:apex@127.0.0.1:5433/apex_dev";
 process.env.REDIS_URL ??= "redis://127.0.0.1:6380";
-process.env.S3_VIDEOS_BUCKET ??= "apex-videos";
-process.env.S3_UPLOADS_BUCKET ??= "apex-uploads";
-process.env.S3_ASSETS_BUCKET ??= "apex-assets";
-process.env.CLOUDFRONT_DOMAIN ??= "cdn.apex.tv";
+// DO_SPACES_* + DO_CDN_ENDPOINT have zod defaults — no need to set them here.
 process.env.JWT_ACCESS_SECRET ??= "test_access_secret_0123456789";
 process.env.JWT_REFRESH_SECRET ??= "test_refresh_secret_0123456789";
 

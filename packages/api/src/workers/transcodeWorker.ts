@@ -2,17 +2,16 @@ import { spawn } from "child_process";
 import { mkdir, rm, readdir } from "fs/promises";
 import { join } from "path";
 import { Worker, type Job } from "bullmq";
-import { DetectModerationLabelsCommand } from "@aws-sdk/client-rekognition";
 import { TRANSCODE_QUEUE, type TranscodeJob } from "../config/queue";
 import { redisClient, bullConnection } from "../config/redis";
 import { query } from "../config/database";
-import { buckets, cloudfrontUrl, rekognitionClient } from "../config/aws";
+import { buckets, cdnUrl } from "../config/storage";
 import { downloadToFile, uploadFile, readFileBytes } from "../utils/s3";
+import { isImageNSFW } from "../services/moderation";
 import { sendEmail } from "../config/email";
 import { getIo, rooms } from "../sockets";
 
 const WORK_ROOT = "/tmp/apex-transcoding";
-const MODERATION_MIN_CONFIDENCE = 80;
 
 // HLS ladder: [name, resolution, videoBitrate(k), maxrate(k), bufsize(k)]
 const LADDER: Array<[string, string, string]> = [
@@ -113,15 +112,9 @@ async function processVideo(job: Job<TranscodeJob>): Promise<void> {
       "-i", original, "-vframes", "1", "-q:v", "3", thumb,
     ]);
 
-    // 5. Rekognition moderation on the thumbnail.
+    // 5. NSFW moderation on the thumbnail (nsfwjs, local — replaces Rekognition).
     const bytes = await readFileBytes(thumb);
-    const mod = await rekognitionClient.send(
-      new DetectModerationLabelsCommand({
-        Image: { Bytes: bytes },
-        MinConfidence: MODERATION_MIN_CONFIDENCE,
-      })
-    );
-    if ((mod.ModerationLabels?.length ?? 0) > 0) {
+    if (await isImageNSFW(bytes)) {
       await query(
         "UPDATE videos SET status='rejected', rejection_reason='content-policy' WHERE id=$1",
         [videoId]
@@ -136,8 +129,8 @@ async function processVideo(job: Job<TranscodeJob>): Promise<void> {
     await uploadFile(buckets.assets, thumbKey, thumb, "image/jpeg");
 
     // 7. Persist ready state.
-    const hlsUrl = cloudfrontUrl(`${videoId}/hls/master.m3u8`);
-    const thumbnailUrl = cloudfrontUrl(thumbKey); // assets served via same CDN prefix
+    const hlsUrl = cdnUrl(`${videoId}/hls/master.m3u8`);
+    const thumbnailUrl = cdnUrl(thumbKey); // assets served via same CDN prefix
     await query(
       `UPDATE videos SET status='ready', hls_url=$1, s3_hls_key=$2,
          thumbnail_url=$3, duration_seconds=$4, published_at=COALESCE(published_at, NOW())

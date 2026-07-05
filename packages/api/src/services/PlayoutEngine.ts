@@ -4,7 +4,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 import { query } from "../config/database";
 import { redisClient } from "../config/redis";
-import { buckets } from "../config/aws";
+import { buckets } from "../config/storage";
 import { downloadToFile } from "../utils/s3";
 import { getIo, rooms } from "../sockets";
 

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { query } from "../config/database";
 import { redisClient } from "../config/redis";
-import { s3Client, buckets, cloudfrontUrl } from "../config/aws";
+import { spacesClient, buckets, cdnUrl } from "../config/storage";
 import { authenticate, clearUserCache } from "../middleware/auth";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ok } from "../utils/response";
@@ -110,7 +110,7 @@ router.post(
 
     const ext = req.file.mimetype.split("/")[1].replace("jpeg", "jpg");
     const key = `avatars/${userId}/${crypto.randomUUID()}.${ext}`;
-    await s3Client.send(
+    await spacesClient.send(
       new PutObjectCommand({
         Bucket: buckets.assets,
         Key: key,
@@ -118,7 +118,7 @@ router.post(
         ContentType: req.file.mimetype,
       })
     );
-    const url = cloudfrontUrl(key);
+    const url = cdnUrl(key);
     await query("UPDATE users SET avatar_url = $1, updated_at = NOW() WHERE id = $2", [
       url,
       userId,

@@ -1,10 +1,20 @@
-import { SendEmailCommand } from "@aws-sdk/client-ses";
-import { sesClient } from "./aws";
+import nodemailer from "nodemailer";
 import { env } from "./env";
 
+// SMTP transport (Resend / SendGrid / any SMTP provider — replaces AWS SES).
+const transporter = nodemailer.createTransport({
+  host: env.SMTP_HOST,
+  port: env.SMTP_PORT,
+  secure: env.SMTP_PORT === 465,
+  auth:
+    env.SMTP_USER && env.SMTP_PASS
+      ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
+      : undefined,
+});
+
 /**
- * Send an email via AWS SES. In local dev (no AWS creds / unverified domain)
- * this fails softly: it logs and resolves so signup/reset flows don't crash.
+ * Send an email via SMTP. In local dev (no SMTP creds) this fails softly:
+ * it logs and resolves so signup/reset flows don't crash.
  */
 export async function sendEmail(
   to: string,
@@ -12,20 +22,19 @@ export async function sendEmail(
   htmlBody: string,
   textBody: string
 ): Promise<void> {
+  if (!env.SMTP_HOST) {
+    // eslint-disable-next-line no-console
+    console.warn(`[email] SMTP not configured — skipped "${subject}" → ${to}`);
+    return;
+  }
   try {
-    await sesClient.send(
-      new SendEmailCommand({
-        Source: env.SES_FROM_ADDRESS,
-        Destination: { ToAddresses: [to] },
-        Message: {
-          Subject: { Data: subject },
-          Body: {
-            Html: { Data: htmlBody },
-            Text: { Data: textBody },
-          },
-        },
-      })
-    );
+    await transporter.sendMail({
+      from: env.SMTP_FROM,
+      to,
+      subject,
+      html: htmlBody,
+      text: textBody,
+    });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn(
