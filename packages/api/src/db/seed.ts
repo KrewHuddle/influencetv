@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import { Pool, PoolClient } from "pg";
 import { env } from "../config/env";
 
-const HLS_1 = "https://cdn.apex.tv/seed/drama-ep1/master.m3u8";
-const HLS_2 = "https://cdn.apex.tv/seed/news-brief/master.m3u8";
-const THUMB = "https://cdn.apex.tv/seed/thumb-placeholder.jpg";
+const HLS_1 = "https://cdn.influencetvnetwork.com/seed/drama-ep1/master.m3u8";
+const HLS_2 = "https://cdn.influencetvnetwork.com/seed/news-brief/master.m3u8";
+const THUMB = "https://cdn.influencetvnetwork.com/seed/thumb-placeholder.jpg";
 
 async function insertUser(
   c: PoolClient,
@@ -57,22 +57,22 @@ async function main(): Promise<void> {
 
       // ── staff ──
       const adminId = await insertUser(client, {
-        email: "admin@apex.tv",
+        email: "admin@influencetvnetwork.com",
         role: "super_admin",
         plan: "ultra",
-        displayName: "Apex Admin",
+        displayName: "Influence Admin",
         username: "apex_admin",
         passwordHash: adminHash,
       });
       await insertUser(client, {
-        email: "manager@apex.tv",
+        email: "manager@influencetvnetwork.com",
         role: "channel_manager",
         displayName: "Channel Manager",
         username: "channel_manager",
         passwordHash: userHash,
       });
       await insertUser(client, {
-        email: "mod@apex.tv",
+        email: "mod@influencetvnetwork.com",
         role: "moderator",
         displayName: "Moderator",
         username: "moderator",
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
 
       // ── creators ──
       const creator1 = await insertUser(client, {
-        email: "creator1@apex.tv",
+        email: "creator1@influencetvnetwork.com",
         role: "creator",
         plan: "ultra",
         displayName: "Nova Fields",
@@ -89,7 +89,7 @@ async function main(): Promise<void> {
         passwordHash: userHash,
       });
       const creator2 = await insertUser(client, {
-        email: "creator2@apex.tv",
+        email: "creator2@influencetvnetwork.com",
         role: "creator",
         plan: "ultra",
         displayName: "Rex Marlow",
@@ -100,9 +100,9 @@ async function main(): Promise<void> {
       // ── channels ──
       const channels: Array<{ id: string; slug: string; name: string }> = [];
       for (const [name, slug, genre] of [
-        ["Apex Drama", "drama", "Drama"],
-        ["Apex News", "news", "News"],
-        ["Apex Entertainment", "entertainment", "Entertainment"],
+        ["Influence Drama", "drama", "Drama"],
+        ["Influence News", "news", "News"],
+        ["Influence Entertainment", "entertainment", "Entertainment"],
       ]) {
         const { rows } = await client.query<{ id: string }>(
           `INSERT INTO channels
@@ -168,8 +168,8 @@ async function main(): Promise<void> {
 
       // ── products (3 physical, 2 digital) approved ──
       const products: Array<[string, boolean, number]> = [
-        ["Apex Tee", false, 2500],
-        ["Apex Hoodie", false, 5500],
+        ["Influence Tee", false, 2500],
+        ["Influence Hoodie", false, 5500],
         ["Enamel Pin Set", false, 1200],
         ["Digital Wallpaper Pack", true, 500],
         ["Behind-the-Scenes PDF", true, 900],
@@ -183,7 +183,7 @@ async function main(): Promise<void> {
           [
             creator1,
             title,
-            `${title} — official Apex merch`,
+            `${title} — official Influence merch`,
             isDigital,
             price,
             isDigital ? 0 : 100,
@@ -206,7 +206,7 @@ async function main(): Promise<void> {
       // eslint-disable-next-line no-console
       console.log("✅ Seed complete.");
       // eslint-disable-next-line no-console
-      console.log("   admin@apex.tv / Admin123!  (all others: Password1!)");
+      console.log("   admin@influencetvnetwork.com / Admin123!  (all others: Password1!)");
     } catch (err) {
       await client.query("ROLLBACK");
       throw err;

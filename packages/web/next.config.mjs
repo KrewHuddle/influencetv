@@ -5,7 +5,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.cloudfront.net" },
-      { protocol: "https", hostname: "cdn.apex.tv" },
+      { protocol: "https", hostname: "cdn.influencetvnetwork.com" },
     ],
   },
 };

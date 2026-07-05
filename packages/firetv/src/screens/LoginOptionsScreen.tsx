@@ -10,7 +10,7 @@ type Props = StackScreenProps<RootStackParamList, "LoginOptions">;
 export function LoginOptionsScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>APEX</Text>
+      <Text style={styles.logo}>INFLUENCE TV</Text>
       <Text style={styles.sub}>Sign in to start watching</Text>
       <FocusableCard
         hasTVPreferredFocus

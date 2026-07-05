@@ -59,7 +59,7 @@ export function CodeLoginScreen() {
       <View style={styles.left}>
         <Text style={styles.heading}>Sign In on Your Phone</Text>
         <Text style={styles.code}>{code.split("").join(" ")}</Text>
-        <Text style={styles.hint}>Go to apex.tv/activate on your phone</Text>
+        <Text style={styles.hint}>Go to influencetvnetwork.com/activate on your phone</Text>
       </View>
       <View style={styles.right}>
         {code ? (

@@ -10,7 +10,7 @@ PostgreSQL + Redis, Spaces object storage, CDN, load balancer, firewalls, DNS.
 - A **DigitalOcean API token** with **read + write** scope on:
   **droplets, spaces, databases, load balancers, domains**
 - **Spaces access keys** (API → Spaces Keys) for the `spaces_access_id` / `spaces_secret_key` vars
-- The domain (`apex.tv`) added to DigitalOcean DNS, and your registrar's
+- The domain (`influencetvnetwork.com`) added to DigitalOcean DNS, and your registrar's
   nameservers pointed at DigitalOcean (`ns1/ns2/ns3.digitalocean.com`)
 
 ## Setup
@@ -39,8 +39,8 @@ terraform destroy   # tear it all down
 |---------------------------|-------------------------------------------|
 | `api_droplet_ip`          | `DO_API_DROPLET_IP` GitHub secret         |
 | `streaming_droplet_ip`    | `DO_STREAMING_DROPLET_IP` GitHub secret   |
-| `load_balancer_ip`        | `apex.tv` A record (auto-created)         |
-| `cdn_endpoint`            | `DO_CDN_ENDPOINT` / `cdn.apex.tv`         |
+| `load_balancer_ip`        | `influencetvnetwork.com` A record (auto-created)         |
+| `cdn_endpoint`            | `DO_CDN_ENDPOINT` / `cdn.influencetvnetwork.com`         |
 | `postgres_connection_uri` | `DATABASE_URL` (sensitive)                |
 | `redis_connection_uri`    | `REDIS_URL` (sensitive)                   |
 
@@ -51,8 +51,8 @@ terraform output -raw redis_connection_uri
 
 ## Notes
 
-- Spaces bucket names are **globally unique**. If `apex-videos` / `apex-uploads`
-  / `apex-assets` are taken, append a suffix in `main.tf` and update the app's
+- Spaces bucket names are **globally unique**. If `itvn-videos` / `itvn-uploads`
+  / `itvn-assets` are taken, append a suffix in `main.tf` and update the app's
   `DO_SPACES_*_BUCKET` env vars to match.
 - Let's Encrypt certificates (CDN + load balancer) require the domain to be
   live in DigitalOcean DNS before `apply` can validate them.

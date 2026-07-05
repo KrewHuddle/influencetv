@@ -42,7 +42,7 @@ export function VideoCard({ video }: { video: VideoSummary }) {
       </div>
       <h3 className="mt-2 line-clamp-1 text-sm font-medium">{video.title}</h3>
       <p className="text-xs text-[color:var(--text-secondary)]">
-        {video.creator_name ?? "Apex"} · {formatCount(video.view_count)} views
+        {video.creator_name ?? "Influence TV"} · {formatCount(video.view_count)} views
       </p>
     </Link>
   );

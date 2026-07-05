@@ -16,7 +16,7 @@ export function Header() {
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-apex bg-apex-black/90 px-6 backdrop-blur">
       <div className="flex items-center gap-8">
         <Link href="/" className="font-display text-xl tracking-wider text-apex-white">
-          APEX
+          INFLUENCE TV
         </Link>
         <nav className="hidden gap-6 md:flex">
           {NAV_LINKS.map((l) => (

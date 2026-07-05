@@ -24,12 +24,12 @@ const envSchema = z.object({
     .string()
     .default("https://nyc3.digitaloceanspaces.com"),
   DO_SPACES_REGION: z.string().default("nyc3"),
-  DO_SPACES_VIDEOS_BUCKET: z.string().default("apex-videos"),
-  DO_SPACES_UPLOADS_BUCKET: z.string().default("apex-uploads"),
-  DO_SPACES_ASSETS_BUCKET: z.string().default("apex-assets"),
+  DO_SPACES_VIDEOS_BUCKET: z.string().default("itvn-videos"),
+  DO_SPACES_UPLOADS_BUCKET: z.string().default("itvn-uploads"),
+  DO_SPACES_ASSETS_BUCKET: z.string().default("itvn-assets"),
   DO_CDN_ENDPOINT: z
     .string()
-    .default("https://apex-videos.nyc3.cdn.digitaloceanspaces.com"),
+    .default("https://cdn.influencetvnetwork.com"),
 
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
@@ -54,7 +54,7 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM: z.string().default("noreply@apex.tv"),
+  SMTP_FROM: z.string().default("noreply@influencetvnetwork.com"),
   YOUTUBE_API_KEY: z.string().optional(),
 
   ALLOWED_ORIGINS: z.string().default("http://localhost:3001"),

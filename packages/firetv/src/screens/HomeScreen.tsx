@@ -33,7 +33,7 @@ export function HomeScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>{featured?.name ?? "APEX"}</Text>
+        <Text style={styles.heroTitle}>{featured?.name ?? "INFLUENCE TV"}</Text>
         <Text style={styles.heroSub}>{featured?.current_show ?? "Live TV · VOD · Shop"}</Text>
       </View>
 

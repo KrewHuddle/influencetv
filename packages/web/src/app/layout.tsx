@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Apex — Streaming Network",
+  title: "Influence TV Network",
   description: "Live TV, VOD, creators, and live shopping.",
 };
 

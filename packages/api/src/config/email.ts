@@ -46,56 +46,56 @@ export async function sendEmail(
 
 const wrap = (title: string, inner: string) => `
 <div style="background:#080808;color:#F4F4F4;font-family:Inter,Arial,sans-serif;padding:32px">
-  <h1 style="font-family:Syne,Arial,sans-serif;text-transform:uppercase;color:#FF2D2D;letter-spacing:2px">APEX</h1>
+  <h1 style="font-family:Syne,Arial,sans-serif;text-transform:uppercase;color:#FF2D2D;letter-spacing:2px">INFLUENCE TV</h1>
   <h2 style="font-weight:600">${title}</h2>
   ${inner}
-  <p style="color:rgba(255,255,255,0.28);font-size:12px;margin-top:32px">Apex Streaming Network</p>
+  <p style="color:rgba(255,255,255,0.28);font-size:12px;margin-top:32px">Influence TV Network</p>
 </div>`;
 
 export function welcomeEmail(displayName: string) {
   return {
-    subject: "Welcome to Apex",
+    subject: "Welcome to Influence TV",
     html: wrap(
       `Welcome, ${displayName}`,
       `<p>Your account is live. Start watching live channels, VOD, and more.</p>`
     ),
-    text: `Welcome to Apex, ${displayName}. Your account is live.`,
+    text: `Welcome to Influence TV, ${displayName}. Your account is live.`,
   };
 }
 
 export function verificationEmail(displayName: string, verifyUrl: string) {
   return {
-    subject: "Verify your Apex email",
+    subject: "Verify your Influence TV email",
     html: wrap(
       `Confirm your email, ${displayName}`,
       `<p>Click to verify your account:</p>
        <p><a href="${verifyUrl}" style="color:#FF2D2D">${verifyUrl}</a></p>
        <p style="color:rgba(255,255,255,0.52)">Link expires in 24 hours.</p>`
     ),
-    text: `Verify your Apex email: ${verifyUrl} (expires in 24h)`,
+    text: `Verify your Influence TV email: ${verifyUrl} (expires in 24h)`,
   };
 }
 
 export function passwordResetEmail(displayName: string, resetUrl: string) {
   return {
-    subject: "Reset your Apex password",
+    subject: "Reset your Influence TV password",
     html: wrap(
       `Password reset`,
       `<p>Hi ${displayName}, reset your password:</p>
        <p><a href="${resetUrl}" style="color:#FF2D2D">${resetUrl}</a></p>
        <p style="color:rgba(255,255,255,0.52)">Link expires in 1 hour. Ignore if you didn't request it.</p>`
     ),
-    text: `Reset your Apex password: ${resetUrl} (expires in 1h)`,
+    text: `Reset your Influence TV password: ${resetUrl} (expires in 1h)`,
   };
 }
 
 export function payoutConfirmedEmail(displayName: string, amount: string) {
   return {
-    subject: "Your Apex payout is on the way",
+    subject: "Your Influence TV payout is on the way",
     html: wrap(
       `Payout confirmed`,
       `<p>Hi ${displayName}, your payout of <strong>${amount}</strong> has been initiated.</p>`
     ),
-    text: `Apex payout of ${amount} initiated for ${displayName}.`,
+    text: `Influence TV payout of ${amount} initiated for ${displayName}.`,
   };
 }

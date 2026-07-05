@@ -5,7 +5,7 @@ import { COLORS } from "../lib/constants";
 export function SplashScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>APEX</Text>
+      <Text style={styles.logo}>INFLUENCE TV</Text>
       <ActivityIndicator color={COLORS.red} size="large" />
     </View>
   );
