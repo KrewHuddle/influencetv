@@ -18,8 +18,11 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: TypeScript check
-        run: pnpm -r exec tsc --noEmit
+      # Build first (turbo ^build order: @apex/shared → api → web). This also
+      # typechecks every package — a bare `tsc -r` would fail because
+      # @apex/shared has no dist yet.
+      - name: Build
+        run: pnpm build
       - name: Tests
         run: pnpm test
 
