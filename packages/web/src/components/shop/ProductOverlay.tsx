@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { useSocket } from "@/hooks/useSocket";
-import { Button } from "@/components/ui/Button";
 
 interface PinnedProduct {
   productId: string;
@@ -12,13 +11,18 @@ interface PinnedProduct {
   thumbnail?: string | null;
   compareAtPrice?: number | null;
   liveShopId?: string;
+  flashUnitsLeft?: number | null;
+  flashEndsAt?: string | null;
 }
 
 /** Listens for `product-pinned` in a channel room and slides a buy card up. */
 export function ProductOverlay({ channelId }: { channelId: string }) {
   const socket = useSocket();
   const [product, setProduct] = useState<PinnedProduct | null>(null);
+  const [shown, setShown] = useState(false);
+  const [secsLeft, setSecsLeft] = useState<number | null>(null);
 
+  // socket wiring
   useEffect(() => {
     if (!socket) return;
     socket.emit("join-channel", channelId);
@@ -33,28 +37,76 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
     };
   }, [socket, channelId]);
 
+  // slide-in + 30s auto-dismiss on each new product
+  useEffect(() => {
+    if (!product) {
+      setShown(false);
+      return;
+    }
+    const raf = requestAnimationFrame(() => setShown(true));
+    const dismiss = setTimeout(() => setProduct(null), 30_000);
+    // flash countdown
+    if (product.flashEndsAt) {
+      const end = new Date(product.flashEndsAt).getTime();
+      setSecsLeft(Math.max(0, Math.round((end - Date.now()) / 1000)));
+    } else {
+      setSecsLeft(null);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(dismiss);
+    };
+  }, [product]);
+
+  useEffect(() => {
+    if (secsLeft == null || secsLeft <= 0) return;
+    const t = setInterval(() => setSecsLeft((v) => (v == null || v <= 1 ? 0 : v - 1)), 1000);
+    return () => clearInterval(t);
+  }, [secsLeft]);
+
   if (!product) return null;
+  const isFlash = product.flashUnitsLeft != null || product.flashEndsAt != null;
 
   return (
-    <div className="absolute bottom-4 left-1/2 z-20 flex w-[90%] max-w-md -translate-x-1/2 items-center gap-3 rounded-xl border border-apex bg-apex-gray-900/95 p-3 shadow-2xl">
+    <div
+      className="absolute bottom-0 left-1/2 z-20 flex w-4/5 -translate-x-1/2 items-center gap-3 p-3"
+      style={{
+        background: "#111",
+        borderTop: "2px solid #D946EF",
+        transform: `translate(-50%, ${shown ? "0" : "100%"})`,
+        transition: "transform 200ms ease-out",
+      }}
+    >
       {product.thumbnail && (
         <Image
           src={product.thumbnail}
           alt={product.title}
-          width={56}
-          height={56}
-          className="rounded-md object-cover"
+          width={60}
+          height={60}
+          className="object-cover"
         />
       )}
       <div className="flex-1">
-        <p className="line-clamp-1 text-sm font-medium">{product.title}</p>
-        <p className="text-sm text-apex-red">${(product.price / 100).toFixed(2)}</p>
+        <p className="line-clamp-1 text-sm font-bold text-itv-text">{product.title}</p>
+        <p className="text-sm font-bold text-itv-magenta">${(product.price / 100).toFixed(2)}</p>
+        {isFlash && (
+          <p className="mt-0.5 flex items-center gap-2 text-[11px] font-bold text-itv-magenta">
+            {secsLeft != null && (
+              <span className="font-mono">
+                {Math.floor(secsLeft / 60)}:{String(secsLeft % 60).padStart(2, "0")}
+              </span>
+            )}
+            {product.flashUnitsLeft != null && <span>{product.flashUnitsLeft} units left</span>}
+          </p>
+        )}
       </div>
-      <Button className="px-3 py-2 text-xs">Buy Now</Button>
+      <button className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110">
+        Buy Now
+      </button>
       <button
         aria-label="Dismiss"
         onClick={() => setProduct(null)}
-        className="text-[color:var(--text-muted)] hover:text-apex-white"
+        className="text-white/40 hover:text-itv-white"
       >
         <X size={16} />
       </button>
