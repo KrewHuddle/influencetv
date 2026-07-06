@@ -1,15 +1,55 @@
 import { Router, type Router as ExpressRouter } from "express";
+import jwt from "jsonwebtoken";
 import { query } from "../config/database";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ok } from "../utils/response";
 import { badRequest, notFound } from "../middleware/errorHandler";
+import { env } from "../config/env";
 import { adDecisionEngine } from "../services/AdDecisionEngine";
+import type { JwtAccessPayload } from "../types";
 
 const router: ExpressRouter = Router();
 
-// All ad-ops routes require an operator role.
+// ─────────────────── PUBLIC: VOD ad serving (before the operator gate) ───────
+// GET /api/ads/vod?videoId= — returns pre-roll (+ one mid-roll) for the player.
+// Premium/Ultra viewers are ad-free; anonymous/free viewers get ads. Serving
+// records the impression (VOD = 1 per play).
+router.get(
+  "/vod",
+  asyncHandler(async (req, res) => {
+    const videoId = (req.query.videoId as string) ?? null;
+
+    // Optional auth: if a valid token says premium/ultra, serve no ads.
+    const header = req.headers.authorization;
+    if (header?.startsWith("Bearer ")) {
+      try {
+        const payload = jwt.verify(header.slice(7), env.JWT_ACCESS_SECRET) as JwtAccessPayload;
+        if (payload.plan === "premium" || payload.plan === "ultra") {
+          ok(res, { ads: [], preroll: null, midroll: null });
+          return;
+        }
+      } catch {
+        /* invalid token → treat as free viewer */
+      }
+    }
+
+    const selections = await adDecisionEngine.selectAdsForBreak(60);
+    const preroll = selections[0] ?? null;
+    const midroll = selections[1] ?? null;
+    const served = [preroll, midroll].filter(Boolean) as NonNullable<typeof preroll>[];
+    if (served.length > 0) {
+      await adDecisionEngine.recordImpressions(served, 1, "vod", videoId);
+    }
+    ok(res, {
+      preroll: preroll && { creativeVideoId: preroll.creativeVideoId, hlsUrl: preroll.hlsUrl, durationSeconds: preroll.durationSeconds, advertiserName: preroll.advertiserName },
+      midroll: midroll && { creativeVideoId: midroll.creativeVideoId, hlsUrl: midroll.hlsUrl, durationSeconds: midroll.durationSeconds, advertiserName: midroll.advertiserName },
+    });
+  })
+);
+
+// ─────────────────── operator-gated routes below ───────
 router.use(authenticate, requireRole("channel_manager", "super_admin"));
 
 // ─────────────────────── campaigns ───────────────────────

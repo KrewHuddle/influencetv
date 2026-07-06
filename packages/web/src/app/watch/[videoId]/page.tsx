@@ -35,7 +35,7 @@ export default function WatchPage({
       {isLoading ? (
         <Skeleton className="aspect-video w-full" />
       ) : video?.hls_url ? (
-        <VideoPlayer hlsUrl={video.hls_url} posterUrl={video.thumbnail_url ?? undefined} autoPlay={false} />
+        <VideoPlayer hlsUrl={video.hls_url} posterUrl={video.thumbnail_url ?? undefined} autoPlay={false} vodVideoId={video.id} />
       ) : (
         <div className="grid aspect-video place-items-center rounded-lg border border-apex bg-apex-gray-900 text-sm text-[color:var(--text-muted)]">
           Video unavailable

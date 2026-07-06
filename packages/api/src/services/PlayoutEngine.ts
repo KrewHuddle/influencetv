@@ -7,6 +7,7 @@ import { redisClient } from "../config/redis";
 import { buckets } from "../config/storage";
 import { downloadToFile } from "../utils/s3";
 import { getIo, rooms } from "../sockets";
+import { adDecisionEngine } from "./AdDecisionEngine";
 
 const VOD_CACHE = "/tmp/apex-vod";
 const CACHE_LIMIT_BYTES = 20 * 1024 * 1024 * 1024; // 20GB
@@ -25,6 +26,8 @@ interface ScheduleItem {
   hls_url: string | null;
   thumbnail_url: string | null;
   slug: string;
+  is_ad_break?: boolean;
+  ad_pod_id?: string | null;
 }
 
 /** Drives one channel's continuous playout to rtmp://localhost/vod/{slug}. */
@@ -76,7 +79,11 @@ export class PlayoutEngine {
       try {
         const item = await this.currentScheduleItem();
         if (item) {
-          await this.playItem(item);
+          if (item.is_ad_break) {
+            await this.playAdBreak(item);
+          } else {
+            await this.playItem(item);
+          }
         } else {
           // Gap: fill if the next item is far enough out.
           const next = await this.nextScheduleItem();
@@ -103,6 +110,7 @@ export class PlayoutEngine {
   private async currentScheduleItem(): Promise<ScheduleItem | null> {
     const { rows } = await query<ScheduleItem>(
       `SELECT s.id, s.video_id, s.title, s.start_time, s.end_time,
+              s.is_ad_break, s.ad_pod_id,
               v.s3_original_key, v.hls_url, v.thumbnail_url, c.slug
        FROM schedule s
        JOIN channels c ON c.id = s.channel_id
@@ -153,16 +161,61 @@ export class PlayoutEngine {
       : Math.max(0, Math.floor((Date.now() - new Date(item.start_time).getTime()) / 1000));
 
     await this.broadcastNowPlaying(item, seek);
+    await this.streamFile(localPath, seek, new Date(item.end_time).getTime(), item.id);
+  }
 
-    await new Promise<void>((resolve) => {
+  /**
+   * Play a scheduled ad break: fill its duration with creatives chosen by the
+   * ad decision engine, count impressions × concurrent viewers, and fall back
+   * to filler (never dead air) when no ad is eligible. Each creative is a fresh
+   * ffmpeg push, so nginx-rtmp emits an HLS discontinuity at the boundary.
+   * (Frame-accurate SCTE-35 splicing is a later production upgrade.)
+   */
+  private async playAdBreak(item: ScheduleItem): Promise<void> {
+    const endMs = new Date(item.end_time).getTime();
+    const target = Math.max(1, Math.floor((endMs - Date.now()) / 1000));
+    const selections = await adDecisionEngine.selectAdsForBreak(target);
+
+    if (selections.length === 0) {
+      // No eligible ad — cover the break with filler rather than dead air.
+      const filler = await this.pickFiller();
+      if (filler?.video_id && filler.s3_original_key) {
+        const p = await this.downloadVOD(filler.video_id, filler.s3_original_key);
+        await this.streamFile(p, 0, endMs, item.id);
+      } else {
+        await sleep(Math.min(2000, Math.max(0, endMs - Date.now())));
+      }
+      return;
+    }
+
+    // Impression = one per concurrent viewer, counted once as the break starts.
+    const viewers = await this.currentViewerCount();
+    await adDecisionEngine.recordImpressions(selections, viewers, "linear", this.channelId);
+    await this.broadcastAdBreak(endMs);
+
+    for (const sel of selections) {
+      if (!this.isRunning || Date.now() >= endMs) break;
+      if (!sel.s3OriginalKey) continue;
+      const p = await this.downloadVOD(sel.creativeVideoId, sel.s3OriginalKey);
+      await this.streamFile(p, 0, endMs, item.id);
+    }
+  }
+
+  /** Spawn ffmpeg to push a local file to the channel's RTMP target, resolving
+   *  when it closes or the scheduled end_time passes. */
+  private streamFile(
+    localPath: string,
+    seek: number,
+    endMs: number,
+    itemId: string
+  ): Promise<void> {
+    return new Promise<void>((resolve) => {
       const proc = spawn("ffmpeg", this.buildFFmpegArgs(localPath, seek), {
         stdio: ["ignore", "ignore", "pipe"],
       });
       this.currentProcess = proc;
-      this.currentItemId = item.id;
+      this.currentItemId = itemId;
 
-      // Advance when the scheduled end_time passes.
-      const endMs = new Date(item.end_time).getTime();
       const watchdog = setInterval(() => {
         if (!this.isRunning || Date.now() >= endMs) {
           clearInterval(watchdog);
@@ -181,6 +234,31 @@ export class PlayoutEngine {
         resolve();
       });
     });
+  }
+
+  private async currentViewerCount(): Promise<number> {
+    try {
+      const { rows } = await query<{ viewer_count: number }>(
+        "SELECT viewer_count FROM channels WHERE id = $1",
+        [this.channelId]
+      );
+      return rows[0]?.viewer_count ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private async broadcastAdBreak(endMs: number): Promise<void> {
+    const payload = {
+      event: "ad-break",
+      title: "Advertisement",
+      startTime: new Date().toISOString(),
+      endTime: new Date(endMs).toISOString(),
+    };
+    await redisClient
+      .set(`nowplaying:${this.channelId}`, JSON.stringify({ ...payload, adBreak: true }), "EX", NOWPLAYING_TTL)
+      .catch(() => undefined);
+    this.safeEmit(rooms.channel(this.channelId), "ad-break", payload);
   }
 
   private buildFFmpegArgs(localPath: string, seekOffset: number): string[] {
@@ -219,7 +297,10 @@ export class PlayoutEngine {
   // ── VOD cache with 20GB LRU eviction ──
   private async downloadVOD(videoId: string, s3Key: string): Promise<string> {
     await mkdir(VOD_CACHE, { recursive: true });
-    const dest = join(VOD_CACHE, `${videoId}.mp4`);
+    // videoId is a DB UUID; strip anything but hex/dash so the cache path can
+    // never escape VOD_CACHE (defence-in-depth against path traversal).
+    const safeId = videoId.replace(/[^a-fA-F0-9-]/g, "");
+    const dest = join(VOD_CACHE, `${safeId}.mp4`);
     if (existsSync(dest)) return dest;
     await this.evictIfNeeded();
     await downloadToFile(buckets.uploads, s3Key, dest);
