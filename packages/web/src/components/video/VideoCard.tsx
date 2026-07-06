@@ -1,6 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Play } from "lucide-react";
 import { formatCount, formatDuration } from "@/lib/constants";
 
 export interface VideoSummary {
@@ -19,21 +17,15 @@ export function VideoCard({ video }: { video: VideoSummary }) {
       className="group block w-full"
       aria-label={video.title}
     >
-      <div className="relative aspect-video overflow-hidden rounded-lg bg-apex-gray-800">
-        {video.thumbnail_url ? (
-          <Image
-            src={video.thumbnail_url}
-            alt={video.title}
-            fill
-            sizes="(max-width:768px) 50vw, 300px"
-            className="object-cover transition-transform group-hover:scale-105"
-          />
-        ) : (
-          <div className="h-full w-full bg-apex-gray-800" />
-        )}
-        <div className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition-opacity group-hover:bg-black/30 group-hover:opacity-100">
-          <Play className="text-white" />
-        </div>
+      <div className="relative aspect-video overflow-hidden rounded-[4px] bg-apex-gray-800">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={video.thumbnail_url || "/placeholder.svg"}
+          alt={video.title}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
         {video.duration_seconds ? (
           <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-[11px]">
             {formatDuration(video.duration_seconds)}

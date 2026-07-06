@@ -1,14 +1,17 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
-export const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3000";
+// Empty default = same-origin: browser calls /api/... on the current host.
+// In prod the web app and API share an origin (influencetvnetwork.com), so no
+// hardcoded host is needed. For local dev, set NEXT_PUBLIC_API_URL in .env.local
+// (e.g. http://localhost:3000). See .env.example.
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+export const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "";
 export const CDN_URL =
   process.env.NEXT_PUBLIC_CLOUDFRONT_URL ?? "https://cdn.influencetvnetwork.com";
 
 export const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/live", label: "Live TV" },
-  { href: "/browse", label: "Training" },
-  { href: "/browse", label: "News" },
+  { href: "/training", label: "Training" },
+  { href: "/news", label: "News" },
   { href: "/shop", label: "Shop" },
   { href: "/community", label: "Community" },
 ] as const;
