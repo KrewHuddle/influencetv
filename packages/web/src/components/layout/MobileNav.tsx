@@ -22,7 +22,7 @@ export function MobileNav() {
             key={href}
             href={href}
             className={`flex flex-col items-center gap-1 text-[9px] uppercase tracking-[0.5px] ${
-              active ? "text-itv-magenta" : "text-white/[0.28]"
+              active ? "text-itv-magenta" : "text-white/[0.55]"
             }`}
           >
             <Icon size={19} />

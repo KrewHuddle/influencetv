@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Menu, X } from "lucide-react";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { NAV_LINKS } from "@/lib/constants";
@@ -10,12 +10,24 @@ import { useAuth } from "@/hooks/useAuth";
 export function Header() {
   const { user, logout } = useAuth();
   const path = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const isFree = !user || user.plan === "free";
   const initial = (user?.displayName ?? user?.email ?? "?")[0]?.toUpperCase();
 
   const isActive = (href: string) =>
     href === "/" ? path === "/" : path.startsWith(href);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    setMenuOpen(false);
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+  };
 
   return (
     <header className="sticky top-0 z-40 h-[52px] border-b border-itv-border bg-itv-bg">
@@ -39,7 +51,7 @@ export function Header() {
                 className={`flex items-center border-b-2 text-[12px] font-semibold transition-colors ${
                   active
                     ? "border-itv-magenta text-itv-white"
-                    : "border-transparent text-white/45 hover:text-white/80"
+                    : "border-transparent text-white/65 hover:text-itv-white"
                 }`}
               >
                 {l.label}
@@ -49,19 +61,34 @@ export function Header() {
         </nav>
 
         {/* right cluster */}
-        <div className="ml-auto flex items-center gap-3 md:ml-0">
-          <Link
-            href="/browse"
-            aria-label="Search"
-            className="text-white/60 hover:text-itv-white"
-          >
-            <Search size={17} />
-          </Link>
+        <div className="ml-auto flex items-center gap-3">
+          {/* search: icon toggles an inline input */}
+          {searchOpen ? (
+            <form onSubmit={submitSearch} className="flex items-center">
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onBlur={() => !query && setSearchOpen(false)}
+                placeholder="Search shows, creators…"
+                aria-label="Search"
+                className="w-40 bg-itv-surface2 px-3 py-1.5 text-[12px] outline-none placeholder:text-white/40 focus:ring-1 focus:ring-itv-magenta sm:w-56"
+              />
+            </form>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label="Open search"
+              className="text-white/65 hover:text-itv-white"
+            >
+              <Search size={17} />
+            </button>
+          )}
 
           {isFree && (
             <Link
               href="/plans"
-              className="rounded-[2px] bg-itv-magenta px-3 py-[5px] text-[11px] font-bold text-white hover:brightness-110"
+              className="hidden rounded-[2px] bg-itv-magenta px-3 py-[5px] text-[11px] font-bold text-white hover:brightness-110 sm:inline-block"
             >
               Go Ultra
             </Link>
@@ -116,7 +143,8 @@ export function Header() {
 
           {/* hamburger (mobile) */}
           <button
-            aria-label="Menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
             className="text-white/70 md:hidden"
           >
@@ -125,21 +153,39 @@ export function Header() {
         </div>
       </div>
 
-      {/* mobile dropdown menu */}
+      {/* mobile menu — full-screen opaque overlay so nothing bleeds through */}
       {menuOpen && (
-        <nav className="border-t border-itv-border bg-itv-bg px-4 py-2 md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 top-[52px] z-50 flex flex-col gap-1 bg-itv-bg px-4 py-4 md:hidden">
+          <form onSubmit={submitSearch} className="mb-3">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search shows, creators…"
+              aria-label="Search"
+              className="w-full bg-itv-surface2 px-3 py-2 text-sm outline-none placeholder:text-white/40 focus:ring-1 focus:ring-itv-magenta"
+            />
+          </form>
           {NAV_LINKS.map((l) => (
             <Link
               key={l.label}
               href={l.href}
               onClick={() => setMenuOpen(false)}
-              className={`block py-2 text-[13px] font-semibold ${
-                isActive(l.href) ? "text-itv-magenta" : "text-white/60"
+              className={`py-2 text-[15px] font-semibold ${
+                isActive(l.href) ? "text-itv-magenta" : "text-white/70"
               }`}
             >
               {l.label}
             </Link>
           ))}
+          {isFree && (
+            <Link
+              href="/plans"
+              onClick={() => setMenuOpen(false)}
+              className="mt-3 w-full bg-itv-magenta px-3 py-2 text-center text-[13px] font-bold text-white"
+            >
+              Go Ultra
+            </Link>
+          )}
         </nav>
       )}
     </header>

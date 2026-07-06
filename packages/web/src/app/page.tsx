@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Radio, Play, Zap } from "lucide-react";
+import { Play, Zap } from "lucide-react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 
@@ -38,16 +38,44 @@ const MOCK_LIVE: ChannelSummary[] = [
   { id: "m4", name: "Culture 24", slug: "culture", number: 2, current_show: "Open Mic", viewer_count: 2210 },
   { id: "m5", name: "The Blend", slug: "blend", number: 19, current_show: "Morning Blend", viewer_count: 1180 },
 ];
-const vids = (n: number, badge?: string, patron?: boolean): VideoSummary[] =>
-  Array.from({ length: n }, (_, i) => ({
-    id: `v${badge ?? "x"}${i}`,
-    title: ["Backstage: Making the Finale", "Live Shopping Recap", "Creator Spotlight: Nova", "Behind the Desk", "Culture Report", "The Come Up"][i % 6],
-    creator_name: ["Ava Reyes", "Influence TV", "Nova King", "Influence News", "D. Cole", "Mars"][i % 6],
-    duration_seconds: 300 + i * 137,
-    view_count: 12000 + i * 8400,
+const mkRow = (
+  titles: string[],
+  creators: string[],
+  badge?: (i: number) => string,
+  patron = false
+): VideoSummary[] =>
+  titles.map((t, i) => ({
+    id: `${t}-${i}`.replace(/[^a-z0-9]+/gi, "").slice(0, 28).toLowerCase(),
+    title: t,
+    creator_name: creators[i % creators.length],
+    duration_seconds: 240 + i * 173 + t.length * 7,
+    view_count: 8200 + i * 7400 + t.length * 311,
     is_patron: patron && i % 3 === 0,
-    badge,
+    badge: badge?.(i),
   }));
+
+// Distinct content per section (fixes duplicate-placeholder bug).
+const ROW_CONTINUE = mkRow(
+  ["The Last Broadcast — Ep 4", "Midnight Cypher", "Studio Sessions: Nova", "The Come Up — Ep 2", "Culture Desk Live", "Open Mic Finals"],
+  ["Influence Drama", "Mars", "Nova King", "D. Cole", "Influence TV", "Ava Reyes"],
+  (i) => `${8 + i * 3} min left`
+);
+const ROW_FORYOU = mkRow(
+  ["Backstage: Making the Finale", "Live Shopping Recap", "Neighborhood Heroes", "Sound & Vision", "The Blend: Morning Set", "Creators Roundtable"],
+  ["Ava Reyes", "Influence TV", "Jhene B", "Nova King", "The Blend", "Influence TV"],
+  undefined,
+  true
+);
+const ROW_TRAINING = mkRow(
+  ["Camera Basics", "Editing 101", "Growth Playbook", "On-Camera Presence", "Monetize Your Channel", "Landing Brand Deals"],
+  ["Influence Academy"],
+  (i) => `S1 · ${8 + i} EP`
+);
+const ROW_NEWS = mkRow(
+  ["Evening Desk: Top Stories", "Market Watch", "City Hall Recap", "The Weekend Brief", "Culture Report", "Late Brief"],
+  ["Influence News"],
+  (i) => `${2 + i}h ago`
+);
 
 /* ------------------------------------------------------------------ format */
 const kfmt = (n?: number | null) =>
@@ -83,13 +111,13 @@ function Pcard({ c }: { c: ChannelSummary }) {
           watching ? "border-itv-magenta" : "border-white/[0.06]"
         }`}
       >
-        {c.thumbnail_url ? (
-          <Image src={c.thumbnail_url} alt={c.name} fill sizes="108px" className="object-cover" />
-        ) : (
-          <div className="grid h-full w-full place-items-center">
-            <Radio size={22} className="text-white/[0.07]" />
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={c.thumbnail_url || "/placeholder.svg"}
+          alt={c.name}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
         <span className="absolute left-2 top-2 h-1.5 w-1.5 rounded-full bg-itv-magenta shadow-[0_0_0_2px_rgba(217,70,239,0.3)]" />
         {c.live_shop_active && (
           <span className="absolute right-2 top-2 bg-white px-[5px] py-[2px] text-[7px] font-black text-itv-bg">
@@ -117,13 +145,13 @@ function Tcard({ v }: { v: VideoSummary }) {
   return (
     <Link href={`/watch/${v.id}`} className="w-[148px] shrink-0 cursor-pointer">
       <div className="relative h-[84px] w-[148px] overflow-hidden bg-itv-surface3">
-        {v.thumbnail_url ? (
-          <Image src={v.thumbnail_url} alt={v.title} fill sizes="148px" className="object-cover" />
-        ) : (
-          <div className="grid h-full w-full place-items-center">
-            <Play size={24} className="text-white/[0.08]" />
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={v.thumbnail_url || "/placeholder.svg"}
+          alt={v.title}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
         {v.is_patron && (
           <span className="absolute right-1.5 top-1.5 bg-itv-magenta px-1 py-[2px] text-[7px] font-extrabold text-white">
             PATRON
@@ -165,12 +193,8 @@ export default function HomePage() {
 
   const liveReal = (chData?.channels ?? []).filter((c) => c.status === "active");
   const live = liveReal.length ? liveReal : MOCK_LIVE;
-  const forYou = fyData?.items?.length ? fyData.items : vids(8);
+  const forYou = fyData?.items?.length ? fyData.items : ROW_FORYOU;
   const featured = live[0];
-
-  const cont = vids(6).map((v, i) => ({ ...v, badge: `${8 + i * 3} min left` }));
-  const training = vids(6).map((v, i) => ({ ...v, badge: `S1 · ${8 + i} EP`, title: ["Camera Basics", "Editing 101", "Growth Playbook", "On-Camera Presence", "Monetize", "Brand Deals"][i % 6] }));
-  const news = vids(6).map((v) => ({ ...v, creator_name: "Influence News" }));
 
   const leaders = [
     { rank: "Legend", user: "@marsonair", pts: "48,210 pts" },
@@ -263,10 +287,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      <Row label="Continue Watching">{cont.map((v) => <Tcard key={v.id} v={v} />)}</Row>
+      <Row label="Continue Watching">{ROW_CONTINUE.map((v) => <Tcard key={v.id} v={v} />)}</Row>
       <Row label="For You">{forYou.map((v) => <Tcard key={v.id} v={v} />)}</Row>
-      <Row label="Training Series">{training.map((v) => <Tcard key={v.id} v={v} />)}</Row>
-      <Row label="Breaking News" href="/live">{news.map((v) => <Tcard key={v.id} v={v} />)}</Row>
+      <Row label="Training Series" href="/training">{ROW_TRAINING.map((v) => <Tcard key={v.id} v={v} />)}</Row>
+      <Row label="Breaking News" href="/news">{ROW_NEWS.map((v) => <Tcard key={v.id} v={v} />)}</Row>
 
       {/* COMMUNITY LEADERBOARD */}
       <div className="mx-5 mt-5 border border-white/[0.07]">

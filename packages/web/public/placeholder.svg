@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Influence TV">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a0a1a"/>
+      <stop offset="1" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.72" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#D946EF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#D946EF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="320" height="180" fill="url(#g)"/>
+  <rect width="320" height="180" fill="url(#glow)"/>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" text-anchor="middle">
+    <text x="160" y="94" font-size="20" font-weight="900" letter-spacing="3" fill="#F0F0F0">INFLUENCE<tspan fill="#D946EF">TV</tspan></text>
+  </g>
+</svg>
