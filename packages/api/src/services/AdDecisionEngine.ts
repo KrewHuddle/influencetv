@@ -5,6 +5,7 @@ export interface AdSelection {
   advertiserName: string | null;
   creativeVideoId: string;
   hlsUrl: string | null;
+  s3OriginalKey: string | null;
   durationSeconds: number;
   cpmCents: number;
 }
@@ -29,9 +30,10 @@ class AdDecisionEngine {
       cpm_cents: number;
       duration_seconds: number | null;
       hls_url: string | null;
+      s3_original_key: string | null;
     }>(
       `SELECT c.id, c.advertiser_name, c.video_id, c.cpm_cents,
-              v.duration_seconds, v.hls_url
+              v.duration_seconds, v.hls_url, v.s3_original_key
        FROM ad_campaigns c
        JOIN videos v ON v.id = c.video_id AND v.status = 'ready'
        WHERE c.is_active
@@ -52,6 +54,7 @@ class AdDecisionEngine {
         advertiserName: r.advertiser_name,
         creativeVideoId: r.video_id,
         hlsUrl: r.hls_url,
+        s3OriginalKey: r.s3_original_key,
         durationSeconds: dur,
         cpmCents: r.cpm_cents,
       });

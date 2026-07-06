@@ -14,7 +14,13 @@ const SECTIONS = [
     ],
   },
   { label: "Audience", items: [{ href: "/admin/users", label: "Users" }] },
-  { label: "Money", items: [{ href: "/admin/revenue", label: "Revenue" }] },
+  {
+    label: "Money",
+    items: [
+      { href: "/admin/revenue", label: "Revenue" },
+      { href: "/admin/ads", label: "Ad Ops" },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
