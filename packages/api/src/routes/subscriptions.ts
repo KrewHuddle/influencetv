@@ -1,6 +1,6 @@
 import { Router, type Router as ExpressRouter } from "express";
 import { query } from "../config/database";
-import { stripe, PLAN_PRICE } from "../config/stripe";
+import { stripe, stripeEnabled, PLAN_PRICE } from "../config/stripe";
 import { env } from "../config/env";
 import { authenticate } from "../middleware/auth";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -9,6 +9,22 @@ import { badRequest } from "../middleware/errorHandler";
 import type { AuthedRequest } from "../types";
 
 const router: ExpressRouter = Router();
+
+// GET /api/subscriptions/config — public ops check: is billing wired up?
+// Returns booleans only (no keys), so the frontend/ops can verify config.
+router.get(
+  "/config",
+  asyncHandler(async (_req, res) => {
+    ok(res, {
+      stripeEnabled,
+      plansConfigured: {
+        premium: Boolean(PLAN_PRICE.premium),
+        ultra: Boolean(PLAN_PRICE.ultra),
+      },
+      webhookConfigured: Boolean(env.STRIPE_WEBHOOK_SECRET),
+    });
+  })
+);
 
 /** Get or create the Stripe customer for a user, persisting the id. */
 async function getOrCreateCustomer(
@@ -37,6 +53,7 @@ router.post(
   "/create-checkout",
   authenticate,
   asyncHandler(async (req: AuthedRequest, res) => {
+    if (!stripeEnabled) throw badRequest("Payments are not configured", "STRIPE_DISABLED");
     const plan = (req.body?.plan as string) ?? "premium";
     const priceId = PLAN_PRICE[plan];
     if (!priceId) throw badRequest("Unknown or unconfigured plan", "BAD_PLAN");
@@ -61,6 +78,7 @@ router.get(
   "/portal",
   authenticate,
   asyncHandler(async (req: AuthedRequest, res) => {
+    if (!stripeEnabled) throw badRequest("Payments are not configured", "STRIPE_DISABLED");
     const customerId = await getOrCreateCustomer(req.user!.id, req.user!.email);
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

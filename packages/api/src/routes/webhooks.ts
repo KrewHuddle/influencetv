@@ -277,7 +277,7 @@ router.post(
       await audit(`stripe.${event.type}`, event.id, { type: event.type });
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error(`Webhook ${event.type} failed:`, (err as Error).message);
+      console.error("Webhook handler failed for %s: %s", event.type, (err as Error).message);
       // Let Stripe retry — release the idempotency key.
       await redisClient.del(`stripe:evt:${event.id}`);
       res.status(500).send("handler error");
