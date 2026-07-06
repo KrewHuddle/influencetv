@@ -33,15 +33,21 @@ jobs:
     steps:
       - name: Deploy over SSH (DigitalOcean droplet)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          # NEXT_PUBLIC_* vars are inlined at web BUILD time — forward the
+          # Stripe publishable key from a GitHub secret into the remote build.
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_STRIPE_PK }}
         with:
           host: ${{ secrets.DO_API_DROPLET_IP }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
           script: |
             cd /root/apex
             git pull origin main
             pnpm install --frozen-lockfile
             pnpm --filter @apex/api build
+            export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
             pnpm --filter @apex/web build
             pm2 restart apex-api || pm2 start packages/api/dist/index.js --name apex-api
             pm2 restart apex-web || pm2 start "pnpm --filter @apex/web start" --name apex-web
