@@ -27,6 +27,7 @@ import adminRoutes from "./routes/admin";
 import liveShopRoutes from "./routes/liveShops";
 import channelRoutes from "./routes/channels";
 import browseRoutes from "./routes/browse";
+import adRoutes from "./routes/ads";
 
 async function bootstrap(): Promise<void> {
   await assertDbConnection();
@@ -79,6 +80,7 @@ async function bootstrap(): Promise<void> {
   app.use("/api/admin", adminRoutes);
   app.use("/api/channels", channelRoutes);
   app.use("/api/browse", browseRoutes);
+  app.use("/api/ads", adRoutes);
   // liveShops + schedule use full /api/* paths (live-shops, channels/:id/schedule,
   // channels/:id/now-playing, flash-sales). Mounted AFTER /api/channels so the
   // list/guide/slug routes win; the :id/* sub-paths fall through to here.
