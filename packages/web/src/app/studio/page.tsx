@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import useSWR from "swr";
-import { Upload, Radio, PenSquare, Package } from "lucide-react";
+import { Upload, Radio, PenSquare, Package, GraduationCap } from "lucide-react";
 import { swrFetcher } from "@/lib/api";
 import { Badge } from "@/components/ui/Badge";
 
@@ -31,6 +31,7 @@ export default function StudioDashboard() {
     { href: "/live", label: "Go Live", Icon: Radio },
     { href: "/studio/community", label: "Post Update", Icon: PenSquare },
     { href: "/studio/shop", label: "Add Product", Icon: Package },
+    { href: "/studio/courses", label: "Courses", Icon: GraduationCap },
   ];
 
   return (
