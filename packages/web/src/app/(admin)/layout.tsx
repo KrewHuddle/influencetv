@@ -5,15 +5,29 @@ import { useAuth } from "@/hooks/useAuth";
 import { Spinner } from "@/components/ui/Spinner";
 
 const SECTIONS = [
-  { label: "Network", items: [{ href: "/admin", label: "Overview" }] },
+  {
+    label: "Network",
+    items: [
+      { href: "/admin", label: "Overview" },
+      { href: "/admin/audit", label: "Audit Log" },
+    ],
+  },
   {
     label: "Content",
     items: [
       { href: "/admin/content", label: "Content Library" },
+      { href: "/admin/products", label: "Products" },
       { href: "/admin/dmca", label: "DMCA" },
     ],
   },
-  { label: "Broadcast", items: [{ href: "/admin/playout", label: "Playout" }] },
+  {
+    label: "Broadcast",
+    items: [
+      { href: "/admin/playout", label: "Playout" },
+      { href: "/admin/channels", label: "Channels" },
+      { href: "/admin/schedule", label: "Programming" },
+    ],
+  },
   { label: "Audience", items: [{ href: "/admin/users", label: "Users" }] },
   {
     label: "Money",

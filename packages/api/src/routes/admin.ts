@@ -418,7 +418,7 @@ router.patch(
 router.get(
   "/revenue",
   asyncHandler(async (_req, res) => {
-    const [mrr, byStream, payouts] = await Promise.all([
+    const [mrr, byStream, payouts, adRev] = await Promise.all([
       query<{ mrr: string }>(
         `SELECT COALESCE(SUM(CASE WHEN plan='premium' THEN 1499 WHEN plan='ultra' THEN 2499 ELSE 0 END),0) AS mrr
          FROM subscriptions WHERE status='active'`
@@ -430,11 +430,16 @@ router.get(
       query<{ total: string }>(
         "SELECT COALESCE(SUM(amount_cents),0) AS total FROM payouts WHERE status IN ('processing','paid')"
       ),
+      query<{ total: string; impressions: string }>(
+        "SELECT COALESCE(SUM(revenue_cents),0) AS total, COALESCE(SUM(impressions),0) AS impressions FROM ad_impressions"
+      ),
     ]);
     ok(res, {
       mrrCents: Number(mrr.rows[0].mrr),
       byStream: byStream.rows,
       totalPayoutsCents: Number(payouts.rows[0].total),
+      adRevenueCents: Number(adRev.rows[0].total),
+      adImpressions: Number(adRev.rows[0].impressions),
     });
   })
 );
