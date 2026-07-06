@@ -4,7 +4,11 @@ import useSWR from "swr";
 import { api, swrFetcher } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+
+const ROLES = [
+  "viewer_free", "viewer_premium", "viewer_ultra", "creator",
+  "seller", "moderator", "channel_manager", "super_admin",
+];
 
 interface AdminUser {
   id: string;
@@ -27,6 +31,11 @@ export default function AdminUsersPage() {
     await api.post(`/api/admin/users/${id}/${active ? "suspend" : "unsuspend"}`, {
       reason: "admin action",
     });
+    void mutate();
+  };
+
+  const setRole = async (id: string, role: string) => {
+    await api.patch(`/api/admin/users/${id}`, { role });
     void mutate();
   };
 
@@ -53,7 +62,15 @@ export default function AdminUsersPage() {
               <tr key={u.id} className="border-t border-apex">
                 <td className="p-3">{u.display_name ?? "—"}</td>
                 <td className="p-3 text-[color:var(--text-secondary)]">{u.email}</td>
-                <td className="p-3"><Badge>{u.role}</Badge></td>
+                <td className="p-3">
+                  <select
+                    value={u.role}
+                    onChange={(e) => setRole(u.id, e.target.value)}
+                    className="border border-itv-border bg-itv-surface2 px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-itv-magenta"
+                  >
+                    {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </td>
                 <td className="p-3">{u.subscription_plan}</td>
                 <td className="p-3">
                   <span className={u.is_active ? "text-green-400" : "text-apex-red"}>
