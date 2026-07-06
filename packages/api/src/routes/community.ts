@@ -8,6 +8,7 @@ import { ok } from "../utils/response";
 import { badRequest, notFound } from "../middleware/errorHandler";
 import { parsePagination, paginate } from "../utils/pagination";
 import { awardPoints } from "../services/PointsEngine";
+import { moderateText } from "../services/textModeration";
 import type { AuthedRequest } from "../types";
 
 const router: ExpressRouter = Router();
@@ -137,6 +138,10 @@ router.post(
       timestampRef?: number;
     };
     if (!body?.trim()) throw badRequest("Body required");
+    {
+      const mod = moderateText(body);
+      if (!mod.ok) throw badRequest(mod.reason ?? "Content rejected", "CONTENT_REJECTED");
+    }
 
     const post = await transaction(async (c) => {
       const r = await c.query<{ id: string }>(
@@ -194,6 +199,10 @@ router.post(
   asyncHandler(async (req: AuthedRequest, res) => {
     const { body, parentId } = req.body as { body: string; parentId?: string };
     if (!body?.trim()) throw badRequest("Body required");
+    {
+      const mod = moderateText(body);
+      if (!mod.ok) throw badRequest(mod.reason ?? "Content rejected", "CONTENT_REJECTED");
+    }
     const comment = await transaction(async (c) => {
       const r = await c.query<{ id: string }>(
         `INSERT INTO comments (post_id, user_id, parent_id, body)

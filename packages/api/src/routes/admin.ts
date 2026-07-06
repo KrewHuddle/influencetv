@@ -12,8 +12,11 @@ import type { AuthedRequest } from "../types";
 
 const router: ExpressRouter = Router();
 
-// All admin routes require super_admin.
-router.use(authenticate, requireRole("super_admin"));
+// Admin console is staff-only (moderator / channel_manager / super_admin —
+// all rank >= moderator). Destructive, financial, and user/role operations are
+// further restricted to super_admin via `superOnly` on the relevant routes.
+router.use(authenticate, requireRole("moderator"));
+const superOnly = requireRole("super_admin");
 
 async function logAudit(req: AuthedRequest, action: string, targetType: string, targetId: string, data?: unknown): Promise<void> {
   await query(
@@ -88,6 +91,7 @@ router.get(
 
 router.post(
   "/channels",
+  superOnly,
   asyncHandler(async (req: AuthedRequest, res) => {
     const { name, slug, genre, description, requiresPremium } = req.body as {
       name: string; slug: string; genre?: string; description?: string; requiresPremium?: boolean;
@@ -125,6 +129,7 @@ router.patch(
 
 router.delete(
   "/channels/:id",
+  superOnly,
   asyncHandler(async (req: AuthedRequest, res) => {
     const r = await query("DELETE FROM channels WHERE id=$1", [req.params.id]);
     if (!r.rowCount) throw notFound("Channel not found");
@@ -191,6 +196,7 @@ router.get(
 // ─────────────────────── users ───────────────────────
 router.get(
   "/users",
+  superOnly,
   asyncHandler(async (req, res) => {
     const p = parsePagination(req.query);
     const search = (req.query.search as string) ?? "";
@@ -220,6 +226,7 @@ router.get(
 
 router.patch(
   "/users/:id",
+  superOnly,
   asyncHandler(async (req: AuthedRequest, res) => {
     const { role, plan } = req.body as { role?: string; plan?: string };
     const { rows } = await query(
@@ -237,6 +244,7 @@ router.patch(
 
 router.post(
   "/users/:id/suspend",
+  superOnly,
   asyncHandler(async (req: AuthedRequest, res) => {
     const { reason, until } = req.body as { reason?: string; until?: string };
     await query(
@@ -253,6 +261,7 @@ router.post(
 
 router.post(
   "/users/:id/unsuspend",
+  superOnly,
   asyncHandler(async (req: AuthedRequest, res) => {
     await query(
       "UPDATE users SET suspended_at=NULL, suspended_reason=NULL, suspended_until=NULL, is_active=true WHERE id=$1",
@@ -417,6 +426,7 @@ router.patch(
 // ─────────────────────── revenue ───────────────────────
 router.get(
   "/revenue",
+  superOnly,
   asyncHandler(async (_req, res) => {
     const [mrr, byStream, payouts, adRev, subsByPlan, gmv, churn] = await Promise.all([
       query<{ mrr: string }>(
@@ -453,6 +463,7 @@ router.get(
 // ─────────────────────── audit log ───────────────────────
 router.get(
   "/audit",
+  superOnly,
   asyncHandler(async (req, res) => {
     const p = parsePagination(req.query);
     const action = req.query.action as string | undefined;
