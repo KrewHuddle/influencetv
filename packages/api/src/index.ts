@@ -25,6 +25,8 @@ import videoRoutes from "./routes/videos";
 import watchPartyRoutes from "./routes/watchParties";
 import adminRoutes from "./routes/admin";
 import liveShopRoutes from "./routes/liveShops";
+import channelRoutes from "./routes/channels";
+import browseRoutes from "./routes/browse";
 
 async function bootstrap(): Promise<void> {
   await assertDbConnection();
@@ -71,10 +73,15 @@ async function bootstrap(): Promise<void> {
   app.use("/api/shop", shopRoutes);
   app.use("/api/patrons", patronRoutes);
   app.use("/api/community", communityRoutes);
+  app.use("/api/communities", communityRoutes); // web calls the plural form
   app.use("/api/videos", videoRoutes);
   app.use("/api/watch-parties", watchPartyRoutes);
   app.use("/api/admin", adminRoutes);
-  // liveShops + schedule use full /api/* paths (live-shops, channels, flash-sales).
+  app.use("/api/channels", channelRoutes);
+  app.use("/api/browse", browseRoutes);
+  // liveShops + schedule use full /api/* paths (live-shops, channels/:id/schedule,
+  // channels/:id/now-playing, flash-sales). Mounted AFTER /api/channels so the
+  // list/guide/slug routes win; the :id/* sub-paths fall through to here.
   app.use("/api", liveShopRoutes);
   app.use("/api", scheduleRoutes);
 

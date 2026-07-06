@@ -18,6 +18,19 @@ const SORTS: Record<string, string> = {
   top: "p.like_count DESC",
 };
 
+// GET /api/community  (also mounted at /api/communities) — list all communities.
+router.get(
+  "/",
+  asyncHandler(async (_req, res) => {
+    const { rows } = await query(
+      `SELECT id, name, description, banner_url, member_count, post_count
+       FROM communities
+       ORDER BY member_count DESC, created_at ASC`
+    );
+    ok(res, { communities: rows });
+  })
+);
+
 // GET /api/community/:communityId
 router.get(
   "/:communityId",
