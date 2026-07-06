@@ -418,7 +418,7 @@ router.patch(
 router.get(
   "/revenue",
   asyncHandler(async (_req, res) => {
-    const [mrr, byStream, payouts, adRev] = await Promise.all([
+    const [mrr, byStream, payouts, adRev, subsByPlan, gmv, churn] = await Promise.all([
       query<{ mrr: string }>(
         `SELECT COALESCE(SUM(CASE WHEN plan='premium' THEN 1499 WHEN plan='ultra' THEN 2499 ELSE 0 END),0) AS mrr
          FROM subscriptions WHERE status='active'`
@@ -433,6 +433,9 @@ router.get(
       query<{ total: string; impressions: string }>(
         "SELECT COALESCE(SUM(revenue_cents),0) AS total, COALESCE(SUM(impressions),0) AS impressions FROM ad_impressions"
       ),
+      query("SELECT plan, COUNT(*)::int AS count FROM subscriptions WHERE status='active' GROUP BY plan"),
+      query<{ total: string }>("SELECT COALESCE(SUM(subtotal_cents),0) AS total FROM orders WHERE status='paid'"),
+      query<{ n: string }>("SELECT COUNT(*)::int AS n FROM subscriptions WHERE status='cancelled' AND cancelled_at > NOW() - interval '30 days'"),
     ]);
     ok(res, {
       mrrCents: Number(mrr.rows[0].mrr),
@@ -440,6 +443,9 @@ router.get(
       totalPayoutsCents: Number(payouts.rows[0].total),
       adRevenueCents: Number(adRev.rows[0].total),
       adImpressions: Number(adRev.rows[0].impressions),
+      activeSubsByPlan: subsByPlan.rows,
+      gmvCents: Number(gmv.rows[0].total),
+      churn30: Number(churn.rows[0].n),
     });
   })
 );
