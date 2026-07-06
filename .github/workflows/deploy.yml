@@ -47,6 +47,8 @@ jobs:
             git pull origin main
             pnpm install --frozen-lockfile
             pnpm --filter @apex/api build
+            # Apply any new DB migrations (idempotent — tracked in _migrations).
+            pnpm --filter @apex/api db:migrate
             export NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
             pnpm --filter @apex/web build
             pm2 restart apex-api || pm2 start packages/api/dist/index.js --name apex-api
