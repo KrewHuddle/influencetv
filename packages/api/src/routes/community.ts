@@ -31,6 +31,24 @@ router.get(
   })
 );
 
+// GET /api/community/leaderboard?limit= — top members by points (home rail).
+router.get(
+  "/leaderboard",
+  asyncHandler(async (req, res) => {
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+    const { rows } = await query(
+      `SELECT up.user_id, up.total_points, up.level, up.level_name,
+              u.display_name, u.username, u.avatar_url
+       FROM user_points up
+       JOIN users u ON u.id = up.user_id
+       ORDER BY up.total_points DESC, up.updated_at ASC
+       LIMIT $1`,
+      [limit]
+    );
+    ok(res, { leaders: rows });
+  })
+);
+
 // GET /api/community/:communityId
 router.get(
   "/:communityId",
