@@ -44,7 +44,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (isLoading)
     return <div className="grid min-h-[60vh] place-items-center"><Spinner /></div>;
-  if (!user || user.role !== "super_admin")
+  const STAFF = ["moderator", "channel_manager", "super_admin"];
+  if (!user || !STAFF.includes(user.role))
     return (
       <div className="grid min-h-[60vh] place-items-center text-sm text-apex-red">
         Admin access required.
