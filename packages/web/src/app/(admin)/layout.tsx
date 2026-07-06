@@ -13,6 +13,7 @@ const SECTIONS = [
       { href: "/admin/dmca", label: "DMCA" },
     ],
   },
+  { label: "Broadcast", items: [{ href: "/admin/playout", label: "Playout" }] },
   { label: "Audience", items: [{ href: "/admin/users", label: "Users" }] },
   {
     label: "Money",

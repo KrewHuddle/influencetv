@@ -39,33 +39,47 @@ router.post(
   schedulerRoles,
   asyncHandler(async (req: AuthedRequest, res) => {
     const channelId = req.params.channelId;
-    const { videoId, startTime, endTime, title } = req.body as {
-      videoId: string;
+    const { videoId, startTime, endTime, title, isAdBreak, adPodId } = req.body as {
+      videoId?: string;
       startTime: string;
       endTime: string;
       title?: string;
+      isAdBreak?: boolean;
+      adPodId?: string;
     };
-    if (!videoId || !startTime || !endTime) {
-      throw badRequest("videoId, startTime, endTime required");
+    if (!startTime || !endTime) {
+      throw badRequest("startTime, endTime required");
+    }
+    if (!isAdBreak && !videoId) {
+      throw badRequest("videoId required (or set isAdBreak for an ad break)");
     }
     if (new Date(endTime) <= new Date(startTime)) {
       throw badRequest("endTime must be after startTime");
     }
 
-    const v = await query<{ status: string; title: string }>(
-      "SELECT status, title FROM videos WHERE id = $1",
-      [videoId]
-    );
-    if (!v.rows[0]) throw notFound("Video not found");
-    if (v.rows[0].status !== "ready") {
-      throw badRequest("Video is not ready to schedule", "VIDEO_NOT_READY");
+    // An ad break has no video (the playout engine fills it from ad campaigns).
+    let programTitle = title ?? "Ad Break";
+    if (videoId) {
+      const v = await query<{ status: string; title: string }>(
+        "SELECT status, title FROM videos WHERE id = $1",
+        [videoId]
+      );
+      if (!v.rows[0]) throw notFound("Video not found");
+      if (v.rows[0].status !== "ready") {
+        throw badRequest("Video is not ready to schedule", "VIDEO_NOT_READY");
+      }
+      programTitle = title ?? v.rows[0].title;
     }
 
     try {
       const { rows } = await query(
-        `INSERT INTO schedule (channel_id, video_id, title, start_time, end_time, created_by)
-         VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, start_time, end_time`,
-        [channelId, videoId, title ?? v.rows[0].title, startTime, endTime, req.user!.id]
+        `INSERT INTO schedule
+           (channel_id, video_id, title, start_time, end_time, is_ad_break, ad_pod_id, created_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, start_time, end_time, is_ad_break`,
+        [
+          channelId, videoId ?? null, programTitle, startTime, endTime,
+          isAdBreak ?? false, adPodId ?? null, req.user!.id,
+        ]
       );
       try {
         getIo().to(rooms.channel(channelId)).emit("schedule-updated", { channelId });

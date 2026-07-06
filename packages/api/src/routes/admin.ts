@@ -148,6 +148,46 @@ router.post(
   })
 );
 
+// Playout control plane: publish start/stop/restart to the playout process.
+router.post(
+  "/channels/:id/playout",
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const action = (req.body?.action as string) ?? "";
+    if (!["start", "stop", "restart"].includes(action)) {
+      throw badRequest("action must be start | stop | restart");
+    }
+    const ch = await query<{ slug: string }>("SELECT slug FROM channels WHERE id=$1", [req.params.id]);
+    if (!ch.rows[0]) throw notFound("Channel not found");
+    await redisClient.publish(
+      "apex:playout:control",
+      JSON.stringify({ action, channelId: req.params.id, slug: ch.rows[0].slug })
+    );
+    await logAudit(req, `channel.playout.${action}`, "channel", req.params.id);
+    ok(res, { success: true, action });
+  })
+);
+
+// GET /api/admin/playout/status — per-channel playout heartbeats (Redis).
+router.get(
+  "/playout/status",
+  asyncHandler(async (_req, res) => {
+    const keys = await redisClient.keys("playout:heartbeat:*");
+    const channels = await Promise.all(
+      keys.map(async (k) => {
+        const raw = await redisClient.get(k);
+        const hb = raw ? (JSON.parse(raw) as { running: boolean; itemId: string | null; ts: number }) : null;
+        return {
+          channelId: k.replace("playout:heartbeat:", ""),
+          running: hb?.running ?? false,
+          itemId: hb?.itemId ?? null,
+          lastSeenMs: hb ? Date.now() - hb.ts : null,
+        };
+      })
+    );
+    ok(res, { channels });
+  })
+);
+
 // ─────────────────────── users ───────────────────────
 router.get(
   "/users",
