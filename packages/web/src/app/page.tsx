@@ -190,18 +190,30 @@ function Row({ label, href = "/browse", children }: { label: string; href?: stri
 export default function HomePage() {
   const { data: chData } = useSWR<{ channels: ChannelSummary[] }>("/api/channels", swrFetcher, { shouldRetryOnError: false });
   const { data: fyData } = useSWR<{ items: VideoSummary[] }>("/api/browse?sort=new", swrFetcher, { shouldRetryOnError: false });
+  const { data: lbData } = useSWR<{ leaders: Array<{ level_name: string; display_name?: string; username?: string; total_points: number }> }>(
+    "/api/community/leaderboard?limit=4",
+    swrFetcher,
+    { shouldRetryOnError: false }
+  );
 
   const liveReal = (chData?.channels ?? []).filter((c) => c.status === "active");
   const live = liveReal.length ? liveReal : MOCK_LIVE;
   const forYou = fyData?.items?.length ? fyData.items : ROW_FORYOU;
   const featured = live[0];
 
-  const leaders = [
-    { rank: "Legend", user: "@marsonair", pts: "48,210 pts" },
-    { rank: "Insider", user: "@navahoney", pts: "31,540 pts" },
-    { rank: "Superfan", user: "@dcole", pts: "22,880 pts" },
-    { rank: "Fan", user: "@theblend", pts: "14,120 pts" },
-  ];
+  const leaders =
+    lbData?.leaders?.length
+      ? lbData.leaders.map((l) => ({
+          rank: l.level_name,
+          user: l.username ? `@${l.username}` : l.display_name ?? "member",
+          pts: `${l.total_points.toLocaleString()} pts`,
+        }))
+      : [
+          { rank: "Legend", user: "@marsonair", pts: "48,210 pts" },
+          { rank: "Insider", user: "@navahoney", pts: "31,540 pts" },
+          { rank: "Superfan", user: "@dcole", pts: "22,880 pts" },
+          { rank: "Fan", user: "@theblend", pts: "14,120 pts" },
+        ];
 
   return (
     <div className="pb-8">

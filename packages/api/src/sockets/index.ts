@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import jwt from "jsonwebtoken";
 import { redisClient } from "../config/redis";
+import { query } from "../config/database";
 import { allowedOrigins, env } from "../config/env";
 import type { JwtAccessPayload } from "../types";
 import type { SubscriptionPlan, UserRole } from "@apex/shared";
@@ -22,6 +23,25 @@ export const rooms = {
 };
 
 let io: Server | null = null;
+
+/**
+ * Adjust a channel's concurrent-viewer count in Redis, persist it to
+ * channels.viewer_count, and broadcast the new count to the channel room.
+ * (Previously viewer_count was never updated — analytics read 0 everywhere.)
+ */
+async function adjustViewers(channelId: string, delta: number): Promise<void> {
+  const key = `viewers:channel:${channelId}`;
+  let count = await redisClient.incrby(key, delta);
+  if (count < 0) {
+    count = 0;
+    await redisClient.set(key, "0");
+  }
+  await query("UPDATE channels SET viewer_count = $1 WHERE id = $2", [
+    count,
+    channelId,
+  ]).catch(() => undefined);
+  io?.to(rooms.channel(channelId)).emit("viewer-count", { channelId, count });
+}
 
 export function initSockets(server: HttpServer): Server {
   const pubClient = redisClient;
@@ -61,12 +81,29 @@ export function initSockets(server: HttpServer): Server {
       socket.join(rooms.admin());
     }
 
-    socket.on("join-channel", (channelId: string) =>
-      socket.join(rooms.channel(channelId))
-    );
-    socket.on("leave-channel", (channelId: string) =>
-      socket.leave(rooms.channel(channelId))
-    );
+    // Track which channels this socket is watching so we can decrement the
+    // live viewer count on leave/disconnect.
+    const joinedChannels = new Set<string>();
+
+    socket.on("join-channel", (channelId: string) => {
+      socket.join(rooms.channel(channelId));
+      if (!joinedChannels.has(channelId)) {
+        joinedChannels.add(channelId);
+        void adjustViewers(channelId, 1);
+      }
+    });
+    socket.on("leave-channel", (channelId: string) => {
+      socket.leave(rooms.channel(channelId));
+      if (joinedChannels.delete(channelId)) {
+        void adjustViewers(channelId, -1);
+      }
+    });
+    socket.on("disconnect", () => {
+      for (const channelId of joinedChannels) {
+        void adjustViewers(channelId, -1);
+      }
+      joinedChannels.clear();
+    });
     socket.on("join-watch-party", (partyId: string) =>
       socket.join(rooms.watchParty(partyId))
     );

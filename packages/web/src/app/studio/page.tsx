@@ -30,7 +30,7 @@ export default function StudioDashboard() {
     { href: "/studio/upload", label: "Upload Video", Icon: Upload },
     { href: "/live", label: "Go Live", Icon: Radio },
     { href: "/studio/community", label: "Post Update", Icon: PenSquare },
-    { href: "/studio/shop/orders", label: "Add Product", Icon: Package },
+    { href: "/studio/shop", label: "Add Product", Icon: Package },
   ];
 
   return (

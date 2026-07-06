@@ -108,6 +108,32 @@ router.patch(
   })
 );
 
+// GET /api/videos/:videoId (public) — single ready video for the watch page.
+// Also increments view_count (previously never tracked).
+router.get(
+  "/:videoId",
+  asyncHandler(async (req, res) => {
+    const { rows } = await query(
+      `SELECT v.id, v.title, v.description, v.hls_url, v.thumbnail_url,
+              v.duration_seconds, v.view_count, v.like_count, v.genre, v.type,
+              v.is_premium, v.is_patron_exclusive, v.patron_tier_id,
+              v.published_at, v.created_at,
+              u.id AS creator_id, u.display_name AS creator_name,
+              u.username AS creator_username, u.avatar_url AS creator_avatar
+       FROM videos v JOIN users u ON u.id = v.creator_id
+       WHERE v.id = $1 AND v.status = 'ready'`,
+      [req.params.videoId]
+    );
+    const video = rows[0];
+    if (!video) throw notFound("Video not found");
+    // Fire-and-forget view count bump (never blocks the response).
+    void query("UPDATE videos SET view_count = view_count + 1 WHERE id = $1", [
+      req.params.videoId,
+    ]).catch(() => undefined);
+    ok(res, { video });
+  })
+);
+
 // GET /api/videos/:videoId/products (public) — tagged products for playback.
 router.get(
   "/:videoId/products",
