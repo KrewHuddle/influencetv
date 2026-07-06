@@ -215,9 +215,12 @@ router.get(
     const q = (req.query.q as string) ?? "";
     const items = await query(
       `SELECT id, title, thumbnail_url, base_price_cents
-       FROM products WHERE status='approved' AND title ILIKE $1
-       ORDER BY sale_count DESC LIMIT $2 OFFSET $3`,
-      [`%${q}%`, p.limit, p.offset]
+       FROM products
+       WHERE status='approved'
+         AND ($1 = '' OR title ILIKE $2 OR description ILIKE $2
+              OR EXISTS (SELECT 1 FROM unnest(COALESCE(tags,'{}')) tg WHERE tg ILIKE $2))
+       ORDER BY sale_count DESC LIMIT $3 OFFSET $4`,
+      [q, `%${q}%`, p.limit, p.offset]
     );
     ok(res, { items: items.rows });
   })
