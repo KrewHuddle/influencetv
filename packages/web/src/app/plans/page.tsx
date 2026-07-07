@@ -42,8 +42,8 @@ export default function PlansPage() {
               className="border border-itv-border px-6 py-7"
               style={
                 featured
-                  ? { borderTop: "2px solid #D946EF", background: "#0d080d" }
-                  : { background: "#0d0d0d" }
+                  ? { borderTop: "2px solid var(--itv-magenta)", background: "var(--itv-surface)" }
+                  : { background: "var(--itv-bg)" }
               }
             >
               <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.45]">
@@ -75,7 +75,7 @@ export default function PlansPage() {
                 className="mt-6 w-full px-4 py-[11px] text-[10px] font-extrabold uppercase tracking-[1px] transition disabled:opacity-40"
                 style={
                   featured
-                    ? { background: "#D946EF", color: "#fff" }
+                    ? { background: "var(--itv-magenta)", color: "#fff" }
                     : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }
                 }
               >

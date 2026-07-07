@@ -30,20 +30,20 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
       <section className="mb-8 flex items-center gap-4">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-apex-gray-800 text-xl">
+        <div className="grid h-16 w-16 place-items-center rounded-full bg-itv-surface2 text-xl">
           {(user.displayName ?? user.email)[0]?.toUpperCase()}
         </div>
         <div>
           <h1 className="font-display text-2xl">{user.displayName ?? "Viewer"}</h1>
-          <p className="text-sm text-[color:var(--text-secondary)]">{user.email}</p>
+          <p className="text-sm text-itv-muted">{user.email}</p>
           <Badge className="mt-1">{user.plan}</Badge>
         </div>
       </section>
 
-      <section className="mb-6 rounded-lg border border-apex bg-apex-gray-900 p-5">
+      <section className="mb-6 rounded-lg border border-itv-border bg-itv-surface p-5">
         <h2 className="mb-2 font-display text-sm">Subscription</h2>
-        <p className="text-sm text-[color:var(--text-secondary)]">
-          Plan: <span className="text-apex-white">{user.plan}</span>
+        <p className="text-sm text-itv-muted">
+          Plan: <span className="text-itv-text">{user.plan}</span>
           {data?.subscription?.current_period_end &&
             ` · renews ${new Date(data.subscription.current_period_end).toLocaleDateString()}`}
         </p>

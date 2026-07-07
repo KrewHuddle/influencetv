@@ -88,7 +88,7 @@ export default function AdminSchedulePage() {
                 {it.is_ad_break ? "● AD BREAK" : it.title}
               </span>
             </div>
-            <button onClick={() => del(it.id)} className="text-[11px] text-white/[0.5] hover:text-itv-red">remove</button>
+            <button onClick={() => del(it.id)} className="text-[11px] text-white/[0.5] hover:text-itv-live">remove</button>
           </div>
         ))}
         {!items.length && <p className="p-4 text-sm text-white/[0.42]">Nothing scheduled for this day.</p>}

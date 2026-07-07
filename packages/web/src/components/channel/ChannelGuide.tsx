@@ -42,7 +42,7 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
             <button
               onClick={() => setActive(ch.id)}
               className="flex h-16 w-[220px] shrink-0 items-center gap-3 px-4 text-left"
-              style={isActive ? { background: "rgba(217,70,239,0.08)", borderLeft: "2px solid #D946EF" } : undefined}
+              style={isActive ? { background: "rgba(217,70,239,0.08)", borderLeft: "2px solid var(--itv-magenta)" } : undefined}
             >
               <span className="w-6 text-[13px] font-black text-itv-magenta">
                 {ch.number != null ? String(ch.number).padStart(2, "0") : "—"}
@@ -59,7 +59,7 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
             </button>
 
             {/* schedule blocks */}
-            <div className="no-scrollbar flex flex-1 items-center gap-1 overflow-x-auto px-2">
+            <div className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-1 items-center gap-1 overflow-x-auto px-2">
               {ch.items.length === 0 && (
                 <span className="text-[10px] text-white/[0.42]">No programming</span>
               )}
@@ -75,7 +75,7 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
                       width: mins(it.start_time, it.end_time) * PX_PER_MIN,
                       background: "rgba(255,255,255,0.02)",
                       border: "1px dashed rgba(255,255,255,0.08)",
-                      borderLeft: isCurrent ? "2px solid #D946EF" : undefined,
+                      borderLeft: isCurrent ? "2px solid var(--itv-magenta)" : undefined,
                     }}
                   >
                     <p className="line-clamp-1 text-[11px] font-bold">{it.title}</p>

@@ -48,9 +48,9 @@ export default function AdminUsersPage() {
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 max-w-md"
       />
-      <div className="overflow-x-auto rounded-lg border border-apex">
+      <div className="overflow-x-auto rounded-lg border border-itv-border">
         <table className="w-full text-sm">
-          <thead className="bg-apex-gray-900 text-left text-xs uppercase text-[color:var(--text-muted)]">
+          <thead className="bg-itv-surface text-left text-xs uppercase text-itv-muted">
             <tr>
               <th className="p-3">Name</th><th className="p-3">Email</th>
               <th className="p-3">Role</th><th className="p-3">Plan</th>
@@ -59,9 +59,9 @@ export default function AdminUsersPage() {
           </thead>
           <tbody>
             {(data?.items ?? []).map((u) => (
-              <tr key={u.id} className="border-t border-apex">
+              <tr key={u.id} className="border-t border-itv-border">
                 <td className="p-3">{u.display_name ?? "—"}</td>
-                <td className="p-3 text-[color:var(--text-secondary)]">{u.email}</td>
+                <td className="p-3 text-itv-muted">{u.email}</td>
                 <td className="p-3">
                   <select
                     value={u.role}
@@ -73,7 +73,7 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="p-3">{u.subscription_plan}</td>
                 <td className="p-3">
-                  <span className={u.is_active ? "text-green-400" : "text-apex-red"}>
+                  <span className={u.is_active ? "text-green-400" : "text-itv-magenta"}>
                     {u.is_active ? "Active" : "Suspended"}
                   </span>
                 </td>

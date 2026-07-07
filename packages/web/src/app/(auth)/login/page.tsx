@@ -31,14 +31,14 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center px-6">
-      <div className="w-full max-w-sm rounded-2xl border border-apex bg-apex-gray-900 p-8">
+      <div className="w-full max-w-sm rounded-2xl border border-itv-border bg-itv-surface p-8">
         <h1 className="mb-6 text-center font-display text-2xl">INFLUENCE TV</h1>
         <a href={`${API_URL}/api/auth/google`}>
           <Button variant="ghost" className="w-full">
             Continue with Google
           </Button>
         </a>
-        <div className="my-5 flex items-center gap-3 text-xs text-[color:var(--text-muted)]">
+        <div className="my-5 flex items-center gap-3 text-xs text-itv-muted">
           <span className="h-px flex-1 bg-white/10" /> OR <span className="h-px flex-1 bg-white/10" />
         </div>
         <form onSubmit={submit} className="space-y-4">
@@ -48,9 +48,9 @@ export default function LoginPage() {
             {busy ? "Signing in…" : "Sign In"}
           </Button>
         </form>
-        <div className="mt-4 flex justify-between text-xs text-[color:var(--text-secondary)]">
-          <Link href="/forgot-password" className="hover:text-apex-white">Forgot password?</Link>
-          <Link href="/register" className="hover:text-apex-white">Create account</Link>
+        <div className="mt-4 flex justify-between text-xs text-itv-muted">
+          <Link href="/forgot-password" className="hover:text-itv-text">Forgot password?</Link>
+          <Link href="/register" className="hover:text-itv-text">Create account</Link>
         </div>
       </div>
     </div>

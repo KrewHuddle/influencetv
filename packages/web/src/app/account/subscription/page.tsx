@@ -30,18 +30,18 @@ export default function SubscriptionPage() {
   return (
     <div className="mx-auto max-w-xl px-6 py-8">
       <h1 className="mb-6 font-display text-2xl">Subscription</h1>
-      <div className="rounded-lg border border-apex bg-apex-gray-900 p-6">
+      <div className="rounded-lg border border-itv-border bg-itv-surface p-6">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-[color:var(--text-secondary)]">Plan</span>
+          <span className="text-sm text-itv-muted">Plan</span>
           <Badge>{data?.plan ?? "free"}</Badge>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-sm text-[color:var(--text-secondary)]">Status</span>
+          <span className="text-sm text-itv-muted">Status</span>
           <span className="text-sm">{data?.status ?? "—"}</span>
         </div>
         {data?.currentPeriodEnd && (
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-sm text-[color:var(--text-secondary)]">
+            <span className="text-sm text-itv-muted">
               {data.cancelAtPeriodEnd ? "Ends" : "Renews"}
             </span>
             <span className="text-sm">

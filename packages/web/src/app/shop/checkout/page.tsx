@@ -73,7 +73,7 @@ export default function CheckoutPage() {
   };
 
   if (!items.length)
-    return <div className="p-8 text-sm text-[color:var(--text-muted)]">Your cart is empty.</div>;
+    return <div className="p-8 text-sm text-itv-muted">Your cart is empty.</div>;
 
   return (
     <div className="mx-auto max-w-xl px-6 py-8">
@@ -81,7 +81,7 @@ export default function CheckoutPage() {
 
       <div className="mb-6 space-y-2">
         {items.map((i) => (
-          <div key={i.productId} className="flex items-center justify-between rounded-lg border border-apex bg-apex-gray-900 p-3 text-sm">
+          <div key={i.productId} className="flex items-center justify-between rounded-lg border border-itv-border bg-itv-surface p-3 text-sm">
             <span>{i.title}</span>
             <div className="flex items-center gap-3">
               <input
@@ -89,10 +89,10 @@ export default function CheckoutPage() {
                 min={1}
                 value={i.quantity}
                 onChange={(e) => setQuantity(i.productId, Number(e.target.value))}
-                className="w-14 rounded border border-apex bg-apex-black px-2 py-1"
+                className="w-14 rounded border border-itv-border bg-itv-bg px-2 py-1"
               />
               <span>${((i.priceCents * i.quantity) / 100).toFixed(2)}</span>
-              <button onClick={() => remove(i.productId)} className="text-apex-red">✕</button>
+              <button onClick={() => remove(i.productId)} className="text-itv-magenta">✕</button>
             </div>
           </div>
         ))}
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
           <PaymentForm orderId={orderId!} />
         </Elements>
       ) : (
-        <p className="text-sm text-apex-red">Stripe is not configured.</p>
+        <p className="text-sm text-itv-magenta">Stripe is not configured.</p>
       )}
     </div>
   );

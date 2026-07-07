@@ -71,8 +71,8 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
     <div
       className="absolute bottom-0 left-1/2 z-20 flex w-4/5 -translate-x-1/2 items-center gap-3 p-3"
       style={{
-        background: "#111",
-        borderTop: "2px solid #D946EF",
+        background: "var(--itv-surface)",
+        borderTop: "2px solid var(--itv-magenta)",
         transform: `translate(-50%, ${shown ? "0" : "100%"})`,
         transition: "transform 200ms ease-out",
       }}
@@ -106,7 +106,7 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
       <button
         aria-label="Dismiss"
         onClick={() => setProduct(null)}
-        className="text-white/40 hover:text-itv-white"
+        className="text-white/40 hover:text-itv-text"
       >
         <X size={16} />
       </button>

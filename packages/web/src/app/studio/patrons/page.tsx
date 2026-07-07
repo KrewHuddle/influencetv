@@ -49,19 +49,19 @@ export default function StudioPatronsPage() {
 
       <div className="mb-6 space-y-3">
         {tiers.map((t) => (
-          <div key={t.id} className="flex items-center justify-between rounded-lg border border-apex bg-apex-gray-900 p-4">
+          <div key={t.id} className="flex items-center justify-between rounded-lg border border-itv-border bg-itv-surface p-4">
             <div>
               <p className="font-medium">{t.name}</p>
-              <p className="text-xs text-[color:var(--text-muted)]">{t.subscriber_count} patrons</p>
+              <p className="text-xs text-itv-muted">{t.subscriber_count} patrons</p>
             </div>
             <span className="text-sm">${(t.price_cents / 100).toFixed(2)}/mo</span>
           </div>
         ))}
-        {!tiers.length && <p className="text-sm text-[color:var(--text-muted)]">No tiers yet.</p>}
+        {!tiers.length && <p className="text-sm text-itv-muted">No tiers yet.</p>}
       </div>
 
       {tiers.length < 3 && (
-        <form onSubmit={addTier} className="space-y-3 rounded-lg border border-apex bg-apex-gray-900 p-4">
+        <form onSubmit={addTier} className="space-y-3 rounded-lg border border-itv-border bg-itv-surface p-4">
           <h2 className="font-display text-sm">Add Tier</h2>
           <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
           <Input label="Price (USD)" type="number" step="0.01" min="1.99" value={price} onChange={(e) => setPrice(e.target.value)} />

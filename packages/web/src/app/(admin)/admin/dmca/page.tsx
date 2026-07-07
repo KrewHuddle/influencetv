@@ -30,24 +30,24 @@ export default function AdminDmcaPage() {
       <h1 className="mb-4 font-display text-2xl">DMCA Notices</h1>
       <div className="space-y-2">
         {(data?.items ?? []).map((n) => (
-          <div key={n.id} className="rounded-lg border border-apex bg-apex-gray-900 p-4">
+          <div key={n.id} className="rounded-lg border border-itv-border bg-itv-surface p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm">{n.claimed_work_title ?? "Untitled claim"}</p>
-                <p className="text-xs text-[color:var(--text-muted)]">
+                <p className="text-xs text-itv-muted">
                   {n.reporter_name} · {new Date(n.received_at).toLocaleDateString()}
                 </p>
               </div>
               <Badge>{n.status}</Badge>
             </div>
             <div className="mt-3 flex gap-2">
-              <Button variant="ghost" className="text-xs text-apex-red" onClick={() => act(n.id, "remove")}>Remove Content</Button>
+              <Button variant="ghost" className="text-xs text-itv-magenta" onClick={() => act(n.id, "remove")}>Remove Content</Button>
               <Button variant="ghost" className="text-xs" onClick={() => act(n.id, "restore")}>Restore</Button>
               <Button variant="ghost" className="text-xs" onClick={() => act(n.id, "reject")}>Reject Notice</Button>
             </div>
           </div>
         ))}
-        {!data?.items?.length && <p className="text-sm text-[color:var(--text-muted)]">No notices.</p>}
+        {!data?.items?.length && <p className="text-sm text-itv-muted">No notices.</p>}
       </div>
     </div>
   );

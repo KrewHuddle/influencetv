@@ -13,7 +13,7 @@ function strength(pw: string): { label: string; cls: string } {
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 1) return { label: "Weak", cls: "text-apex-red" };
+  if (score <= 1) return { label: "Weak", cls: "text-itv-magenta" };
   if (score === 2) return { label: "Medium", cls: "text-yellow-400" };
   return { label: "Strong", cls: "text-green-400" };
 }
@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center px-6">
-      <div className="w-full max-w-sm rounded-2xl border border-apex bg-apex-gray-900 p-8">
+      <div className="w-full max-w-sm rounded-2xl border border-itv-border bg-itv-surface p-8">
         <h1 className="mb-6 text-center font-display text-2xl">Create Account</h1>
         <form onSubmit={submit} className="space-y-4">
           <Input label="Name" value={displayName} onChange={(e) => setName(e.target.value)} />
@@ -54,7 +54,7 @@ export default function RegisterPage() {
             <Input label="Password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             {password && <p className={`mt-1 text-xs ${pw.cls}`}>{pw.label}</p>}
           </div>
-          <label className="flex items-start gap-2 text-xs text-[color:var(--text-secondary)]">
+          <label className="flex items-start gap-2 text-xs text-itv-muted">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
             I agree to the Terms of Service and Privacy Policy.
           </label>
@@ -62,8 +62,8 @@ export default function RegisterPage() {
             {busy ? "Creating…" : "Create Account"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-xs text-[color:var(--text-secondary)]">
-          Have an account? <Link href="/login" className="text-apex-white">Sign in</Link>
+        <p className="mt-4 text-center text-xs text-itv-muted">
+          Have an account? <Link href="/login" className="text-itv-text">Sign in</Link>
         </p>
       </div>
     </div>

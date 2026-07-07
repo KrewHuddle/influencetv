@@ -35,16 +35,16 @@ function ActivateInner() {
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center px-6">
-      <div className="w-full max-w-sm rounded-2xl border border-apex bg-apex-gray-900 p-8 text-center">
+      <div className="w-full max-w-sm rounded-2xl border border-itv-border bg-itv-surface p-8 text-center">
         <h1 className="mb-2 font-display text-2xl">Activate your TV</h1>
         {state === "ok" ? (
           <>
-            <p className="mb-6 mt-4 text-apex-white">Your TV is now signed in!</p>
+            <p className="mb-6 mt-4 text-itv-text">Your TV is now signed in!</p>
             <Link href="/"><Button>Done</Button></Link>
           </>
         ) : (
           <form onSubmit={submit} className="mt-4 space-y-4">
-            <p className="text-sm text-[color:var(--text-secondary)]">
+            <p className="text-sm text-itv-muted">
               Enter the code shown on your TV.
             </p>
             <Input
@@ -55,7 +55,7 @@ function ActivateInner() {
               maxLength={6}
             />
             {state === "error" && (
-              <p className="text-xs text-apex-red">Invalid or expired code.</p>
+              <p className="text-xs text-itv-magenta">Invalid or expired code.</p>
             )}
             <Button type="submit" disabled={state === "busy" || code.length < 6} className="w-full">
               {state === "busy" ? "Activating…" : "Activate"}

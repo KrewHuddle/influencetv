@@ -42,11 +42,11 @@ export default function SellerOrdersPage() {
       <h1 className="mb-6 font-display text-2xl">Orders</h1>
       <div className="space-y-2">
         {(data?.items ?? []).map((o) => (
-          <div key={o.id} className="rounded-lg border border-apex bg-apex-gray-900 p-4">
+          <div key={o.id} className="rounded-lg border border-itv-border bg-itv-surface p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">{o.order_number}</p>
-                <p className="text-xs text-[color:var(--text-muted)]">
+                <p className="text-xs text-itv-muted">
                   ${(o.subtotal_cents / 100).toFixed(2)} · {new Date(o.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -58,14 +58,14 @@ export default function SellerOrdersPage() {
                   placeholder="Tracking #"
                   value={tracking[o.id] ?? ""}
                   onChange={(e) => setTracking({ ...tracking, [o.id]: e.target.value })}
-                  className="flex-1 rounded border border-apex bg-apex-black px-3 py-1.5 text-sm"
+                  className="flex-1 rounded border border-itv-border bg-itv-bg px-3 py-1.5 text-sm"
                 />
                 <Button className="text-xs" onClick={() => ship(o.id)}>Mark Shipped</Button>
               </div>
             )}
           </div>
         ))}
-        {!data?.items?.length && <p className="text-sm text-[color:var(--text-muted)]">No orders.</p>}
+        {!data?.items?.length && <p className="text-sm text-itv-muted">No orders.</p>}
       </div>
     </div>
   );
