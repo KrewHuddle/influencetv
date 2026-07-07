@@ -8,6 +8,7 @@ import { ok } from "../utils/response";
 import { badRequest, forbidden, notFound } from "../middleware/errorHandler";
 import { parsePagination, paginate } from "../utils/pagination";
 import { sendEmail } from "../config/email";
+import { isRemoteImageNSFW } from "../services/moderation";
 import type { AuthedRequest } from "../types";
 
 const router: ExpressRouter = Router();
@@ -42,23 +43,37 @@ router.post(
       throw badRequest("At least one image required");
     }
     const imageUrls = b.imageUrls;
-    // NOTE: NSFW moderation (nsfwjs, see services/moderation.ts) runs at
-    // transcode time for videos. Product images arrive as CDN URLs, not local
-    // bytes, so the check is deferred here — products enter 'pending' for review.
+    // NSFW moderation (nsfwjs, services/moderation.ts): scan the submitted
+    // images (first 5). Any flagged → auto-reject; otherwise the product stays
+    // 'pending' for manual review. Unscannable images (disallowed host, bad
+    // format, fetch error) don't block — they fall through to manual review.
+    let moderationStatus: "pending" | "rejected" = "pending";
+    let rejectionReason: string | null = null;
+    for (const url of imageUrls.slice(0, 5)) {
+      try {
+        if (await isRemoteImageNSFW(url)) {
+          moderationStatus = "rejected";
+          rejectionReason = "content-policy: image flagged NSFW";
+          break;
+        }
+      } catch {
+        /* unscannable — leave for manual review */
+      }
+    }
 
     const productId = await transaction(async (c) => {
       const p = await c.query<{ id: string }>(
         `INSERT INTO products
            (seller_id, title, description, category, is_digital, base_price_cents,
             compare_at_price_cents, inventory_count, track_inventory, thumbnail_url,
-            image_urls, tags, weight_grams, requires_shipping, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending') RETURNING id`,
+            image_urls, tags, weight_grams, requires_shipping, status, rejection_reason)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`,
         [
           req.user!.id, b.title, b.description ?? null, b.category ?? null,
           b.isDigital ?? false, b.basePriceCents, b.compareAtPriceCents ?? null,
           b.inventoryCount ?? 0, b.trackInventory ?? true, imageUrls[0],
           imageUrls, b.tags ?? null, b.weightGrams ?? null,
-          b.requiresShipping ?? !b.isDigital,
+          b.requiresShipping ?? !b.isDigital, moderationStatus, rejectionReason,
         ]
       );
       for (const v of b.variants ?? []) {
@@ -71,7 +86,11 @@ router.post(
       }
       return p.rows[0].id;
     });
-    ok(res, { product: { id: productId, status: "pending" } }, 201);
+    ok(
+      res,
+      { product: { id: productId, status: moderationStatus, ...(rejectionReason ? { rejectionReason } : {}) } },
+      201
+    );
   })
 );
 
@@ -140,6 +159,20 @@ router.patch(
     };
     // Re-review if title/images changed.
     const reReview = b.title != null || b.imageUrls != null;
+    // Re-scan changed images (same policy as create): flagged → auto-reject.
+    let nsfwRejected = false;
+    let rejectionReason: string | null = null;
+    for (const url of (b.imageUrls ?? []).slice(0, 5)) {
+      try {
+        if (await isRemoteImageNSFW(url)) {
+          nsfwRejected = true;
+          rejectionReason = "content-policy: image flagged NSFW";
+          break;
+        }
+      } catch {
+        /* unscannable — leave for manual review */
+      }
+    }
     const { rows } = await query(
       `UPDATE products SET
          title=COALESCE($1,title), description=COALESCE($2,description),
@@ -147,12 +180,15 @@ router.patch(
          inventory_count=COALESCE($4,inventory_count),
          image_urls=COALESCE($5,image_urls), tags=COALESCE($6,tags),
          thumbnail_url=COALESCE($7,thumbnail_url),
-         status=CASE WHEN $8 THEN 'pending' ELSE status END, updated_at=NOW()
-       WHERE id=$9 RETURNING id, title, status`,
+         status=CASE WHEN $8 THEN 'rejected' WHEN $9 THEN 'pending' ELSE status END,
+         rejection_reason=CASE WHEN $8 THEN $10 WHEN $9 THEN NULL ELSE rejection_reason END,
+         updated_at=NOW()
+       WHERE id=$11 RETURNING id, title, status`,
       [
         b.title ?? null, b.description ?? null, b.basePriceCents ?? null,
         b.inventoryCount ?? null, b.imageUrls ?? null, b.tags ?? null,
-        b.imageUrls?.[0] ?? null, reReview, req.params.productId,
+        b.imageUrls?.[0] ?? null, nsfwRejected, reReview, rejectionReason,
+        req.params.productId,
       ]
     );
     ok(res, { product: rows[0] });
