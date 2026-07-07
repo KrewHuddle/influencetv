@@ -3,6 +3,9 @@ import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { useAuthStore } from "./src/store/authStore";
+import { initSentry } from "./src/lib/sentry";
+
+initSentry();
 
 export default function App() {
   const hydrate = useAuthStore((s) => s.hydrate);

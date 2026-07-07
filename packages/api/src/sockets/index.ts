@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import jwt from "jsonwebtoken";
 import { redisClient } from "../config/redis";
+import { socketConnections } from "../config/metrics";
 import { query } from "../config/database";
 import { allowedOrigins, env } from "../config/env";
 import type { JwtAccessPayload } from "../types";
@@ -75,6 +76,7 @@ export function initSockets(server: HttpServer): Server {
 
   io.on("connection", (socket: Socket) => {
     const user = socket.data.user as SocketUser;
+    socketConnections.inc();
     // Every user auto-joins their personal room for targeted events.
     socket.join(rooms.user(user.id));
     if (["super_admin", "moderator", "channel_manager"].includes(user.role)) {
@@ -99,6 +101,7 @@ export function initSockets(server: HttpServer): Server {
       }
     });
     socket.on("disconnect", () => {
+      socketConnections.dec();
       for (const channelId of joinedChannels) {
         void adjustViewers(channelId, -1);
       }

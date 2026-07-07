@@ -10,6 +10,7 @@ import { downloadToFile, uploadFile, readFileBytes } from "../utils/s3";
 import { isImageNSFW } from "../services/moderation";
 import { sendEmail } from "../config/email";
 import { getIo, rooms } from "../sockets";
+import { logger } from "../config/logger";
 
 const WORK_ROOT = "/tmp/apex-transcoding";
 
@@ -128,14 +129,32 @@ async function processVideo(job: Job<TranscodeJob>): Promise<void> {
     const thumbKey = `thumbnails/${videoId}.jpg`;
     await uploadFile(buckets.assets, thumbKey, thumb, "image/jpeg");
 
+    // 6.5 Normalized mezzanine for linear playout → PERMANENT assets bucket
+    // (the uploads source expires after 24h). 1080p H.264 High + AAC, fixed 2s
+    // GOP so `-c copy` streaming and program boundaries are clean.
+    const mezz = join(dir, "mezzanine.mp4");
+    await run("ffmpeg", [
+      "-i", original,
+      "-vf", "scale=-2:1080",
+      "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high",
+      "-pix_fmt", "yuv420p",
+      "-g", "48", "-keyint_min", "48", "-sc_threshold", "0",
+      "-c:a", "aac", "-b:a", "128k",
+      "-movflags", "+faststart",
+      mezz,
+    ]);
+    const mezzKey = `mezzanine/${videoId}.mp4`;
+    await uploadFile(buckets.assets, mezzKey, mezz, "video/mp4");
+
     // 7. Persist ready state.
     const hlsUrl = cdnUrl(`${videoId}/hls/master.m3u8`);
     const thumbnailUrl = cdnUrl(thumbKey); // assets served via same CDN prefix
     await query(
       `UPDATE videos SET status='ready', hls_url=$1, s3_hls_key=$2,
-         thumbnail_url=$3, duration_seconds=$4, published_at=COALESCE(published_at, NOW())
-       WHERE id=$5`,
-      [hlsUrl, `${videoId}/hls/`, thumbnailUrl, duration, videoId]
+         thumbnail_url=$3, duration_seconds=$4, s3_mezzanine_key=$5,
+         published_at=COALESCE(published_at, NOW())
+       WHERE id=$6`,
+      [hlsUrl, `${videoId}/hls/`, thumbnailUrl, duration, mezzKey, videoId]
     );
     await redisClient.set(`transcode:progress:${videoId}`, "100", "EX", 3600);
 
@@ -181,20 +200,21 @@ async function uploadDir(localDir: string, keyPrefix: string): Promise<void> {
 }
 
 export function startTranscodeWorker(): Worker<TranscodeJob> {
+  // Concurrency is env-tunable so a dedicated transcode droplet (Phase 6.3) can
+  // run more parallel ffmpeg jobs than the shared API host's default of 2.
+  const concurrency = Number(process.env.TRANSCODE_CONCURRENCY) || 2;
   const worker = new Worker<TranscodeJob>(TRANSCODE_QUEUE, processVideo, {
     connection: bullConnection,
-    concurrency: 2,
+    concurrency,
   });
   worker.on("failed", async (job, err) => {
-    // eslint-disable-next-line no-console
-    console.error(`Transcode failed (${job?.id}):`, err.message);
+    logger.error({ jobId: job?.id, err }, "Transcode failed");
     if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) {
       await query("UPDATE videos SET status='failed' WHERE id=$1", [
         job.data.videoId,
       ]).catch(() => undefined);
     }
   });
-  // eslint-disable-next-line no-console
-  worker.on("ready", () => console.log("🎬 Transcode worker ready"));
+  worker.on("ready", () => logger.info({ concurrency }, "Transcode worker ready"));
   return worker;
 }

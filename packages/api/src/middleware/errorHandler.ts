@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import { logger } from "../config/logger";
+import { httpErrorsTotal } from "../config/metrics";
+import { Sentry, sentryEnabled } from "../config/sentry";
 
 export class AppError extends Error {
   constructor(
@@ -49,8 +52,9 @@ export function errorHandler(
     return;
   }
 
-  // eslint-disable-next-line no-console
-  console.error("Unhandled error:", err);
+  httpErrorsTotal.inc();
+  if (sentryEnabled) Sentry.captureException(err);
+  logger.error({ err, path: _req.path, method: _req.method }, "Unhandled error");
   res.status(500).json({
     data: null,
     error: { message: "Something went wrong", code: "INTERNAL_ERROR" },

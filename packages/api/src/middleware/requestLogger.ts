@@ -1,10 +1,19 @@
-import morgan from "morgan";
-import { env } from "../config/env";
+import pinoHttp from "pino-http";
+import { logger } from "../config/logger";
 
-/** HTTP request logger. Concise in prod, colored dev output otherwise. */
-export const requestLogger = morgan(
-  env.NODE_ENV === "production" ? "combined" : "dev",
-  {
-    skip: (req) => req.url === "/health",
-  }
-);
+/**
+ * Structured HTTP request logger (pino-http). Emits one JSON line per request
+ * with method/url/status/latency. Skips /health and /metrics probes. Log level
+ * scales with the response: 5xx→error, 4xx→warn, else info.
+ */
+export const requestLogger = pinoHttp({
+  logger,
+  autoLogging: {
+    ignore: (req) => req.url === "/health" || req.url === "/metrics",
+  },
+  customLogLevel(_req, res, err) {
+    if (res.statusCode >= 500 || err) return "error";
+    if (res.statusCode >= 400) return "warn";
+    return "info";
+  },
+});

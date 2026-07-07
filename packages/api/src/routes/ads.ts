@@ -8,6 +8,7 @@ import { ok } from "../utils/response";
 import { badRequest, notFound } from "../middleware/errorHandler";
 import { env } from "../config/env";
 import { adDecisionEngine } from "../services/AdDecisionEngine";
+import { adImpressionsTotal } from "../config/metrics";
 import type { JwtAccessPayload } from "../types";
 
 const router: ExpressRouter = Router();
@@ -41,6 +42,7 @@ router.get(
     const served = [preroll, midroll].filter(Boolean) as NonNullable<typeof preroll>[];
     if (served.length > 0) {
       await adDecisionEngine.recordImpressions(served, 1, "vod", videoId);
+      adImpressionsTotal.inc({ placement: "vod" }, served.length);
     }
     ok(res, {
       preroll: preroll && { creativeVideoId: preroll.creativeVideoId, hlsUrl: preroll.hlsUrl, durationSeconds: preroll.durationSeconds, advertiserName: preroll.advertiserName },
