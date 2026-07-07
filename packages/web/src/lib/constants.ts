@@ -7,11 +7,11 @@ export const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "";
 export const CDN_URL =
   process.env.NEXT_PUBLIC_CLOUDFRONT_URL ?? "https://cdn.influencetvnetwork.com";
 
+// Primary pillars for the unified network. Home = wordmark.
 export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/live", label: "Live TV" },
-  { href: "/training", label: "Training" },
-  { href: "/news", label: "News" },
+  { href: "/browse", label: "Watch" },
+  { href: "/live", label: "Live" },
+  { href: "/training", label: "Learn" },
   { href: "/shop", label: "Shop" },
   { href: "/community", label: "Community" },
 ] as const;
