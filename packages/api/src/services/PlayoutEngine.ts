@@ -56,10 +56,12 @@ export class PlayoutEngine {
     void this.mainLoop();
   }
 
-  async stop(): Promise<void> {
+  async stop(markOffline = true): Promise<void> {
     this.isRunning = false;
     await this.killCurrent();
-    await query("UPDATE channels SET status='offline' WHERE id=$1", [this.channelId]);
+    if (markOffline) {
+      await query("UPDATE channels SET status='offline' WHERE id=$1", [this.channelId]);
+    }
     await redisClient.del(`nowplaying:${this.channelId}`);
   }
 

@@ -18,10 +18,16 @@ class PlayoutManager {
   private engines = new Map<string, PlayoutEngine>();
   private sub: Redis | null = null;
 
-  /** Boot engines for every active channel (call on streaming-server startup). */
+  /**
+   * Boot engines for every channel on startup. We intentionally start ALL
+   * channels (not just status<>'offline'): a 24/7 network broadcasts all its
+   * channels, and `status` is a live-state signal the engine sets — using it as
+   * a startup gate meant a graceful restart (which marks channels offline on
+   * shutdown) left the next process starting zero engines.
+   */
   async startAll(): Promise<void> {
     const { rows } = await query<{ id: string; slug: string }>(
-      "SELECT id, slug FROM channels WHERE status <> 'offline' OR status IS NULL"
+      "SELECT id, slug FROM channels"
     );
     await Promise.all(rows.map((c) => this.startChannel(c.id, c.slug)));
   }
@@ -33,10 +39,16 @@ class PlayoutManager {
     await engine.start();
   }
 
-  async stopChannel(channelId: string): Promise<void> {
+  /**
+   * Stop a channel's engine. `markOffline` controls whether the channel's DB
+   * status is set to 'offline' — true for an operator kill/stop (the channel
+   * should read offline), false for a process restart/shutdown (leave status
+   * alone so the next process resumes cleanly).
+   */
+  async stopChannel(channelId: string, markOffline = true): Promise<void> {
     const engine = this.engines.get(channelId);
     if (!engine) return;
-    await engine.stop();
+    await engine.stop(markOffline);
     this.engines.delete(channelId);
     await redisClient.del(`playout:heartbeat:${channelId}`).catch(() => undefined);
   }
@@ -109,7 +121,9 @@ class PlayoutManager {
   }
 
   async shutdown(): Promise<void> {
-    await Promise.all([...this.engines.keys()].map((id) => this.stopChannel(id)));
+    // Restart/shutdown: stop engines WITHOUT marking channels offline, so the
+    // next process's startAll resumes them.
+    await Promise.all([...this.engines.keys()].map((id) => this.stopChannel(id, false)));
     await this.sub?.quit().catch(() => undefined);
   }
 }

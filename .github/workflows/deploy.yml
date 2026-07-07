@@ -74,7 +74,8 @@ jobs:
             git pull origin main
             cp streaming/nginx.conf /etc/nginx/nginx.conf
             cp streaming/apex-create-master.sh /usr/local/bin/apex-create-master.sh
-            chmod +x /usr/local/bin/apex-create-master.sh
+            cp streaming/apex-hls-init.sh /usr/local/bin/apex-hls-init.sh
+            chmod +x /usr/local/bin/apex-create-master.sh /usr/local/bin/apex-hls-init.sh
             nginx -t && systemctl reload nginx
             # Rebuild the node app + (re)start the transcode + linear-playout workers.
             pnpm install --frozen-lockfile
