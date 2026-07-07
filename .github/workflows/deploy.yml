@@ -53,8 +53,12 @@ jobs:
             pnpm --filter @apex/web build
             pm2 restart apex-api || pm2 start packages/api/dist/index.js --name apex-api
             pm2 restart apex-web || pm2 start "pnpm --filter @apex/web start" --name apex-web
+            # Flash-sale worker runs here (transcode moved to the streaming droplet,
+            # gated off via RUN_TRANSCODE_IN_MAIN_WORKER=false in .env).
+            pm2 restart apex-worker || pm2 start bash --name apex-worker --cwd /root/apex -- -c "pnpm --filter @apex/api worker"
 
-  # Push updated nginx-rtmp config to the streaming droplet + reload.
+  # Streaming droplet: nginx-rtmp config + the transcode/playout node workers
+  # (these run here because ffmpeg + the RTMP server are local to this host).
   deploy-streaming:
     needs: test
     runs-on: ubuntu-latest
@@ -72,3 +76,10 @@ jobs:
             cp streaming/apex-create-master.sh /usr/local/bin/apex-create-master.sh
             chmod +x /usr/local/bin/apex-create-master.sh
             nginx -t && systemctl reload nginx
+            # Rebuild the node app + (re)start the transcode + linear-playout workers.
+            pnpm install --frozen-lockfile
+            pnpm --filter @apex/shared build
+            pnpm --filter @apex/api build
+            pm2 restart apex-transcode || pm2 start bash --name apex-transcode --cwd /root/apex -- -c "pnpm --filter @apex/api worker:transcode"
+            pm2 restart apex-playout || pm2 start bash --name apex-playout --cwd /root/apex -- -c "pnpm --filter @apex/api playout"
+            pm2 save
