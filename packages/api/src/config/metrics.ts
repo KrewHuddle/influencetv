@@ -55,52 +55,53 @@ export const adImpressionsTotal = new client.Counter({
 
 // Transcode queue depth by job state — the backpressure signal for scaling
 // workers (Phase 6.3). Concurrency is currently a hardcoded 2.
-const transcodeQueueDepth = new client.Gauge({
+new client.Gauge({
   name: "transcode_queue_depth",
   help: "BullMQ transcode jobs by state",
   labelNames: ["state"] as const,
   registers: [registry],
+  // `this` is typed as the Gauge by prom-client's CollectFunction signature.
+  async collect() {
+    try {
+      const c = await transcodeQueue.getJobCounts(
+        "waiting",
+        "active",
+        "delayed",
+        "failed"
+      );
+      this.set({ state: "waiting" }, c.waiting ?? 0);
+      this.set({ state: "active" }, c.active ?? 0);
+      this.set({ state: "delayed" }, c.delayed ?? 0);
+      this.set({ state: "failed" }, c.failed ?? 0);
+    } catch {
+      /* redis blip — leave last value */
+    }
+  },
 });
-transcodeQueueDepth.collect = async () => {
-  try {
-    const c = await transcodeQueue.getJobCounts(
-      "waiting",
-      "active",
-      "delayed",
-      "failed"
-    );
-    transcodeQueueDepth.set({ state: "waiting" }, c.waiting ?? 0);
-    transcodeQueueDepth.set({ state: "active" }, c.active ?? 0);
-    transcodeQueueDepth.set({ state: "delayed" }, c.delayed ?? 0);
-    transcodeQueueDepth.set({ state: "failed" }, c.failed ?? 0);
-  } catch {
-    /* redis blip — leave last value */
-  }
-};
 
 // Playout channels reporting a fresh heartbeat with running=true. Alert when
 // this drops below the number of active channels (a channel went dark).
-const playoutChannelsUp = new client.Gauge({
+new client.Gauge({
   name: "playout_channels_up",
   help: "Playout channels with a fresh running heartbeat",
   registers: [registry],
-});
-playoutChannelsUp.collect = async () => {
-  try {
-    const keys = await redisClient.keys("playout:heartbeat:*");
-    let up = 0;
-    for (const k of keys) {
-      const raw = await redisClient.get(k);
-      if (!raw) continue;
-      try {
-        const hb = JSON.parse(raw) as { running?: boolean };
-        if (hb.running) up += 1;
-      } catch {
-        /* malformed heartbeat — skip */
+  async collect() {
+    try {
+      const keys = await redisClient.keys("playout:heartbeat:*");
+      let up = 0;
+      for (const k of keys) {
+        const raw = await redisClient.get(k);
+        if (!raw) continue;
+        try {
+          const hb = JSON.parse(raw) as { running?: boolean };
+          if (hb.running) up += 1;
+        } catch {
+          /* malformed heartbeat — skip */
+        }
       }
+      this.set(up);
+    } catch {
+      /* redis blip — leave last value */
     }
-    playoutChannelsUp.set(up);
-  } catch {
-    /* redis blip — leave last value */
-  }
-};
+  },
+});
