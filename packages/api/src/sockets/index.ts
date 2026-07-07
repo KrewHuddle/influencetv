@@ -53,6 +53,24 @@ export function initSockets(server: HttpServer): Server {
     adapter: createAdapter(pubClient, subClient),
   });
 
+  // Haggle event bridge: HaggleEngine (API or worker process) publishes to the
+  // `haggle:events` Redis channel; re-emit each to its Socket.IO room. This is
+  // what lets worker-process settlement events (haggle-won, etc.) reach clients.
+  const haggleSub = redisClient.duplicate();
+  void haggleSub.subscribe("haggle:events");
+  haggleSub.on("message", (_ch, raw) => {
+    try {
+      const { room, event, payload } = JSON.parse(raw) as {
+        room: string;
+        event: string;
+        payload: unknown;
+      };
+      io?.to(room).emit(event, payload);
+    } catch {
+      /* ignore malformed */
+    }
+  });
+
   // Auth handshake: token supplied via socket.handshake.auth.token.
   io.use((socket: Socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;

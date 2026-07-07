@@ -12,7 +12,11 @@ export type PointAction =
   | "purchase_shop"
   | "like_received"
   | "first_upload"
-  | "watch_party_host";
+  | "watch_party_host"
+  | "haggle_bid"
+  | "haggle_win"
+  | "haggle_sell"
+  | "haggle_watch";
 
 const POINTS: Record<PointAction, number> = {
   watch_episode_full: 50,
@@ -25,6 +29,10 @@ const POINTS: Record<PointAction, number> = {
   like_received: 2,
   first_upload: 200,
   watch_party_host: 150,
+  haggle_bid: 10,
+  haggle_win: 150,
+  haggle_sell: 50,
+  haggle_watch: 5,
 };
 
 // Ordered ascending by threshold.

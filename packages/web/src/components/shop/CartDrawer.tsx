@@ -1,15 +1,79 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { CheckCircle2, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { useCartStore } from "@/store/cartStore";
-import { Button } from "@/components/ui/Button";
-import { PriceTag } from "@/components/ui/PriceTag";
+import { apiPost } from "@/lib/api";
+import { Button, PriceTag } from "@/components/ui";
 
-/** Right-hand slide-over cart. Driven by cartStore.isOpen / toggle. */
+const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = pk ? loadStripe(pk) : null;
+
+type View = "cart" | "pay" | "done";
+
+/** Right-hand slide-over cart with inline (in-drawer) Stripe checkout. */
 export function CartDrawer() {
-  const { items, isOpen, toggle, remove, setQuantity, subtotalCents } =
+  const { items, isOpen, toggle, remove, setQuantity, clear, subtotalCents } =
     useCartStore();
+
+  const [view, setView] = useState<View>("cart");
+  const [busy, setBusy] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [fallback, setFallback] = useState(false);
+
+  // Reset to the cart view every time the drawer re-opens.
+  useEffect(() => {
+    if (isOpen) {
+      setView("cart");
+      setClientSecret(null);
+      setOrderId(null);
+      setFallback(false);
+      setBusy(false);
+    }
+  }, [isOpen]);
+
+  const startCheckout = async () => {
+    // No publishable key → fall back to the standalone checkout page.
+    if (!stripePromise) {
+      setFallback(true);
+      setView("pay");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await apiPost<{ clientSecret: string; orderId: string }>(
+        "/api/shop/checkout",
+        {
+          items: items.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            quantity: i.quantity,
+          })),
+        }
+      );
+      setClientSecret(res.clientSecret);
+      setOrderId(res.orderId);
+      setFallback(false);
+      setView("pay");
+    } catch {
+      // Request failed → fall back to the standalone checkout page.
+      setFallback(true);
+      setView("pay");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const count = items.reduce((n, i) => n + i.quantity, 0);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(o) => toggle(o)}>
@@ -22,7 +86,12 @@ export function CartDrawer() {
           <div className="flex items-center justify-between border-b border-itv-border px-5 py-4">
             <Dialog.Title className="flex items-center gap-2 font-display text-lg text-itv-text">
               <ShoppingBag size={18} className="text-itv-magenta" />
-              Your Cart
+              {view === "done" ? "Order confirmed" : "Cart"}
+              {view === "cart" && count > 0 && (
+                <span className="grid min-w-[1.25rem] place-items-center rounded-full bg-itv-magenta px-1.5 font-mono text-xs font-semibold text-white">
+                  {count}
+                </span>
+              )}
             </Dialog.Title>
             <Dialog.Close
               aria-label="Close cart"
@@ -32,7 +101,15 @@ export function CartDrawer() {
             </Dialog.Close>
           </div>
 
-          {items.length === 0 ? (
+          {view === "done" ? (
+            <SuccessView
+              orderId={orderId}
+              onContinue={() => {
+                clear();
+                toggle(false);
+              }}
+            />
+          ) : items.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
               <ShoppingBag size={40} className="text-itv-faint" />
               <p className="text-sm text-itv-muted">Your cart is empty.</p>
@@ -40,12 +117,21 @@ export function CartDrawer() {
                 Keep shopping
               </Button>
             </div>
+          ) : view === "pay" ? (
+            <PayView
+              fallback={fallback}
+              clientSecret={clientSecret}
+              orderId={orderId}
+              subtotalCents={subtotalCents()}
+              onBack={() => setView("cart")}
+              onSuccess={() => setView("done")}
+            />
           ) : (
             <>
               <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                 {items.map((i) => (
                   <div key={i.productId} className="flex gap-3">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-itv-surface3">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-itv-surface3">
                       {i.thumbnail && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -59,6 +145,11 @@ export function CartDrawer() {
                       <p className="truncate text-sm font-medium text-itv-text">
                         {i.title}
                       </p>
+                      {i.variantId && (
+                        <p className="truncate font-mono text-xs text-itv-faint">
+                          {i.variantId}
+                        </p>
+                      )}
                       <PriceTag cents={i.priceCents} size="sm" className="mt-0.5" />
                       <div className="mt-2 flex items-center gap-2">
                         <QtyBtn
@@ -94,20 +185,148 @@ export function CartDrawer() {
                   <span className="text-sm text-itv-muted">Subtotal</span>
                   <PriceTag cents={subtotalCents()} size="lg" />
                 </div>
-                <Dialog.Close asChild>
-                  <Link
-                    href="/shop/checkout"
-                    className="block w-full rounded-md bg-itv-magenta py-3 text-center text-sm font-medium text-white transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
-                  >
-                    Checkout
-                  </Link>
-                </Dialog.Close>
+                <Button
+                  className="w-full"
+                  disabled={busy}
+                  onClick={startCheckout}
+                >
+                  {busy ? "Preparing…" : "Checkout"}
+                </Button>
               </div>
             </>
           )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+/** In-drawer payment step. */
+function PayView({
+  fallback,
+  clientSecret,
+  orderId,
+  subtotalCents,
+  onBack,
+  onSuccess,
+}: {
+  fallback: boolean;
+  clientSecret: string | null;
+  orderId: string | null;
+  subtotalCents: number;
+  onBack: () => void;
+  onSuccess: () => void;
+}) {
+  return (
+    <div className="flex flex-1 flex-col overflow-y-auto px-5 py-4">
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          onClick={onBack}
+          className="text-sm text-itv-muted transition-colors hover:text-itv-text"
+        >
+          ← Back to cart
+        </button>
+        <PriceTag cents={subtotalCents} size="md" />
+      </div>
+
+      {fallback || !stripePromise || !clientSecret ? (
+        <div className="space-y-4">
+          <p className="text-sm text-itv-muted">
+            Secure inline checkout is unavailable right now. Continue on the
+            checkout page instead.
+          </p>
+          <Dialog.Close asChild>
+            <Link
+              href="/shop/checkout"
+              className="block w-full rounded-md bg-itv-magenta py-3 text-center text-sm font-medium text-white transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
+            >
+              Go to checkout
+            </Link>
+          </Dialog.Close>
+        </div>
+      ) : (
+        <Elements stripe={stripePromise} options={{ clientSecret }}>
+          <PaymentForm orderId={orderId} onSuccess={onSuccess} />
+        </Elements>
+      )}
+    </div>
+  );
+}
+
+/** Stripe Payment Element + Pay button, kept entirely inside the drawer. */
+function PaymentForm({
+  orderId,
+  onSuccess,
+}: {
+  orderId: string | null;
+  onSuccess: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setBusy(true);
+    setError(null);
+    const { error: err, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: window.location.href },
+      redirect: "if_required",
+    });
+    if (err) {
+      setError(err.message ?? "Payment failed. Please try again.");
+      setBusy(false);
+      return;
+    }
+    if (paymentIntent && paymentIntent.status === "succeeded") {
+      onSuccess();
+      return;
+    }
+    // Non-terminal status (e.g. processing) — treat as submitted.
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={pay} className="space-y-4">
+      <PaymentElement />
+      {orderId && (
+        <p className="font-mono text-xs text-itv-faint">Order #{orderId}</p>
+      )}
+      {error && <p className="text-sm text-itv-live">{error}</p>}
+      <Button type="submit" disabled={!stripe || busy} className="w-full">
+        {busy ? "Processing…" : "Pay"}
+      </Button>
+    </form>
+  );
+}
+
+/** Confirmation state shown after a successful payment. */
+function SuccessView({
+  orderId,
+  onContinue,
+}: {
+  orderId: string | null;
+  onContinue: () => void;
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <CheckCircle2 size={48} className="text-itv-success" />
+      <div className="space-y-1">
+        <p className="font-display text-lg text-itv-text">Order confirmed</p>
+        {orderId && (
+          <p className="font-mono text-xs text-itv-faint">Order #{orderId}</p>
+        )}
+        <p className="text-sm text-itv-muted">
+          Thanks! Your order is on its way.
+        </p>
+      </div>
+      <Button className="w-full" onClick={onContinue}>
+        Continue Watching
+      </Button>
+    </div>
   );
 }
 

@@ -57,3 +57,51 @@ export async function scheduleFlashSale(
     { delay: Math.max(0, endDelayMs), jobId: `${flashSaleId}:end` }
   );
 }
+
+// ─── Haggle live-auction settlement ───
+export const HAGGLE_SETTLEMENT_QUEUE = "haggle-settlement";
+export const HAGGLE_PAYMENT_RETRY_QUEUE = "haggle-payment-retry";
+
+export interface HaggleSettlementJob {
+  auctionId: string;
+}
+export interface HagglePaymentRetryJob {
+  auctionId: string;
+  winnerId: string;
+  amountCents: number;
+}
+
+export const haggleSettlementQueue = new Queue<HaggleSettlementJob, void, string>(
+  HAGGLE_SETTLEMENT_QUEUE,
+  { connection: bullConnection }
+);
+export const hagglePaymentRetryQueue = new Queue<HagglePaymentRetryJob, void, string>(
+  HAGGLE_PAYMENT_RETRY_QUEUE,
+  { connection: bullConnection }
+);
+
+/** Settle an auction `delayMs` from now (its duration). Idempotent by jobId. */
+export async function scheduleHaggleSettlement(
+  auctionId: string,
+  delayMs: number
+): Promise<void> {
+  await haggleSettlementQueue.add(
+    "settle",
+    { auctionId },
+    { delay: Math.max(0, delayMs), jobId: `settle:${auctionId}`, removeOnComplete: true }
+  );
+}
+
+/** Retry a failed winner charge after `delayMs`. */
+export async function scheduleHagglePaymentRetry(
+  auctionId: string,
+  winnerId: string,
+  amountCents: number,
+  delayMs: number
+): Promise<void> {
+  await hagglePaymentRetryQueue.add(
+    "retry",
+    { auctionId, winnerId, amountCents },
+    { delay: Math.max(0, delayMs), jobId: `retry:${auctionId}`, removeOnComplete: true }
+  );
+}

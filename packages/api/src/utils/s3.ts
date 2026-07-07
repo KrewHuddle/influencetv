@@ -10,9 +10,22 @@ import { createReadStream, createWriteStream } from "fs";
 import { readFile, stat } from "fs/promises";
 import { pipeline } from "stream/promises";
 import type { Readable } from "stream";
-import { spacesClient } from "../config/storage";
+import { spacesClient, buckets } from "../config/storage";
 
 const PRESIGN_TTL = 3600; // 1h
+
+/** Presigned GET URL for a stored digital asset. */
+export async function presignDownload(
+  key: string,
+  expiresSeconds = PRESIGN_TTL,
+  bucket: string = buckets.assets
+): Promise<string> {
+  return getSignedUrl(
+    spacesClient,
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+    { expiresIn: expiresSeconds }
+  );
+}
 
 export interface PresignedPart {
   partNumber: number;

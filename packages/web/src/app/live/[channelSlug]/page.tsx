@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { ProductOverlay } from "@/components/shop/ProductOverlay";
+import { HaggleOverlay } from "@/components/shop/HaggleOverlay";
 import { useTuneIn } from "@/hooks/useTuneIn";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -62,6 +63,7 @@ export default function ChannelPlayerPage({
           </div>
 
           {channel && <ProductOverlay channelId={channel.id} />}
+          {channel && <HaggleOverlay channelId={channel.id} />}
         </div>
 
         <div className="mt-4">
