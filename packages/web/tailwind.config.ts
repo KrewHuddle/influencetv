@@ -1,5 +1,8 @@
 import type { Config } from "tailwindcss";
 
+/* Broadcast Bloom — creator-network dark. Colours reference the OKLCH token
+ * source of truth in globals.css :root. Alpha-tint variants stay explicit so
+ * existing classes keep resolving. */
 const config: Config = {
   content: [
     "./src/pages/**/*.{ts,tsx}",
@@ -9,51 +12,74 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Influence TV — magenta system (BET / HBO Max / Tubi inspired)
         itv: {
-          bg: "#0d0d0d",
-          surface: "#111111",
-          surface2: "#161616",
-          surface3: "#1a1a1a",
-          border: "rgba(255,255,255,0.08)",
-          border2: "rgba(255,255,255,0.05)",
-          magenta: "#D946EF",
+          bg: "var(--itv-bg)",
+          surface: "var(--itv-surface)",
+          surface2: "var(--itv-surface2)",
+          surface3: "var(--itv-surface3)",
+          border: "var(--itv-border)",
+          border2: "var(--itv-border2)",
+          // signature accents
+          magenta: "var(--itv-magenta)",
+          "magenta-strong": "var(--itv-magenta-strong)",
           "magenta-dim": "rgba(217,70,239,0.15)",
-          "magenta-border": "rgba(217,70,239,0.25)",
-          red: "#FF3333",
-          "red-dim": "rgba(255,51,51,0.12)",
+          "magenta-border": "rgba(217,70,239,0.28)",
+          gold: "var(--itv-gold)",
+          "gold-dim": "rgba(245,184,65,0.14)",
+          "gold-border": "rgba(245,184,65,0.3)",
+          live: "var(--itv-live)",
+          "live-dim": "rgba(255,77,94,0.14)",
+          success: "var(--itv-success)",
+          "success-dim": "rgba(52,211,153,0.15)",
+          warn: "var(--itv-warn)",
+          "warn-dim": "rgba(245,184,65,0.15)",
           white: "#FFFFFF",
-          text: "#F0F0F0",
-          muted: "rgba(255,255,255,0.42)",
-          faint: "rgba(255,255,255,0.22)",
-        },
-        // Compatibility layer: existing routes use apex-* classes.
-        // Remapped onto the new palette so untouched pages adopt the
-        // redesign automatically (apex-red is now magenta, not #FF2D2D).
-        apex: {
-          black: "#0d0d0d",
-          red: "#D946EF",
-          white: "#F0F0F0",
-          gray: {
-            900: "#111111",
-            800: "#161616",
-            700: "#1a1a1a",
-            600: "#222222",
-            500: "#555555",
-            400: "rgba(255,255,255,0.42)",
-            300: "rgba(255,255,255,0.6)",
-          },
+          text: "var(--itv-text)",
+          muted: "var(--itv-muted)",
+          faint: "var(--itv-faint)",
         },
       },
       fontFamily: {
-        sans: ["Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
-        // display/body kept as aliases so existing font-display / font-body
-        // classes keep resolving — now to the system stack (Syne removed).
-        display: ["Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
-        body: ["Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
+        sans: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "Inter", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Bricolage Grotesque", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "ui-monospace", "monospace"],
       },
-      borderColor: {
-        apex: "rgba(255,255,255,0.08)",
+      borderRadius: {
+        sm: "var(--radius-sm)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
+      },
+      boxShadow: {
+        "glow-magenta": "0 0 0 1px rgba(217,70,239,0.35), 0 8px 40px -12px rgba(217,70,239,0.55)",
+        "glow-gold": "0 0 0 1px rgba(245,184,65,0.35), 0 8px 40px -14px rgba(245,184,65,0.5)",
+        "glow-live": "0 0 0 1px rgba(255,77,94,0.4), 0 6px 30px -10px rgba(255,77,94,0.55)",
+        card: "0 2px 8px -2px rgba(0,0,0,0.5), 0 12px 40px -18px rgba(0,0,0,0.7)",
+      },
+      transitionTimingFunction: {
+        "ease-out-soft": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "ease-in-out-soft": "cubic-bezier(0.65, 0, 0.35, 1)",
+      },
+      keyframes: {
+        "live-pulse": {
+          "0%,100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.45", transform: "scale(0.82)" },
+        },
+        rise: {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "none" },
+        },
+        shimmer: {
+          from: { backgroundPosition: "-200% 0" },
+          to: { backgroundPosition: "200% 0" },
+        },
+      },
+      animation: {
+        "live-pulse": "live-pulse 1.4s cubic-bezier(0.65,0,0.35,1) infinite",
+        rise: "rise 360ms cubic-bezier(0.22,1,0.36,1) both",
+        shimmer: "shimmer 2.2s linear infinite",
       },
     },
   },
