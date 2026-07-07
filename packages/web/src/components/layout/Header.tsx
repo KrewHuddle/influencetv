@@ -128,6 +128,11 @@ export function Header() {
                   className="z-50 w-44 rounded-lg border border-itv-border bg-itv-surface p-1 text-sm shadow-card"
                 >
                   {[
+                    ...(["super_admin", "channel_manager", "moderator"].includes(
+                      user.role
+                    )
+                      ? [{ href: "/admin", label: "Admin Dashboard" }]
+                      : []),
                     { href: "/account", label: "Profile" },
                     { href: "/browse", label: "My List" },
                     { href: "/account/settings", label: "Settings" },
