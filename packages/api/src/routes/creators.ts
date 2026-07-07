@@ -439,7 +439,7 @@ router.get(
     // Community linked to any of this creator's channels (seed model:
     // type='channel', entity_id = channel.id). Optional — omitted if none.
     let community: unknown = null;
-    const channelIds = channels.rows.map((c: { id: string }) => c.id);
+    const channelIds = channels.rows.map((c) => c.id as string);
     if (channelIds.length) {
       const comm = await query(
         `SELECT id, name, description, member_count, post_count
@@ -473,8 +473,7 @@ router.get(
         courses: courses.rows.length,
         products: products.rows.length,
         patrons: tiers.rows.reduce(
-          (n: number, t: { subscriber_count?: number }) =>
-            n + (t.subscriber_count ?? 0),
+          (n: number, t) => n + (Number(t.subscriber_count) || 0),
           0
         ),
       },
