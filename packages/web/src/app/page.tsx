@@ -84,8 +84,9 @@ const ROW_LEARN = mkRow(
 );
 
 const MOCK_CREATORS: CreatorSummary[] = [
-  { username: "novaking", name: "Nova King", tagline: "Music · Studio sessions", live: true },
-  { username: "avareyes", name: "Ava Reyes", tagline: "Culture · Talk", patron: true },
+  // First two are real seeded creators — their hubs show live data.
+  { username: "novafields", name: "Nova Fields", tagline: "Drama · Live TV · Shop", live: true, patron: true },
+  { username: "rexmarlow", name: "Rex Marlow", tagline: "News · Talk", patron: true },
   { username: "marsonair", name: "Mars", tagline: "Late-night · Cypher", live: true },
   { username: "theblend", name: "The Blend", tagline: "Morning show", patron: true },
   { username: "dcole", name: "D. Cole", tagline: "Docuseries" },
