@@ -1,3 +1,5 @@
+// Sentry must load before Express so HTTP auto-instrumentation is in place.
+import { Sentry, sentryEnabled } from "./config/sentry";
 import http from "http";
 import express from "express";
 import cors from "cors";
@@ -7,8 +9,11 @@ import { allowedOrigins, env } from "./config/env";
 import { assertDbConnection, isDbConnected } from "./config/database";
 import { isRedisConnected } from "./config/redis";
 import { requestLogger } from "./middleware/requestLogger";
+import { httpMetrics } from "./middleware/httpMetrics";
 import { globalLimiter } from "./middleware/rateLimiter";
 import { errorHandler } from "./middleware/errorHandler";
+import { logger } from "./config/logger";
+import { registry } from "./config/metrics";
 import { initSockets } from "./sockets";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
@@ -52,6 +57,21 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
   app.use(requestLogger);
+  app.use(httpMetrics);
+
+  // Prometheus scrape endpoint. Optionally gated by METRICS_TOKEN (Bearer) —
+  // set it and restrict /metrics at the firewall/LB so internal-only scrapers
+  // reach it. Mounted before the rate limiter so scrapes aren't throttled.
+  app.get("/metrics", async (req, res) => {
+    const token = process.env.METRICS_TOKEN;
+    if (token && req.headers.authorization !== `Bearer ${token}`) {
+      res.status(401).end();
+      return;
+    }
+    res.set("Content-Type", registry.contentType);
+    res.end(await registry.metrics());
+  });
+
   app.use(globalLimiter);
 
   app.get("/health", async (_req, res) => {
@@ -96,13 +116,22 @@ async function bootstrap(): Promise<void> {
   initSockets(server);
 
   server.listen(env.PORT, () => {
-    // eslint-disable-next-line no-console
-    console.log(`🚀 Apex API listening on :${env.PORT} (${env.NODE_ENV})`);
+    logger.info({ port: env.PORT, env: env.NODE_ENV }, "Apex API listening");
   });
 }
 
+process.on("unhandledRejection", (reason) => {
+  if (sentryEnabled) Sentry.captureException(reason);
+  logger.error({ err: reason }, "Unhandled promise rejection");
+});
+process.on("uncaughtException", (err) => {
+  if (sentryEnabled) Sentry.captureException(err);
+  logger.fatal({ err }, "Uncaught exception");
+  process.exit(1);
+});
+
 bootstrap().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error("Fatal boot error:", err);
+  if (sentryEnabled) Sentry.captureException(err);
+  logger.fatal({ err }, "Fatal boot error");
   process.exit(1);
 });
