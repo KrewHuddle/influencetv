@@ -20,8 +20,9 @@ export default function LoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      await login(email, password);
-      router.push("/");
+      const u = await login(email, password);
+      const STAFF = ["moderator", "channel_manager", "super_admin"];
+      router.push(u && STAFF.includes(u.role) ? "/admin" : "/");
     } catch {
       toast({ title: "Sign in failed", description: "Check your credentials", variant: "error" });
     } finally {
