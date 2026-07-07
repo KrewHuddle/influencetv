@@ -23,6 +23,7 @@ interface ScheduleItem {
   start_time: Date;
   end_time: Date;
   s3_original_key: string | null;
+  s3_mezzanine_key?: string | null;
   hls_url: string | null;
   thumbnail_url: string | null;
   slug: string;
@@ -111,7 +112,7 @@ export class PlayoutEngine {
     const { rows } = await query<ScheduleItem>(
       `SELECT s.id, s.video_id, s.title, s.start_time, s.end_time,
               s.is_ad_break, s.ad_pod_id,
-              v.s3_original_key, v.hls_url, v.thumbnail_url, c.slug
+              v.s3_original_key, v.s3_mezzanine_key, v.hls_url, v.thumbnail_url, c.slug
        FROM schedule s
        JOIN channels c ON c.id = s.channel_id
        LEFT JOIN videos v ON v.id = s.video_id
@@ -138,24 +139,39 @@ export class PlayoutEngine {
 
   private async pickFiller(): Promise<ScheduleItem | null> {
     const { rows } = await query<ScheduleItem>(
-      `SELECT v.id AS video_id, v.title, v.s3_original_key, v.hls_url,
-              v.thumbnail_url, c.slug,
+      `SELECT v.id AS video_id, v.title, v.s3_original_key, v.s3_mezzanine_key,
+              v.hls_url, v.thumbnail_url, c.slug,
               NOW() AS start_time, NOW() + interval '5 minutes' AS end_time,
               gen_random_uuid() AS id
        FROM videos v CROSS JOIN channels c
-       WHERE c.id = $1 AND v.status='ready' AND v.s3_original_key IS NOT NULL
+       WHERE c.id = $1 AND v.status='ready'
+         AND (v.s3_mezzanine_key IS NOT NULL OR v.s3_original_key IS NOT NULL)
        ORDER BY random() LIMIT 1`,
       [this.channelId]
     );
     return rows[0] ?? null;
   }
 
+  /**
+   * Resolve the playout source for an item: prefer the permanent normalized
+   * mezzanine (assets bucket) over the raw upload (uploads bucket, 24h TTL).
+   */
+  private sourceFor(item: {
+    s3_mezzanine_key?: string | null;
+    s3_original_key: string | null;
+  }): { key: string; bucket: string } | null {
+    if (item.s3_mezzanine_key) return { key: item.s3_mezzanine_key, bucket: buckets.assets };
+    if (item.s3_original_key) return { key: item.s3_original_key, bucket: buckets.uploads };
+    return null;
+  }
+
   private async playItem(item: ScheduleItem, isFiller = false): Promise<void> {
-    if (!item.video_id || !item.s3_original_key) {
+    const src = this.sourceFor(item);
+    if (!item.video_id || !src) {
       await sleep(2000);
       return;
     }
-    const localPath = await this.downloadVOD(item.video_id, item.s3_original_key);
+    const localPath = await this.downloadVOD(item.video_id, src.key, src.bucket);
     const seek = isFiller
       ? 0
       : Math.max(0, Math.floor((Date.now() - new Date(item.start_time).getTime()) / 1000));
@@ -179,8 +195,9 @@ export class PlayoutEngine {
     if (selections.length === 0) {
       // No eligible ad — cover the break with filler rather than dead air.
       const filler = await this.pickFiller();
-      if (filler?.video_id && filler.s3_original_key) {
-        const p = await this.downloadVOD(filler.video_id, filler.s3_original_key);
+      const fillerSrc = filler ? this.sourceFor(filler) : null;
+      if (filler?.video_id && fillerSrc) {
+        const p = await this.downloadVOD(filler.video_id, fillerSrc.key, fillerSrc.bucket);
         await this.streamFile(p, 0, endMs, item.id);
       } else {
         await sleep(Math.min(2000, Math.max(0, endMs - Date.now())));
@@ -295,7 +312,11 @@ export class PlayoutEngine {
   }
 
   // ── VOD cache with 20GB LRU eviction ──
-  private async downloadVOD(videoId: string, s3Key: string): Promise<string> {
+  private async downloadVOD(
+    videoId: string,
+    s3Key: string,
+    bucket: string = buckets.uploads
+  ): Promise<string> {
     await mkdir(VOD_CACHE, { recursive: true });
     // videoId is a DB UUID; strip anything but hex/dash so the cache path can
     // never escape VOD_CACHE (defence-in-depth against path traversal).
@@ -303,7 +324,7 @@ export class PlayoutEngine {
     const dest = join(VOD_CACHE, `${safeId}.mp4`);
     if (existsSync(dest)) return dest;
     await this.evictIfNeeded();
-    await downloadToFile(buckets.uploads, s3Key, dest);
+    await downloadToFile(bucket, s3Key, dest);
     return dest;
   }
 
