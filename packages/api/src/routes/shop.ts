@@ -108,8 +108,9 @@ router.get(
     const countParams = [...params];
     params.push(p.limit, p.offset);
     const items = await query(
-      `SELECT id, title, thumbnail_url, base_price_cents, compare_at_price_cents, category
-       FROM products WHERE ${where} ORDER BY created_at DESC
+      `SELECT p.id, p.title, p.thumbnail_url, p.base_price_cents, p.compare_at_price_cents, p.category,
+              u.username AS seller_username, u.display_name AS seller_name
+       FROM products p JOIN users u ON u.id = p.seller_id WHERE ${where} ORDER BY p.created_at DESC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
     );

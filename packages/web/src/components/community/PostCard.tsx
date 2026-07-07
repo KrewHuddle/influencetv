@@ -1,5 +1,6 @@
 import { MessageSquare, Heart, Pin } from "lucide-react";
 import { formatCount } from "@/lib/constants";
+import { Card } from "@/components/ui/Card";
 
 export interface PostSummary {
   id: string;
@@ -15,18 +16,16 @@ export interface PostSummary {
 
 export function PostCard({ post }: { post: PostSummary }) {
   return (
-    <article className="rounded-lg border border-apex bg-apex-gray-900 p-4">
-      <div className="mb-1 flex items-center gap-2 text-xs text-[color:var(--text-muted)]">
-        {post.is_pinned && <Pin size={12} className="text-apex-red" />}
-        <span>{post.author_name ?? "Member"}</span>
+    <Card className="p-4">
+      <div className="mb-1 flex items-center gap-2 text-xs text-itv-faint">
+        {post.is_pinned && <Pin size={12} className="text-itv-magenta" />}
+        <span className="text-itv-muted">{post.author_name ?? "Member"}</span>
         <span>·</span>
         <span>{new Date(post.created_at).toLocaleDateString()}</span>
       </div>
-      {post.title && <h3 className="mb-1 font-medium">{post.title}</h3>}
-      <p className="line-clamp-3 text-sm text-[color:var(--text-secondary)]">
-        {post.body}
-      </p>
-      <div className="mt-3 flex gap-4 text-xs text-[color:var(--text-muted)]">
+      {post.title && <h3 className="mb-1 font-semibold text-itv-text">{post.title}</h3>}
+      <p className="line-clamp-3 text-sm text-itv-muted">{post.body}</p>
+      <div className="mt-3 flex gap-4 text-xs text-itv-faint">
         <span className="inline-flex items-center gap-1">
           <Heart size={13} /> {formatCount(post.like_count)}
         </span>
@@ -34,6 +33,6 @@ export function PostCard({ post }: { post: PostSummary }) {
           <MessageSquare size={13} /> {formatCount(post.comment_count)}
         </span>
       </div>
-    </article>
+    </Card>
   );
 }
