@@ -1,57 +1,108 @@
+/* Hallmark · custom theme: Broadcast Bloom · tone: cinematic-electric-warm
+ * creator-network dark — TV (Tubi/HBO) × learning (Skool) × live commerce
+ * (TikTok Shop) × membership (Patreon). paper: dark · display: grotesque ·
+ * accent: electric-magenta + amber-gold + live-coral
+ * pre-emit critique: P5 H4 E4 S5 R4 V5 */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* system font stack only — Syne removed */
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* ── type ── (next/font vars set on <html> in layout.tsx) */
+  --font-display: var(--font-display-face, "Bricolage Grotesque"), "Helvetica Neue", sans-serif;
+  --font-body: var(--font-body-face, "Inter"), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-mono-face, "JetBrains Mono"), ui-monospace, monospace;
 
-  /* magenta system tokens (mirrors tailwind itv.*) */
-  --itv-bg: #0d0d0d;
-  --itv-surface: #111111;
-  --itv-surface2: #161616;
-  --itv-surface3: #1a1a1a;
-  --itv-border: rgba(255, 255, 255, 0.08);
-  --itv-magenta: #d946ef;
-  --itv-red: #ff3333;
-  --itv-text: #f0f0f0;
+  /* ── surfaces (warm near-black, layered) ── */
+  --itv-bg: oklch(15% 0.012 320);
+  --itv-surface: oklch(19% 0.014 320);
+  --itv-surface2: oklch(23% 0.016 320);
+  --itv-surface3: oklch(28% 0.018 320);
+  --itv-border: rgba(255, 255, 255, 0.09);
+  --itv-border2: rgba(255, 255, 255, 0.05);
 
-  /* legacy var names kept (used by some inline styles) — remapped */
-  --apex-black: #0d0d0d;
-  --apex-red: #d946ef;
-  --apex-white: #f0f0f0;
-  --surface-1: #111111;
-  --surface-2: #161616;
-  --border: rgba(255, 255, 255, 0.08);
-  --text-secondary: rgba(255, 255, 255, 0.55);
-  --text-muted: rgba(255, 255, 255, 0.42);
+  /* ── signature accents ── */
+  --itv-magenta: oklch(67% 0.26 330);          /* electric magenta — primary */
+  --itv-magenta-strong: oklch(72% 0.27 330);
+  --itv-gold: oklch(82% 0.14 78);              /* amber-gold — membership / patron */
+  --itv-live: oklch(64% 0.23 22);              /* hot coral — on-air / live */
+  --itv-success: oklch(74% 0.17 152);
+  --itv-warn: oklch(80% 0.15 70);
+
+  /* ── text ── */
+  --itv-text: oklch(96% 0.004 320);
+  --itv-muted: rgba(244, 241, 245, 0.55);
+  --itv-faint: rgba(244, 241, 245, 0.3);
+
+  /* ── radii ── */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* ── motion ── */
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 360ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 html,
 body {
   background: var(--itv-bg);
   color: var(--itv-text);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* wire next/font faces into the token names */
+html {
+  --font-display-face: var(--font-display, "Bricolage Grotesque");
+  --font-body-face: var(--font-body, "Inter");
+  --font-mono-face: var(--font-mono, "JetBrains Mono");
 }
 
 *::selection {
-  background: #d946ef;
+  background: var(--itv-magenta);
   color: #fff;
 }
 
-/* display helper kept for existing class usage — system font, no forced uppercase */
-.font-display {
-  font-family: var(--font-sans);
-  font-weight: 900;
-  letter-spacing: -0.01em;
+/* a11y: consistent keyboard focus ring app-wide. Components that set their own
+ * focus-visible:ring opt out via outline-none. */
+:focus-visible {
+  outline: 2px solid var(--itv-magenta);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-/* hide scrollbars on horizontal rails */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* display helper kept for existing class usage — now the grotesque display face */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+
+/* ── motion primitives ── */
+@keyframes itv-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+@keyframes itv-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes itv-shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+.itv-live-dot { animation: itv-live-pulse 1.4s var(--ease-in-out) infinite; }
+.itv-rise { animation: itv-rise var(--dur-slow) var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .itv-live-dot, .itv-rise { animation: none; }
+  * { scroll-behavior: auto !important; }
 }

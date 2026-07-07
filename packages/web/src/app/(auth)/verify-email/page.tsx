@@ -29,14 +29,14 @@ function VerifyInner() {
         {state === "ok" && (
           <>
             <h1 className="mb-2 font-display text-2xl">Email verified</h1>
-            <p className="mb-6 text-[color:var(--text-secondary)]">You can now sign in.</p>
+            <p className="mb-6 text-itv-muted">You can now sign in.</p>
             <Link href="/login"><Button>Go to Sign In</Button></Link>
           </>
         )}
         {state === "error" && (
           <>
-            <h1 className="mb-2 font-display text-2xl text-apex-red">Link invalid</h1>
-            <p className="mb-6 text-[color:var(--text-secondary)]">This verification link is invalid or expired.</p>
+            <h1 className="mb-2 font-display text-2xl text-itv-magenta">Link invalid</h1>
+            <p className="mb-6 text-itv-muted">This verification link is invalid or expired.</p>
             <Link href="/login"><Button variant="ghost">Back to Sign In</Button></Link>
           </>
         )}

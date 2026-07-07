@@ -40,7 +40,7 @@ export default function UploadPage() {
     <div className="mx-auto max-w-xl px-6 py-6">
       <h1 className="mb-6 font-display text-2xl">Upload Video</h1>
       <form onSubmit={submit} className="space-y-5">
-        <label className="grid h-40 cursor-pointer place-items-center rounded-xl border border-dashed border-white/20 text-center text-sm text-[color:var(--text-secondary)] hover:border-white/40">
+        <label className="grid h-40 cursor-pointer place-items-center rounded-xl border border-dashed border-white/20 text-center text-sm text-itv-muted hover:border-white/40">
           <input
             type="file"
             accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska"
@@ -57,8 +57,8 @@ export default function UploadPage() {
         <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
 
         {busy && (
-          <div className="h-2 w-full overflow-hidden rounded bg-apex-gray-800">
-            <div className="h-full bg-apex-red transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-2 w-full overflow-hidden rounded bg-itv-surface2">
+            <div className="h-full bg-itv-magenta transition-all" style={{ width: `${progress}%` }} />
           </div>
         )}
 

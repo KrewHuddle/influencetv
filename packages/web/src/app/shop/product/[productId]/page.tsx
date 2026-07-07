@@ -33,7 +33,7 @@ export default function ProductDetailPage({
   const product = data?.product;
 
   if (!product)
-    return <div className="p-8 text-sm text-[color:var(--text-muted)]">Loading…</div>;
+    return <div className="p-8 text-sm text-itv-muted">Loading…</div>;
 
   const addToCart = () => {
     add({
@@ -47,24 +47,24 @@ export default function ProductDetailPage({
 
   return (
     <div className="mx-auto grid max-w-4xl gap-8 px-6 py-8 md:grid-cols-2">
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-apex-gray-800">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-itv-surface2">
         {product.thumbnail_url && (
           <Image src={product.thumbnail_url} alt={product.title} fill sizes="400px" className="object-cover" />
         )}
       </div>
       <div>
         <h1 className="font-display text-2xl">{product.title}</h1>
-        <p className="mt-1 text-sm text-[color:var(--text-secondary)]">by {product.seller_name}</p>
+        <p className="mt-1 text-sm text-itv-muted">by {product.seller_name}</p>
         <p className="my-4 text-2xl">
           ${(product.base_price_cents / 100).toFixed(2)}
           {product.compare_at_price_cents && (
-            <span className="ml-2 text-sm text-[color:var(--text-muted)] line-through">
+            <span className="ml-2 text-sm text-itv-muted line-through">
               ${(product.compare_at_price_cents / 100).toFixed(2)}
             </span>
           )}
         </p>
         {product.description && (
-          <p className="mb-6 text-sm text-[color:var(--text-secondary)]">{product.description}</p>
+          <p className="mb-6 text-sm text-itv-muted">{product.description}</p>
         )}
         <div className="flex gap-2">
           <Button onClick={addToCart}>Add to Cart</Button>

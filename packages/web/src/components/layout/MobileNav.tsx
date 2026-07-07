@@ -1,28 +1,30 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Radio, Search, ShoppingBag, User } from "lucide-react";
+import { Home, Radio, Play, GraduationCap, User } from "lucide-react";
 
+// Bottom bar surfaces the pillars most useful on mobile. Shop/Community live
+// in the header + hamburger; the cart is in the header.
 const items = [
   { href: "/", label: "Home", Icon: Home },
   { href: "/live", label: "Live", Icon: Radio },
-  { href: "/browse", label: "Browse", Icon: Search },
-  { href: "/shop", label: "Shop", Icon: ShoppingBag },
+  { href: "/browse", label: "Watch", Icon: Play },
+  { href: "/training", label: "Learn", Icon: GraduationCap },
   { href: "/account", label: "You", Icon: User },
 ];
 
 export function MobileNav() {
   const path = usePathname();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-itv-border bg-itv-bg md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-itv-border bg-itv-bg/95 backdrop-blur md:hidden">
       {items.map(({ href, label, Icon }) => {
         const active = href === "/" ? path === "/" : path.startsWith(href);
         return (
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center gap-1 text-[9px] uppercase tracking-[0.5px] ${
-              active ? "text-itv-magenta" : "text-white/[0.55]"
+            className={`flex flex-col items-center gap-1 text-[9px] font-medium uppercase tracking-[0.5px] transition-colors ${
+              active ? "text-itv-magenta" : "text-itv-faint hover:text-itv-muted"
             }`}
           >
             <Icon size={19} />

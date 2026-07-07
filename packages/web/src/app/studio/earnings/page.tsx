@@ -41,10 +41,10 @@ export default function StudioEarningsPage() {
     <div className="mx-auto max-w-2xl px-6 py-6">
       <h1 className="mb-6 font-display text-2xl">Earnings</h1>
 
-      <div className="mb-6 rounded-lg border border-apex bg-apex-gray-900 p-6">
-        <p className="text-xs uppercase text-[color:var(--text-muted)]">Pending Balance</p>
+      <div className="mb-6 rounded-lg border border-itv-border bg-itv-surface p-6">
+        <p className="text-xs uppercase text-itv-muted">Pending Balance</p>
         <p className="my-2 font-display text-4xl">{dollars(data?.pendingCents ?? 0)}</p>
-        <p className="text-xs text-[color:var(--text-muted)]">Lifetime: {dollars(data?.lifetimeCents ?? 0)}</p>
+        <p className="text-xs text-itv-muted">Lifetime: {dollars(data?.lifetimeCents ?? 0)}</p>
         <div className="mt-4 flex gap-2">
           <Button onClick={requestPayout} disabled={(data?.pendingCents ?? 0) < 1000}>
             Request Payout
@@ -56,12 +56,12 @@ export default function StudioEarningsPage() {
       <h2 className="mb-3 font-display text-sm">History</h2>
       <div className="space-y-2">
         {(data?.items ?? []).map((e) => (
-          <div key={e.id} className="flex items-center justify-between rounded-lg border border-apex bg-apex-gray-900 p-3 text-sm">
+          <div key={e.id} className="flex items-center justify-between rounded-lg border border-itv-border bg-itv-surface p-3 text-sm">
             <span className="capitalize">{e.source}</span>
             <span>{dollars(e.net_cents)}</span>
           </div>
         ))}
-        {!data?.items?.length && <p className="text-sm text-[color:var(--text-muted)]">No earnings yet.</p>}
+        {!data?.items?.length && <p className="text-sm text-itv-muted">No earnings yet.</p>}
       </div>
     </div>
   );

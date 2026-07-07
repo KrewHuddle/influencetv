@@ -9,14 +9,14 @@ export interface CommentNode {
 function Comment({ comment, depth }: { comment: CommentNode; depth: number }) {
   return (
     <div
-      className="border-l border-apex pl-3"
+      className="border-l border-itv-border pl-3"
       style={{ marginLeft: depth ? 12 : 0 }}
     >
-      <p className="text-xs text-[color:var(--text-muted)]">
+      <p className="text-xs text-itv-muted">
         {comment.author_name ?? "Member"} ·{" "}
         {new Date(comment.created_at).toLocaleDateString()}
       </p>
-      <p className="mb-2 text-sm text-[color:var(--text-secondary)]">
+      <p className="mb-2 text-sm text-itv-muted">
         {comment.body}
       </p>
       {comment.replies?.map((r) => (
@@ -29,7 +29,7 @@ function Comment({ comment, depth }: { comment: CommentNode; depth: number }) {
 export function CommentThread({ comments }: { comments: CommentNode[] }) {
   if (!comments.length)
     return (
-      <p className="text-sm text-[color:var(--text-muted)]">No comments yet.</p>
+      <p className="text-sm text-itv-muted">No comments yet.</p>
     );
   return (
     <div className="space-y-3">

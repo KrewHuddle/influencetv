@@ -37,7 +37,7 @@ export default function AdminContentPage() {
             key={t}
             onClick={() => setTab(t)}
             className={`rounded-full px-3 py-1 text-xs capitalize ${
-              tab === t ? "bg-apex-red text-white" : "border border-apex text-[color:var(--text-secondary)]"
+              tab === t ? "bg-itv-magenta text-white" : "border border-itv-border text-itv-muted"
             }`}
           >
             {t}
@@ -46,19 +46,19 @@ export default function AdminContentPage() {
       </div>
       <div className="space-y-2">
         {(data?.items ?? []).map((v) => (
-          <div key={v.id} className="flex items-center justify-between rounded-lg border border-apex bg-apex-gray-900 p-3">
+          <div key={v.id} className="flex items-center justify-between rounded-lg border border-itv-border bg-itv-surface p-3">
             <div>
               <p className="text-sm">{v.title}</p>
-              <p className="text-xs text-[color:var(--text-muted)]">{v.creator_name} · {v.view_count} views</p>
+              <p className="text-xs text-itv-muted">{v.creator_name} · {v.view_count} views</p>
             </div>
             <div className="flex items-center gap-2">
               <Badge>{v.status}</Badge>
               <Button variant="ghost" className="text-xs" onClick={() => act(v.id, "approve")}>Approve</Button>
-              <Button variant="ghost" className="text-xs text-apex-red" onClick={() => act(v.id, "reject")}>Reject</Button>
+              <Button variant="ghost" className="text-xs text-itv-magenta" onClick={() => act(v.id, "reject")}>Reject</Button>
             </div>
           </div>
         ))}
-        {!data?.items?.length && <p className="text-sm text-[color:var(--text-muted)]">Nothing here.</p>}
+        {!data?.items?.length && <p className="text-sm text-itv-muted">Nothing here.</p>}
       </div>
     </div>
   );

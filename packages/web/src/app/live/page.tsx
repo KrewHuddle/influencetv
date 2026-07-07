@@ -4,42 +4,52 @@ import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { ChannelGuide, type GuideChannel } from "@/components/channel/ChannelGuide";
 import { Skeleton } from "@/components/ui/Spinner";
+import { PillFilter } from "@/components/ui/PillFilter";
 
 export default function LiveTVPage() {
-  const [liveOnly, setLiveOnly] = useState(false);
+  const [filter, setFilter] = useState("all");
   const { data, isLoading } = useSWR<{ channels: GuideChannel[] }>(
     "/api/channels/guide",
     swrFetcher,
     { shouldRetryOnError: false }
   );
 
-  const channels = data?.channels ?? [];
+  const all = data?.channels ?? [];
+  const now = Date.now();
+  const isLiveNow = (c: GuideChannel) =>
+    c.items?.some(
+      (it) =>
+        new Date(it.start_time).getTime() <= now &&
+        new Date(it.end_time).getTime() > now
+    );
+  const channels = filter === "live" ? all.filter(isLiveNow) : all;
 
   return (
-    <div className="px-6 py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-[22px] font-black">Live TV Guide</h1>
-        <button
-          onClick={() => setLiveOnly((v) => !v)}
-          className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-[1px]"
-          style={
-            liveOnly
-              ? { background: "#D946EF", color: "#fff" }
-              : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }
-          }
-        >
-          {liveOnly ? "Showing Live" : "Live Now Only"}
-        </button>
+    <div className="mx-auto max-w-[1400px] px-4 py-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-bold text-itv-text">Live TV Guide</h1>
+        <PillFilter
+          options={[
+            { value: "all", label: "All Channels" },
+            { value: "live", label: "Live Now" },
+          ]}
+          value={filter}
+          onChange={setFilter}
+        />
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
         </div>
       ) : channels.length ? (
         <ChannelGuide channels={channels} />
       ) : (
-        <p className="text-sm text-white/[0.42]">No channels available yet.</p>
+        <p className="rounded-lg border border-dashed border-itv-border py-12 text-center text-sm text-itv-muted">
+          {filter === "live" ? "Nothing live right now." : "No channels available yet."}
+        </p>
       )}
     </div>
   );

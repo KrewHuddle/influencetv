@@ -7,7 +7,7 @@ import { requirePlan } from "../middleware/requireRole";
 import { clearUserCache } from "../middleware/auth";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ok } from "../utils/response";
-import { badRequest, forbidden } from "../middleware/errorHandler";
+import { badRequest, forbidden, notFound } from "../middleware/errorHandler";
 import { parsePagination, paginate } from "../utils/pagination";
 import { env } from "../config/env";
 import { sendEmail } from "../config/email";
@@ -375,6 +375,108 @@ router.get(
       topVideos: topVideos.rows,
       revenueBySource: revenueBySource.rows,
       activePatrons: Number(subs.rows[0].total),
+    });
+  })
+);
+
+// ─────────────── GET /api/creators/:username/hub (public) ───────────────
+// Unified Creator Hub: profile + channel(s) + VOD + courses + shop + tiers +
+// community, aggregated in one round-trip. Powers /creator/[username].
+router.get(
+  "/:username/hub",
+  asyncHandler(async (req, res) => {
+    const prof = await query<{
+      id: string;
+      display_name: string;
+      username: string;
+      bio: string | null;
+      avatar_url: string | null;
+      banner_url: string | null;
+      role: string;
+      created_at: Date;
+    }>(
+      `SELECT id, display_name, username, bio, avatar_url, banner_url, role, created_at
+       FROM users WHERE username = $1 AND is_active = true`,
+      [req.params.username]
+    );
+    const p = prof.rows[0];
+    if (!p) throw notFound("Creator not found");
+
+    const id = p.id;
+    const [channels, videos, courses, products, tiers] = await Promise.all([
+      query(
+        `SELECT id, name, slug, status, genre, artwork_url, viewer_count
+         FROM channels WHERE created_by = $1 ORDER BY created_at`,
+        [id]
+      ),
+      query(
+        `SELECT id, title, thumbnail_url, duration_seconds, view_count, published_at
+         FROM videos WHERE creator_id = $1 AND status = 'ready'
+         ORDER BY published_at DESC NULLS LAST LIMIT 12`,
+        [id]
+      ),
+      query(
+        `SELECT id, title, slug, thumbnail_url, description, access_level, lesson_count,
+                enrollment_count
+         FROM courses WHERE creator_id = $1 AND is_published = true
+         ORDER BY created_at DESC LIMIT 12`,
+        [id]
+      ),
+      query(
+        `SELECT id, title, base_price_cents, compare_at_price_cents, thumbnail_url, is_digital
+         FROM products WHERE seller_id = $1 AND status = 'approved'
+         ORDER BY created_at DESC LIMIT 12`,
+        [id]
+      ),
+      query(
+        `SELECT id, name, description, price_cents, perks, subscriber_count, position
+         FROM patron_tiers WHERE creator_id = $1 AND is_active = true
+         ORDER BY position`,
+        [id]
+      ),
+    ]);
+
+    // Community linked to any of this creator's channels (seed model:
+    // type='channel', entity_id = channel.id). Optional — omitted if none.
+    let community: unknown = null;
+    const channelIds = channels.rows.map((c) => c.id as string);
+    if (channelIds.length) {
+      const comm = await query(
+        `SELECT id, name, description, member_count, post_count
+         FROM communities
+         WHERE type = 'channel' AND entity_id = ANY($1::uuid[]) AND is_active = true
+         ORDER BY member_count DESC LIMIT 1`,
+        [channelIds]
+      );
+      community = comm.rows[0] ?? null;
+    }
+
+    ok(res, {
+      creator: {
+        id,
+        displayName: p.display_name,
+        username: p.username,
+        bio: p.bio,
+        avatarUrl: p.avatar_url,
+        bannerUrl: p.banner_url,
+        role: p.role,
+        joinedAt: p.created_at,
+      },
+      channels: channels.rows,
+      videos: videos.rows,
+      courses: courses.rows,
+      products: products.rows,
+      tiers: tiers.rows,
+      community,
+      stats: {
+        videos: videos.rows.length,
+        courses: courses.rows.length,
+        products: products.rows.length,
+        patrons: tiers.rows.reduce(
+          (n: number, t) => n + (Number(t.subscriber_count) || 0),
+          0
+        ),
+      },
     });
   })
 );

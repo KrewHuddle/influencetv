@@ -42,16 +42,16 @@ export default function AdminOverview() {
       {[row1, row2].map((row, i) => (
         <div key={i} className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
           {row.map((t) => (
-            <div key={t.label} className="rounded-lg border border-apex bg-apex-gray-900 p-4">
-              <p className="text-xs uppercase tracking-wide text-[color:var(--text-muted)]">{t.label}</p>
+            <div key={t.label} className="rounded-lg border border-itv-border bg-itv-surface p-4">
+              <p className="text-xs uppercase tracking-wide text-itv-muted">{t.label}</p>
               <p className="mt-2 font-display text-2xl">{t.value}</p>
             </div>
           ))}
         </div>
       ))}
-      <div className="mt-4 rounded-lg border border-apex bg-apex-gray-900 p-4">
-        <p className="text-sm text-[color:var(--text-secondary)]">
-          MRR: <span className="text-apex-white">{dollars(data?.mtd.mrrCents ?? 0)}</span> ·
+      <div className="mt-4 rounded-lg border border-itv-border bg-itv-surface p-4">
+        <p className="text-sm text-itv-muted">
+          MRR: <span className="text-itv-text">{dollars(data?.mtd.mrrCents ?? 0)}</span> ·
           Pending video review: {data?.queues.pendingVideoReview ?? 0} ·
           Pending products: {data?.queues.pendingProductReview ?? 0} ·
           Open DMCA: {data?.queues.openDmcaNotices ?? 0}

@@ -27,7 +27,7 @@ export default function CommunityPage({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl">{data?.community?.name ?? "Community"}</h1>
-          <p className="text-sm text-[color:var(--text-secondary)]">
+          <p className="text-sm text-itv-muted">
             {data?.community?.member_count ?? 0} members
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function CommunityPage({
           {data!.posts.map((p) => <PostCard key={p.id} post={p} />)}
         </div>
       ) : (
-        <p className="text-sm text-[color:var(--text-muted)]">No posts yet.</p>
+        <p className="text-sm text-itv-muted">No posts yet.</p>
       )}
     </div>
   );

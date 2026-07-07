@@ -66,7 +66,7 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
 
         {/* time-synced shoppable overlay */}
         {active && (
-          <div className="absolute bottom-4 left-1/2 z-20 flex w-[85%] max-w-md -translate-x-1/2 items-center gap-3 border-t-2 border-itv-magenta bg-itv-surface/95 p-3">
+          <div className="absolute bottom-4 left-1/2 z-20 flex w-[85%] max-w-md -translate-x-1/2 items-center gap-3 border-t-2 border-itv-magenta bg-itv-surface p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={active.thumbnail_url || "/placeholder.svg"} alt={active.title} className="h-12 w-12 object-cover" />
             <div className="min-w-0 flex-1">
@@ -74,7 +74,7 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
               <p className="text-sm font-bold text-itv-magenta">${(active.base_price_cents / 100).toFixed(2)}</p>
             </div>
             <button onClick={() => addToCart(active)} className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110">Add</button>
-            <button aria-label="Dismiss" onClick={() => setDismissed(active.product_id)} className="text-white/40 hover:text-itv-white"><X size={16} /></button>
+            <button aria-label="Dismiss" onClick={() => setDismissed(active.product_id)} className="text-white/40 hover:text-itv-text"><X size={16} /></button>
           </div>
         )}
       </div>
@@ -95,7 +95,7 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
           <h2 className="mb-3 flex items-center gap-2 text-[13px] font-extrabold">
             <ShoppingBag size={15} className="text-itv-magenta" /> Shop this video
           </h2>
-          <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
+          <div className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex gap-3 overflow-x-auto pb-2">
             {products.map((p) => (
               <div key={`${p.product_id}-${p.timestamp_seconds}`} className="w-[140px] shrink-0 border border-itv-border bg-itv-surface">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

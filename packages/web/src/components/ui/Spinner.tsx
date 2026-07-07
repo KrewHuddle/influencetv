@@ -6,7 +6,7 @@ export function Spinner({ className }: { className?: string }) {
       role="status"
       aria-label="Loading"
       className={cn(
-        "inline-block h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-apex-red",
+        "inline-block h-5 w-5 animate-spin rounded-full border-2 border-itv-border border-t-itv-magenta",
         className
       )}
     />
@@ -16,8 +16,12 @@ export function Spinner({ className }: { className?: string }) {
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn("animate-pulse rounded-md bg-apex-gray-800", className)}
       aria-hidden
+      className={cn(
+        "rounded-md bg-gradient-to-r from-itv-surface via-itv-surface2 to-itv-surface",
+        "bg-[length:200%_100%] animate-shimmer",
+        className
+      )}
     />
   );
 }

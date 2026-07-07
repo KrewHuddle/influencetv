@@ -9,7 +9,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(
   ({ label, className, id, ...props }, ref) => (
     <label className="block">
       {label && (
-        <span className="mb-1.5 block text-xs uppercase tracking-wide text-[color:var(--text-secondary)]">
+        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-itv-muted">
           {label}
         </span>
       )}
@@ -17,9 +17,9 @@ export const Input = forwardRef<HTMLInputElement, Props>(
         ref={ref}
         id={id}
         className={cn(
-          "w-full rounded-md border border-apex bg-apex-gray-900 px-3.5 py-2.5",
-          "text-sm text-apex-white placeholder:text-[color:var(--text-muted)]",
-          "focus:border-apex-red focus:outline-none",
+          "w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5",
+          "text-sm text-itv-text placeholder:text-itv-faint",
+          "transition-colors duration-[--dur-fast] focus:border-itv-magenta focus:outline-none",
           className
         )}
         {...props}

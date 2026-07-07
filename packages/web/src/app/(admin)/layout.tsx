@@ -47,20 +47,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const STAFF = ["moderator", "channel_manager", "super_admin"];
   if (!user || !STAFF.includes(user.role))
     return (
-      <div className="grid min-h-[60vh] place-items-center text-sm text-apex-red">
+      <div className="grid min-h-[60vh] place-items-center text-sm text-itv-magenta">
         Admin access required.
       </div>
     );
 
   return (
     <div className="flex">
-      <aside className="hidden w-56 shrink-0 border-r border-apex bg-apex-gray-900 p-4 md:block">
+      <aside className="hidden w-56 shrink-0 border-r border-itv-border bg-itv-surface p-4 md:block">
         <p className="mb-4 flex items-center gap-2 px-2 font-display text-sm">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-apex-red" /> INFLUENCE TV ADMIN
+          <span className="h-2 w-2 animate-pulse rounded-full bg-itv-magenta" /> INFLUENCE TV ADMIN
         </p>
         {SECTIONS.map((s) => (
           <div key={s.label} className="mb-4">
-            <p className="mb-1 px-2 text-[10px] uppercase tracking-wider text-[color:var(--text-muted)]">
+            <p className="mb-1 px-2 text-[10px] uppercase tracking-wider text-itv-muted">
               {s.label}
             </p>
             {s.items.map((i) => {
@@ -70,7 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   key={i.href}
                   href={i.href}
                   className={`block rounded px-2 py-1.5 text-sm ${
-                    active ? "bg-white/[0.08] text-apex-white" : "text-[color:var(--text-secondary)] hover:text-apex-white"
+                    active ? "bg-white/[0.08] text-itv-text" : "text-itv-muted hover:text-itv-text"
                   }`}
                 >
                   {i.label}

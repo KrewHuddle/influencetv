@@ -1,7 +1,12 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { PillFilter } from "@/components/ui/PillFilter";
+import { CreatorLink } from "@/components/video/VideoCard";
 
 interface Course {
   id: string;
@@ -13,44 +18,79 @@ interface Course {
   lesson_count: number;
   enrollment_count: number;
   creator_name?: string | null;
+  creator_username?: string | null;
 }
 
 export default function TrainingPage() {
-  const { data } = useSWR<{ courses: Course[] }>("/api/courses", swrFetcher, { shouldRetryOnError: false });
-  const courses = data?.courses ?? [];
+  const { data } = useSWR<{ courses: Course[] }>("/api/courses", swrFetcher, {
+    shouldRetryOnError: false,
+  });
+  const [access, setAccess] = useState("all");
+  const courses = (data?.courses ?? []).filter(
+    (c) => access === "all" || c.access_level === access
+  );
 
   return (
-    <div className="px-6 py-6">
-      <h1 className="mb-1 text-[22px] font-black">Training</h1>
-      <p className="mb-6 text-[12px] text-white/[0.55]">
+    <div className="mx-auto max-w-[1400px] px-4 py-6">
+      <h1 className="mb-1 font-display text-2xl font-bold text-itv-text">Learn</h1>
+      <p className="mb-5 text-sm text-itv-muted">
         Structured courses from Influence creators — lessons, progress, and completion.
       </p>
 
+      <PillFilter
+        className="mb-6"
+        options={[
+          { value: "all", label: "All" },
+          { value: "free", label: "Free" },
+          { value: "premium", label: "Premium" },
+          { value: "ultra", label: "Ultra" },
+        ]}
+        value={access}
+        onChange={setAccess}
+      />
+
       {courses.length === 0 ? (
-        <div className="border border-itv-border bg-itv-surface p-8 text-center">
-          <p className="text-sm text-white/[0.55]">No courses published yet.</p>
-          <Link href="/studio/courses" className="mt-2 inline-block text-[12px] font-semibold text-itv-magenta">
+        <div className="rounded-lg border border-dashed border-itv-border p-8 text-center">
+          <p className="text-sm text-itv-muted">No courses here yet.</p>
+          <Link
+            href="/studio/courses"
+            className="mt-2 inline-block text-sm font-semibold text-itv-magenta"
+          >
             Create a course in Studio →
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
-            <Link key={c.id} href={`/courses/${c.slug}`} className="group border border-itv-border bg-itv-surface transition-colors hover:border-itv-magenta-border">
-              <div className="relative aspect-video overflow-hidden bg-itv-surface3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.thumbnail_url || "/placeholder.svg"} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
-                <span className="absolute right-2 top-2 bg-itv-magenta px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-[1px] text-white">
-                  {c.access_level}
-                </span>
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-bold">{c.title}</p>
-                <p className="mt-1 text-[11px] text-white/[0.45]">
-                  {c.creator_name ?? "Influence"} · {c.lesson_count} lessons · {c.enrollment_count} enrolled
-                </p>
-              </div>
-            </Link>
+            <div key={c.id}>
+              <Link href={`/courses/${c.slug}`} className="group block">
+                <Card interactive className="overflow-hidden">
+                  <div className="relative aspect-video bg-itv-surface3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={c.thumbnail_url || "/placeholder.svg"}
+                      alt={c.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="absolute left-2 top-2">
+                      <Badge tone={c.access_level === "free" ? "success" : "gold"}>
+                        {c.access_level}
+                      </Badge>
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-semibold text-itv-text">{c.title}</p>
+                    <p className="mt-1 text-xs text-itv-muted">
+                      {c.lesson_count} lessons · {c.enrollment_count} enrolled
+                    </p>
+                  </div>
+                </Card>
+              </Link>
+              <p className="mt-1 px-1 text-xs text-itv-muted">
+                <CreatorLink name={c.creator_name} username={c.creator_username} />
+              </p>
+            </div>
           ))}
         </div>
       )}

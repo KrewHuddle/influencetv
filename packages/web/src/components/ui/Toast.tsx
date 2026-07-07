@@ -36,19 +36,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             onOpenChange={(open) =>
               !open && setItems((p) => p.filter((x) => x.id !== t.id))
             }
-            className="rounded-md border border-apex bg-apex-gray-900 p-4 shadow-xl data-[state=open]:animate-in"
+            className="rounded-lg border border-itv-border bg-itv-surface2 p-4 shadow-card data-[state=open]:animate-rise"
           >
             <ToastPrimitive.Title
               className={
                 t.variant === "error"
-                  ? "text-sm font-medium text-apex-red"
-                  : "text-sm font-medium text-apex-white"
+                  ? "text-sm font-medium text-itv-live"
+                  : "text-sm font-medium text-itv-text"
               }
             >
               {t.title}
             </ToastPrimitive.Title>
             {t.description && (
-              <ToastPrimitive.Description className="mt-1 text-xs text-[color:var(--text-secondary)]">
+              <ToastPrimitive.Description className="mt-1 text-xs text-itv-muted">
                 {t.description}
               </ToastPrimitive.Description>
             )}

@@ -26,10 +26,10 @@ export default function StorefrontPage({
       <div className="mb-6">
         <h1 className="font-display text-2xl">{data?.seller?.display_name ?? "Seller"}</h1>
         {data?.seller?.bio && (
-          <p className="text-sm text-[color:var(--text-secondary)]">{data.seller.bio}</p>
+          <p className="text-sm text-itv-muted">{data.seller.bio}</p>
         )}
         {data?.liveShopActive && (
-          <div className="mt-3 rounded-lg border border-apex-red/40 bg-apex-red/10 px-4 py-2 text-sm text-apex-red">
+          <div className="mt-3 rounded-lg border border-itv-magenta bg-itv-magenta-dim px-4 py-2 text-sm text-itv-magenta">
             LIVE NOW — Watch &amp; Shop
           </div>
         )}

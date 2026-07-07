@@ -29,7 +29,7 @@ export default function AdminProductsPage() {
       <div className="mb-4 flex gap-2">
         {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px]"
-            style={tab === t ? { background: "#D946EF", color: "#fff" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}>
+            style={tab === t ? { background: "var(--itv-magenta)", color: "#fff" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}>
             {t}
           </button>
         ))}
@@ -43,7 +43,7 @@ export default function AdminProductsPage() {
             </div>
             {tab === "pending" && (
               <div className="flex gap-2">
-                <button onClick={() => act(p.id, "approve")} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white" style={{ background: "#D946EF" }}>Approve</button>
+                <button onClick={() => act(p.id, "approve")} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white" style={{ background: "var(--itv-magenta)" }}>Approve</button>
                 <button onClick={() => act(p.id, "reject")} className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-white/[0.06]">Reject</button>
               </div>
             )}

@@ -24,18 +24,19 @@ export function Modal({
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2",
-            "rounded-xl border border-apex bg-apex-gray-900 p-6 shadow-2xl focus:outline-none",
+            "rounded-xl border border-itv-border bg-itv-surface p-6 shadow-card focus:outline-none",
+            "data-[state=open]:animate-rise",
             className
           )}
         >
           {title && (
-            <Dialog.Title className="mb-4 font-display text-lg">
+            <Dialog.Title className="mb-4 font-display text-lg text-itv-text">
               {title}
             </Dialog.Title>
           )}
           <Dialog.Close
             aria-label="Close"
-            className="absolute right-4 top-4 text-[color:var(--text-muted)] hover:text-apex-white"
+            className="absolute right-4 top-4 text-itv-muted transition-colors hover:text-itv-text"
           >
             <X size={18} />
           </Dialog.Close>

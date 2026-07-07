@@ -1,5 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
+import { Card } from "@/components/ui/Card";
+import { PriceTag } from "@/components/ui/PriceTag";
+import { CreatorLink } from "@/components/video/VideoCard";
 
 export interface ProductSummary {
   id: string;
@@ -7,40 +9,44 @@ export interface ProductSummary {
   thumbnail_url?: string | null;
   base_price_cents: number;
   compare_at_price_cents?: number | null;
+  seller_name?: string | null;
+  seller_username?: string | null;
 }
-
-const price = (c: number) => `$${(c / 100).toFixed(2)}`;
 
 export function ProductCard({ product }: { product: ProductSummary }) {
   return (
-    <Link
-      href={`/shop/product/${product.id}`}
-      className="group block overflow-hidden rounded-lg border border-apex bg-apex-gray-900"
-    >
-      <div className="relative aspect-square bg-apex-gray-800">
-        {product.thumbnail_url && (
-          <Image
-            src={product.thumbnail_url}
-            alt={product.title}
-            fill
-            sizes="240px"
-            className="object-cover transition-transform group-hover:scale-105"
-          />
-        )}
-      </div>
-      <div className="p-3">
-        <h3 className="line-clamp-1 text-sm font-medium">{product.title}</h3>
-        <p className="mt-1 text-sm">
-          <span className="text-apex-white">
-            {price(product.base_price_cents)}
-          </span>
-          {product.compare_at_price_cents ? (
-            <span className="ml-2 text-xs text-[color:var(--text-muted)] line-through">
-              {price(product.compare_at_price_cents)}
-            </span>
-          ) : null}
+    <div>
+      <Link href={`/shop/product/${product.id}`} className="group block">
+        <Card interactive className="overflow-hidden">
+          <div className="relative aspect-square bg-itv-surface3">
+            {product.thumbnail_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={product.thumbnail_url}
+                alt={product.title}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+          <div className="p-3">
+            <h3 className="line-clamp-1 text-[13px] font-semibold text-itv-text">
+              {product.title}
+            </h3>
+            <PriceTag
+              cents={product.base_price_cents}
+              compareAtCents={product.compare_at_price_cents}
+              size="sm"
+              className="mt-1"
+            />
+          </div>
+        </Card>
+      </Link>
+      {product.seller_username && (
+        <p className="mt-1 px-1 text-xs text-itv-muted">
+          <CreatorLink name={product.seller_name} username={product.seller_username} />
         </p>
-      </div>
-    </Link>
+      )}
+    </div>
   );
 }
