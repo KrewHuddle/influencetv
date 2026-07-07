@@ -217,10 +217,60 @@ function CreatorCard({ c }: { c: CreatorSummary }) {
   );
 }
 
+/* ------------------------------------------------------------------ live haggle card */
+interface HaggleSummary {
+  id: string;
+  title: string;
+  product_title?: string | null;
+  thumbnail_url?: string | null;
+  current_bid_cents?: number | null;
+  ends_at?: string | null;
+  bid_count?: number | null;
+}
+function HaggleRailCard({ a }: { a: HaggleSummary }) {
+  const [left, setLeft] = useState(() =>
+    a.ends_at ? Math.max(0, Math.round((new Date(a.ends_at).getTime() - Date.now()) / 1000)) : 0
+  );
+  useEffect(() => {
+    const t = setInterval(
+      () =>
+        setLeft(
+          a.ends_at ? Math.max(0, Math.round((new Date(a.ends_at!).getTime() - Date.now()) / 1000)) : 0
+        ),
+      1000
+    );
+    return () => clearInterval(t);
+  }, [a.ends_at]);
+  const mmss = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+  return (
+    <Link href="/haggle" className="w-[200px] shrink-0 snap-start">
+      <Card interactive className="overflow-hidden">
+        <div className="relative aspect-video bg-itv-surface3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={a.thumbnail_url || "/placeholder.svg"} alt={a.title} loading="lazy" className="h-full w-full object-cover" />
+          <span className="absolute left-2 top-2">
+            <Badge tone="magenta">Haggle</Badge>
+          </span>
+          <span className={`absolute right-2 top-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[11px] tabular-nums ${left <= 10 ? "text-itv-live" : "text-white/85"}`}>
+            {mmss}
+          </span>
+        </div>
+        <div className="p-3">
+          <p className="line-clamp-1 text-[13px] font-semibold text-itv-text">{a.product_title ?? a.title}</p>
+          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-itv-magenta">
+            {kfmt(a.bid_count)} bids · ${(Number(a.current_bid_cents) || 0) / 100}
+          </p>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
 /* ================================================================== page */
 export default function HomePage() {
   const { data: chData } = useSWR<{ channels: ChannelSummary[] }>("/api/channels", swrFetcher, { shouldRetryOnError: false });
   const { data: fyData } = useSWR<{ items: VideoSummary[] }>("/api/browse?sort=new", swrFetcher, { shouldRetryOnError: false });
+  const { data: haggleData } = useSWR<{ items: HaggleSummary[] }>("/api/haggle/browse?status=live", swrFetcher, { shouldRetryOnError: false });
   const { data: lbData } = useSWR<{ leaders: Array<{ level_name: string; display_name?: string; username?: string; total_points: number }> }>(
     "/api/community/leaderboard?limit=4",
     swrFetcher,
@@ -316,6 +366,15 @@ export default function HomePage() {
             <LiveCard key={c.id} c={c} />
           ))}
         </Rail>
+
+        {/* -------------------------------------------------------- LIVE HAGGLES */}
+        {(haggleData?.items?.length ?? 0) > 0 && (
+          <Rail title="Live Haggles" href="/haggle">
+            {haggleData!.items.map((a) => (
+              <HaggleRailCard key={a.id} a={a} />
+            ))}
+          </Rail>
+        )}
 
         {/* -------------------------------------------------------- FLASH SALE */}
         <Card

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { useSocket } from "@/hooks/useSocket";
+import { useCartStore } from "@/store/cartStore";
 
 interface PinnedProduct {
   productId: string;
@@ -18,6 +19,7 @@ interface PinnedProduct {
 /** Listens for `product-pinned` in a channel room and slides a buy card up. */
 export function ProductOverlay({ channelId }: { channelId: string }) {
   const socket = useSocket();
+  const addToCart = useCartStore((s) => s.add);
   const [product, setProduct] = useState<PinnedProduct | null>(null);
   const [shown, setShown] = useState(false);
   const [secsLeft, setSecsLeft] = useState<number | null>(null);
@@ -100,8 +102,19 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
           </p>
         )}
       </div>
-      <button className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110">
-        Buy Now
+      <button
+        onClick={() =>
+          addToCart({
+            productId: product.productId,
+            title: product.title,
+            priceCents: product.price,
+            quantity: 1,
+            thumbnail: product.thumbnail ?? null,
+          })
+        }
+        className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110"
+      >
+        Add to Cart
       </button>
       <button
         aria-label="Dismiss"

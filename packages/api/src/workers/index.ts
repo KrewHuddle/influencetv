@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { assertDbConnection } from "../config/database";
 import { startTranscodeWorker } from "./transcodeWorker";
 import { startFlashSaleWorker } from "./flashSaleWorker";
+import { startHaggleWorkers } from "./haggleWorker";
 import { startWorkerMetricsServer } from "./metricsServer";
 import { logger } from "../config/logger";
 
@@ -14,7 +15,7 @@ import { logger } from "../config/logger";
 async function main(): Promise<void> {
   await assertDbConnection();
 
-  const workers: Worker[] = [startFlashSaleWorker()];
+  const workers: Worker[] = [startFlashSaleWorker(), ...startHaggleWorkers()];
   const transcodeHere = process.env.RUN_TRANSCODE_IN_MAIN_WORKER !== "false";
   if (transcodeHere) workers.push(startTranscodeWorker());
 

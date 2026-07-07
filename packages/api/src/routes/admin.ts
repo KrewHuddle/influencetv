@@ -8,6 +8,7 @@ import { ok } from "../utils/response";
 import { badRequest, notFound } from "../middleware/errorHandler";
 import { parsePagination, paginate } from "../utils/pagination";
 import { getIo, rooms } from "../sockets";
+import { cancelAuction } from "../services/HaggleEngine";
 import type { AuthedRequest } from "../types";
 
 const router: ExpressRouter = Router();
@@ -30,7 +31,7 @@ async function logAudit(req: AuthedRequest, action: string, targetType: string, 
 router.get(
   "/overview",
   asyncHandler(async (_req, res) => {
-    const [live, today, queues, mrr] = await Promise.all([
+    const [live, today, queues, mrr, haggle, recentWon] = await Promise.all([
       query<{ viewers: string; active: string; ingesting: string }>(
         `SELECT COALESCE(SUM(viewer_count),0) AS viewers,
                 COUNT(*) FILTER (WHERE status='active') AS active,
@@ -54,6 +55,17 @@ router.get(
         `SELECT COALESCE(SUM(CASE WHEN plan='premium' THEN 1499 WHEN plan='ultra' THEN 2499 ELSE 0 END),0) AS mrr
          FROM subscriptions WHERE status='active'`
       ),
+      query<{ active: string; bids: string; today_gmv: string }>(
+        `SELECT
+           (SELECT COUNT(*) FROM haggle_auctions WHERE status IN ('live','ending')) AS active,
+           (SELECT COALESCE(SUM(current_bid_cents),0) FROM haggle_auctions WHERE status IN ('live','ending')) AS bids,
+           (SELECT COALESCE(SUM(final_price_cents),0) FROM haggle_auctions WHERE status='sold' AND updated_at::date=CURRENT_DATE) AS today_gmv`
+      ),
+      query(
+        `SELECT a.id, a.title, a.final_price_cents, u.username AS winner
+         FROM haggle_auctions a LEFT JOIN users u ON u.id=a.current_winner_id
+         WHERE a.status='sold' ORDER BY a.updated_at DESC LIMIT 5`
+      ),
     ]);
 
     ok(res, {
@@ -73,6 +85,12 @@ router.get(
         pendingVideoReview: Number(queues.rows[0].videos),
         pendingProductReview: Number(queues.rows[0].products),
         openDmcaNotices: Number(queues.rows[0].dmca),
+      },
+      haggle: {
+        activeAuctions: Number(haggle.rows[0].active),
+        currentBidsCents: Number(haggle.rows[0].bids),
+        todayGmvCents: Number(haggle.rows[0].today_gmv),
+        recentWon: recentWon.rows,
       },
     });
   })
@@ -482,6 +500,61 @@ router.get(
       action ? [`${action}%`] : []
     );
     ok(res, paginate(items.rows, Number(count.rows[0].n), p));
+  })
+);
+
+// ─────────────────────── haggle ───────────────────────
+router.get(
+  "/haggle",
+  asyncHandler(async (req, res) => {
+    const p = parsePagination(req.query);
+    const items = await query(
+      `SELECT a.id, a.title, a.status, a.current_bid_cents, a.final_price_cents, a.created_at,
+              su.username AS seller, pr.title AS product,
+              (SELECT COUNT(*)::int FROM haggle_bids b WHERE b.auction_id=a.id) AS bid_count
+       FROM haggle_auctions a
+       JOIN users su ON su.id=a.seller_id
+       JOIN products pr ON pr.id=a.product_id
+       ORDER BY a.created_at DESC LIMIT $1 OFFSET $2`,
+      [p.limit, p.offset]
+    );
+    const count = await query<{ n: string }>("SELECT COUNT(*)::int AS n FROM haggle_auctions", []);
+    ok(res, paginate(items.rows, Number(count.rows[0].n), p));
+  })
+);
+
+router.post(
+  "/haggle/:id/cancel",
+  asyncHandler(async (req, res) => {
+    await cancelAuction(req.params.id, "admin_cancelled");
+    ok(res, { cancelled: true });
+  })
+);
+
+router.get(
+  "/haggle/stats",
+  asyncHandler(async (_req, res) => {
+    const { rows } = await query<{
+      total: string;
+      sold: string;
+      gmv: string;
+      avg_price: string;
+    }>(
+      `SELECT COUNT(*) AS total,
+              COUNT(*) FILTER (WHERE status='sold') AS sold,
+              COALESCE(SUM(final_price_cents) FILTER (WHERE status='sold'),0) AS gmv,
+              COALESCE(AVG(final_price_cents) FILTER (WHERE status='sold'),0) AS avg_price
+       FROM haggle_auctions`
+    );
+    const r = rows[0];
+    const total = Number(r.total);
+    const sold = Number(r.sold);
+    ok(res, {
+      totalAuctions: total,
+      totalGmvCents: Number(r.gmv),
+      avgPriceCents: Math.round(Number(r.avg_price)),
+      winRate: total ? Math.round((sold / total) * 100) : 0,
+    });
   })
 );
 

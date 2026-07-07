@@ -1,10 +1,26 @@
 import { Router, type Router as ExpressRouter } from "express";
 import { query } from "../config/database";
+import { redisClient } from "../config/redis";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ok } from "../utils/response";
 import { notFound } from "../middleware/errorHandler";
 
 const router: ExpressRouter = Router();
+
+// GET /api/channels/:channelId/haggle/active — the auction live on a channel now.
+router.get(
+  "/:channelId/haggle/active",
+  asyncHandler(async (req, res) => {
+    const auctionId = await redisClient.get(`haggle:active:${req.params.channelId}`);
+    if (!auctionId) {
+      ok(res, { auction: null });
+      return;
+    }
+    const { rows } = await query("SELECT * FROM haggle_auctions WHERE id=$1", [auctionId]);
+    const live = await redisClient.hgetall(`haggle:auction:${auctionId}`);
+    ok(res, { auction: rows[0] ?? null, live: Object.keys(live).length ? live : null });
+  })
+);
 
 // Shared column list for a channel card, with a derived 1-based channel number
 // (schema has no explicit number) and the currently-airing show title.

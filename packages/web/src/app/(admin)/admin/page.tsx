@@ -7,6 +7,12 @@ interface Overview {
   today: { newSignups: number; newSubscriptions: number; revenueCents: number; gmvCents: number };
   mtd: { mrrCents: number };
   queues: { pendingVideoReview: number; pendingProductReview: number; openDmcaNotices: number };
+  haggle?: {
+    activeAuctions: number;
+    currentBidsCents: number;
+    todayGmvCents: number;
+    recentWon: Array<{ id: string; title: string; final_price_cents: number | null; winner: string | null }>;
+  };
 }
 
 const dollars = (c: number) => `$${(c / 100).toFixed(0)}`;
@@ -56,6 +62,38 @@ export default function AdminOverview() {
           Pending products: {data?.queues.pendingProductReview ?? 0} ·
           Open DMCA: {data?.queues.openDmcaNotices ?? 0}
         </p>
+      </div>
+
+      {/* Haggle */}
+      <div className="mt-6">
+        <h2 className="mb-3 font-display text-lg text-itv-text">Haggle</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          {[
+            { label: "Active Auctions", value: data?.haggle?.activeAuctions ?? 0 },
+            { label: "Current Bids", value: dollars(data?.haggle?.currentBidsCents ?? 0) },
+            { label: "Today’s Haggle GMV", value: dollars(data?.haggle?.todayGmvCents ?? 0) },
+          ].map((t) => (
+            <div key={t.label} className="rounded-lg border border-itv-border bg-itv-surface p-4">
+              <p className="text-xs uppercase tracking-wide text-itv-muted">{t.label}</p>
+              <p className="mt-2 font-display text-2xl">{t.value}</p>
+            </div>
+          ))}
+        </div>
+        {(data?.haggle?.recentWon?.length ?? 0) > 0 && (
+          <div className="mt-4 rounded-lg border border-itv-border bg-itv-surface p-4">
+            <p className="mb-2 text-xs uppercase tracking-wide text-itv-muted">Recent Won</p>
+            <ul className="space-y-1 text-sm text-itv-text">
+              {data!.haggle!.recentWon.map((w) => (
+                <li key={w.id} className="flex justify-between">
+                  <span className="truncate">{w.title}</span>
+                  <span className="font-mono tabular-nums text-itv-muted">
+                    {w.winner ? `@${w.winner}` : "—"} · {dollars(w.final_price_cents ?? 0)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
