@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
-import { CheckCircle2, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -17,7 +17,7 @@ import { Button, PriceTag } from "@/components/ui";
 const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = pk ? loadStripe(pk) : null;
 
-type View = "cart" | "pay" | "done";
+type View = "cart" | "pay" | "processing" | "done";
 
 /** Right-hand slide-over cart with inline (in-drawer) Stripe checkout. */
 export function CartDrawer() {
@@ -29,6 +29,7 @@ export function CartDrawer() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [fallback, setFallback] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   // Reset to the cart view every time the drawer re-opens.
   useEffect(() => {
@@ -38,6 +39,7 @@ export function CartDrawer() {
       setOrderId(null);
       setFallback(false);
       setBusy(false);
+      setCheckoutError(null);
     }
   }, [isOpen]);
 
@@ -49,6 +51,7 @@ export function CartDrawer() {
       return;
     }
     setBusy(true);
+    setCheckoutError(null);
     try {
       const res = await apiPost<{ clientSecret: string; orderId: string }>(
         "/api/shop/checkout",
@@ -64,10 +67,12 @@ export function CartDrawer() {
       setOrderId(res.orderId);
       setFallback(false);
       setView("pay");
-    } catch {
-      // Request failed → fall back to the standalone checkout page.
-      setFallback(true);
-      setView("pay");
+    } catch (err) {
+      // Surface the server's message in the drawer instead of failing silently.
+      const message =
+        (err as { response?: { data?: { error?: { message?: string } } } })
+          ?.response?.data?.error?.message ?? "Checkout failed — try again.";
+      setCheckoutError(message);
     } finally {
       setBusy(false);
     }
@@ -78,7 +83,7 @@ export function CartDrawer() {
   return (
     <Dialog.Root open={isOpen} onOpenChange={(o) => toggle(o)}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-[60] bg-itv-bg/80 backdrop-blur-sm" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed right-0 top-0 z-[60] flex h-full w-[92vw] max-w-md flex-col border-l border-itv-border bg-itv-surface shadow-card focus:outline-none"
@@ -86,9 +91,13 @@ export function CartDrawer() {
           <div className="flex items-center justify-between border-b border-itv-border px-5 py-4">
             <Dialog.Title className="flex items-center gap-2 font-display text-lg text-itv-text">
               <ShoppingBag size={18} className="text-itv-magenta" />
-              {view === "done" ? "Order confirmed" : "Cart"}
+              {view === "done"
+                ? "Order confirmed"
+                : view === "processing"
+                  ? "Payment processing"
+                  : "Cart"}
               {view === "cart" && count > 0 && (
-                <span className="grid min-w-[1.25rem] place-items-center rounded-full bg-itv-magenta px-1.5 font-mono text-xs font-semibold text-white">
+                <span className="grid min-w-[1.25rem] place-items-center rounded-full bg-itv-magenta px-1.5 font-mono text-xs font-semibold text-itv-text">
                   {count}
                 </span>
               )}
@@ -109,6 +118,13 @@ export function CartDrawer() {
                 toggle(false);
               }}
             />
+          ) : view === "processing" ? (
+            <ProcessingView
+              onClose={() => {
+                clear();
+                toggle(false);
+              }}
+            />
           ) : items.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
               <ShoppingBag size={40} className="text-itv-faint" />
@@ -125,6 +141,7 @@ export function CartDrawer() {
               subtotalCents={subtotalCents()}
               onBack={() => setView("cart")}
               onSuccess={() => setView("done")}
+              onProcessing={() => setView("processing")}
             />
           ) : (
             <>
@@ -185,6 +202,9 @@ export function CartDrawer() {
                   <span className="text-sm text-itv-muted">Subtotal</span>
                   <PriceTag cents={subtotalCents()} size="lg" />
                 </div>
+                {checkoutError && (
+                  <p className="text-sm text-itv-live">{checkoutError}</p>
+                )}
                 <Button
                   className="w-full"
                   disabled={busy}
@@ -209,6 +229,7 @@ function PayView({
   subtotalCents,
   onBack,
   onSuccess,
+  onProcessing,
 }: {
   fallback: boolean;
   clientSecret: string | null;
@@ -216,15 +237,18 @@ function PayView({
   subtotalCents: number;
   onBack: () => void;
   onSuccess: () => void;
+  onProcessing: () => void;
 }) {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto px-5 py-4">
       <div className="mb-4 flex items-center justify-between">
         <button
           onClick={onBack}
-          className="text-sm text-itv-muted transition-colors hover:text-itv-text"
+          aria-label="Back to cart"
+          className="flex items-center gap-1.5 text-sm text-itv-muted transition-colors hover:text-itv-text"
         >
-          ← Back to cart
+          <ArrowLeft size={16} />
+          Back to cart
         </button>
         <PriceTag cents={subtotalCents} size="md" />
       </div>
@@ -238,7 +262,7 @@ function PayView({
           <Dialog.Close asChild>
             <Link
               href="/shop/checkout"
-              className="block w-full rounded-md bg-itv-magenta py-3 text-center text-sm font-medium text-white transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
+              className="block w-full rounded-md bg-itv-magenta py-3 text-center text-sm font-medium text-itv-text transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
             >
               Go to checkout
             </Link>
@@ -246,7 +270,11 @@ function PayView({
         </div>
       ) : (
         <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <PaymentForm orderId={orderId} onSuccess={onSuccess} />
+          <PaymentForm
+            orderId={orderId}
+            onSuccess={onSuccess}
+            onProcessing={onProcessing}
+          />
         </Elements>
       )}
     </div>
@@ -257,9 +285,11 @@ function PayView({
 function PaymentForm({
   orderId,
   onSuccess,
+  onProcessing,
 }: {
   orderId: string | null;
   onSuccess: () => void;
+  onProcessing: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -281,12 +311,17 @@ function PaymentForm({
       setBusy(false);
       return;
     }
-    if (paymentIntent && paymentIntent.status === "succeeded") {
+    if (paymentIntent?.status === "succeeded") {
       onSuccess();
       return;
     }
-    // Non-terminal status (e.g. processing) — treat as submitted.
-    onSuccess();
+    if (paymentIntent?.status === "processing") {
+      onProcessing();
+      return;
+    }
+    // Any other status — the payment didn't complete.
+    setError("Payment could not be completed. Please try again.");
+    setBusy(false);
   };
 
   return (
@@ -300,6 +335,24 @@ function PaymentForm({
         {busy ? "Processing…" : "Pay"}
       </Button>
     </form>
+  );
+}
+
+/** Shown when Stripe reports the payment as still processing. */
+function ProcessingView({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <Clock size={48} className="text-itv-warn" />
+      <div className="space-y-1">
+        <p className="font-display text-lg text-itv-text">Payment processing</p>
+        <p className="text-sm text-itv-muted">
+          Payment processing — we&apos;ll confirm by email once it completes.
+        </p>
+      </div>
+      <Button className="w-full" onClick={onClose}>
+        Continue Watching
+      </Button>
+    </div>
   );
 }
 
@@ -343,7 +396,7 @@ function QtyBtn({
     <button
       aria-label={label}
       onClick={onClick}
-      className="grid h-6 w-6 place-items-center rounded border border-itv-border text-itv-muted transition-colors hover:border-itv-border2 hover:text-itv-text"
+      className="grid h-10 w-10 place-items-center rounded border border-itv-border text-itv-muted transition-colors hover:border-itv-border2 hover:text-itv-text"
     >
       {children}
     </button>

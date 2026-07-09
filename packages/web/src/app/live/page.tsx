@@ -3,12 +3,13 @@ import { useState } from "react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { ChannelGuide, type GuideChannel } from "@/components/channel/ChannelGuide";
+import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Spinner";
 import { PillFilter } from "@/components/ui/PillFilter";
 
 export default function LiveTVPage() {
   const [filter, setFilter] = useState("all");
-  const { data, isLoading } = useSWR<{ channels: GuideChannel[] }>(
+  const { data, error, isLoading, mutate } = useSWR<{ channels: GuideChannel[] }>(
     "/api/channels/guide",
     swrFetcher,
     { shouldRetryOnError: false }
@@ -43,6 +44,13 @@ export default function LiveTVPage() {
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load the guide.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
         </div>
       ) : channels.length ? (
         <ChannelGuide channels={channels} />

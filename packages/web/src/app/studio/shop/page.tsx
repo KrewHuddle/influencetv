@@ -80,13 +80,13 @@ export default function StudioShopPage() {
           <div key={p.id} className="flex items-center justify-between border border-itv-border bg-itv-surface p-3">
             <span className="text-sm font-medium">{p.title}</span>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] uppercase tracking-[1px] text-white/[0.45]">{p.status}</span>
+              <span className="text-[11px] uppercase tracking-[1px] text-itv-faint">{p.status}</span>
               <span className="text-sm">${(p.base_price_cents / 100).toFixed(2)}</span>
             </div>
           </div>
         ))}
         {!products.length && (
-          <p className="text-sm text-white/[0.42]">No products yet. Create one below.</p>
+          <p className="text-sm text-itv-faint">No products yet. Create one below.</p>
         )}
       </div>
 
@@ -101,7 +101,7 @@ export default function StudioShopPage() {
         <Input label="Image URL(s) — comma separated" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://cdn.influencetvnetwork.com/..." required />
         <Input label="Category" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="apparel, digital, …" />
         <label className="block">
-          <span className="mb-1.5 block text-xs uppercase tracking-wide text-white/[0.55]">Description</span>
+          <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Description</span>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -116,7 +116,7 @@ export default function StudioShopPage() {
         <Button type="submit" disabled={busy} className="w-full">
           {busy ? "Submitting…" : "Create Product"}
         </Button>
-        <p className="text-[11px] text-white/[0.42]">
+        <p className="text-[11px] text-itv-faint">
           New products enter review before appearing in the shop.
         </p>
       </form>

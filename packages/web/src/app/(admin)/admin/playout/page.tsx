@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 import useSWR from "swr";
 import { api, swrFetcher } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 
 interface Channel {
   id: string;
@@ -28,7 +30,12 @@ export default function AdminPlayoutPage() {
   const channels = chData?.channels ?? [];
   const beats = new Map((stData?.channels ?? []).map((h) => [h.channelId, h]));
 
+  // Two-step kill confirmation + in-flight tracking.
+  const [confirmKillId, setConfirmKillId] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
   const control = async (id: string, action: string) => {
+    setBusyKey(`${id}:${action}`);
     try {
       if (action === "kill") await api.post(`/api/admin/channels/${id}/kill`);
       else await api.post(`/api/admin/channels/${id}/playout`, { action });
@@ -36,13 +43,16 @@ export default function AdminPlayoutPage() {
       setTimeout(() => void mutate(), 1500);
     } catch {
       toast({ title: `Failed: ${action}`, variant: "error" });
+    } finally {
+      setBusyKey(null);
+      if (action === "kill") setConfirmKillId(null);
     }
   };
 
   return (
     <div className="px-6 py-6">
       <h1 className="mb-1 text-[22px] font-black">Playout Control</h1>
-      <p className="mb-6 text-[12px] text-white/[0.45]">
+      <p className="mb-6 text-[12px] text-itv-muted">
         Live status is reported by the playout process via Redis heartbeats (refreshes every 5s).
       </p>
 
@@ -50,40 +60,63 @@ export default function AdminPlayoutPage() {
         {channels.map((c) => {
           const hb = beats.get(c.id);
           const live = hb?.running && (hb.lastSeenMs ?? 99999) < 30000;
+          const killBusy = busyKey === `${c.id}:kill`;
+          const confirming = confirmKillId === c.id;
           return (
             <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
               <div className="flex items-center gap-3">
-                <span className={`h-2 w-2 rounded-full ${live ? "bg-itv-magenta" : "bg-white/25"}`} />
+                <span className={`h-2 w-2 rounded-full ${live ? "bg-itv-magenta" : "bg-itv-faint"}`} />
                 <div>
                   <p className="text-sm font-bold">{c.name}</p>
-                  <p className="text-[11px] text-white/[0.45]">
+                  <p className="text-[11px] text-itv-muted">
                     {live ? "on air" : "offline"}
                     {hb?.lastSeenMs != null ? ` · seen ${Math.round(hb.lastSeenMs / 1000)}s ago` : " · no heartbeat"}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 {(["start", "restart", "stop"] as const).map((a) => (
                   <button
                     key={a}
                     onClick={() => control(c.id, a)}
-                    className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-white/[0.06]"
+                    disabled={busyKey === `${c.id}:${a}`}
+                    className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-itv-text hover:bg-itv-hover disabled:pointer-events-none disabled:opacity-40"
                   >
                     {a}
                   </button>
                 ))}
-                <button
-                  onClick={() => control(c.id, "kill")}
-                  className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white"
-                  style={{ background: "#FF3333" }}
-                >
-                  Kill
-                </button>
+                {confirming ? (
+                  <>
+                    <button
+                      onClick={() => control(c.id, "kill")}
+                      disabled={killBusy}
+                      className="bg-itv-live px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white disabled:pointer-events-none disabled:opacity-40"
+                    >
+                      {killBusy ? "Killing…" : `Confirm kill ${c.name}?`}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Cancel kill of ${c.name}`}
+                      onClick={() => setConfirmKillId(null)}
+                      disabled={killBusy}
+                    >
+                      ✕
+                    </Button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirmKillId(c.id)}
+                    className="bg-itv-live px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white"
+                  >
+                    Kill
+                  </button>
+                )}
               </div>
             </div>
           );
         })}
-        {!channels.length && <p className="text-sm text-white/[0.42]">No channels.</p>}
+        {!channels.length && <p className="text-sm text-itv-muted">No channels.</p>}
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Spinner";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { ProductOverlay } from "@/components/shop/ProductOverlay";
 import { HaggleOverlay } from "@/components/shop/HaggleOverlay";
@@ -28,8 +29,7 @@ export default function ChannelPlayerPage({
 }) {
   const { channelSlug } = params;
   const { user } = useAuth();
-  const [msg, setMsg] = useState("");
-  const { data } = useSWR<{ channel: Channel }>(
+  const { data, error, isLoading, mutate } = useSWR<{ channel: Channel }>(
     `/api/channels/slug/${channelSlug}`,
     swrFetcher,
     { shouldRetryOnError: false }
@@ -42,10 +42,19 @@ export default function ChannelPlayerPage({
     <div className="grid gap-4 px-6 py-6 lg:grid-cols-[1fr_320px]">
       <div>
         <div className="relative">
-          {channel?.hls_output_url ? (
+          {isLoading ? (
+            <Skeleton className="aspect-video w-full" />
+          ) : error ? (
+            <div className="flex aspect-video flex-col items-center justify-center gap-3 border border-itv-border bg-itv-surface">
+              <p className="text-sm text-itv-muted">Couldn&apos;t load channel.</p>
+              <Button variant="subtle" size="sm" onClick={() => mutate()}>
+                Retry
+              </Button>
+            </div>
+          ) : channel?.hls_output_url ? (
             <VideoPlayer hlsUrl={channel.hls_output_url} startOffset={elapsedSeconds} />
           ) : (
-            <div className="grid aspect-video place-items-center border border-itv-border bg-itv-surface text-sm text-white/[0.42]">
+            <div className="grid aspect-video place-items-center border border-itv-border bg-itv-surface text-sm text-itv-faint">
               Channel offline
             </div>
           )}
@@ -53,7 +62,7 @@ export default function ChannelPlayerPage({
           {/* top-left: channel number + show */}
           <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 text-[11px] font-bold">
             <span className="text-itv-magenta">CH {channel?.number ?? "—"}</span>
-            <span className="text-white/80">{currentItem?.title ?? channel?.name ?? channelSlug}</span>
+            <span className="text-itv-text">{currentItem?.title ?? channel?.name ?? channelSlug}</span>
           </div>
 
           {/* top-right: viewer count */}
@@ -68,7 +77,7 @@ export default function ChannelPlayerPage({
 
         <div className="mt-4">
           <h1 className="text-[18px] font-black">{channel?.name ?? channelSlug}</h1>
-          <p className="text-sm text-white/55">{currentItem?.title ?? "—"}</p>
+          <p className="text-sm text-itv-muted">{currentItem?.title ?? "—"}</p>
         </div>
       </div>
 
@@ -77,21 +86,18 @@ export default function ChannelPlayerPage({
         <h2 className="border-b border-itv-border px-4 py-3 text-[13px] font-extrabold">Live Chat</h2>
         {canChat ? (
           <>
-            <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3 text-sm text-white/70">
-              <p className="text-white/[0.42]">Say something to get the room going…</p>
-            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-3" />
             <div className="border-t border-itv-border p-3">
               <input
-                value={msg}
-                onChange={(e) => setMsg(e.target.value)}
-                placeholder="Say something..."
-                className="w-full bg-itv-surface2 px-3 py-2 text-sm outline-none placeholder:text-white/[0.35] focus:ring-1 focus:ring-itv-magenta"
+                disabled
+                placeholder="Chat coming soon"
+                className="w-full bg-itv-surface2 px-3 py-2 text-sm text-itv-text outline-none placeholder:text-itv-faint disabled:opacity-60"
               />
             </div>
           </>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-            <p className="text-sm text-white/55">Live chat is a Premium feature.</p>
+            <p className="text-sm text-itv-muted">Live chat is a Premium feature.</p>
             <Link
               href="/plans"
               className="bg-itv-magenta px-4 py-2 text-[11px] font-extrabold uppercase tracking-[1px] text-white"

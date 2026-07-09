@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Play, Zap, Info } from "lucide-react";
+import { Play, Info } from "lucide-react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { Rail } from "@/components/ui/Rail";
@@ -97,21 +97,12 @@ const MOCK_CREATORS: CreatorSummary[] = [
 const kfmt = (n?: number | null) =>
   !n ? "0" : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
 
-/* ------------------------------------------------------------------ flash sale countdown */
-function FlashCountdown({ seconds }: { seconds: number }) {
-  const [left, setLeft] = useState(seconds);
-  useEffect(() => {
-    if (left <= 0) return;
-    const t = setInterval(() => setLeft((v) => (v <= 1 ? 0 : v - 1)), 1000);
-    return () => clearInterval(t);
-  }, [left]);
-  const label =
-    left <= 0
-      ? "ENDED"
-      : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+/* ------------------------------------------------------------------ demo label for mock-backed sections */
+function RailTitle({ children, demo }: { children: React.ReactNode; demo?: boolean }) {
   return (
-    <span className="font-mono text-2xl font-black tabular-nums tracking-[2px] text-itv-magenta">
-      {label}
+    <span className="inline-flex items-center gap-2">
+      {children}
+      {demo && <Badge tone="warn">Demo</Badge>}
     </span>
   );
 }
@@ -154,9 +145,9 @@ function LiveCard({ c }: { c: ChannelSummary }) {
 }
 
 /* ------------------------------------------------------------------ VOD card */
-function VodCard({ v }: { v: VideoSummary }) {
+function VodCard({ v, href }: { v: VideoSummary; href?: string }) {
   return (
-    <Link href={`/watch/${v.id}`} className="w-[220px] shrink-0 snap-start">
+    <Link href={href ?? `/watch/${v.id}`} className="w-[220px] shrink-0 snap-start">
       <Card interactive className="overflow-hidden">
         <div className="relative aspect-video bg-itv-surface3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -172,7 +163,7 @@ function VodCard({ v }: { v: VideoSummary }) {
             </span>
           )}
           {v.badge && (
-            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[10px] text-white/80">
+            <span className="absolute bottom-2 right-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[10px] text-itv-text">
               {v.badge}
             </span>
           )}
@@ -251,7 +242,7 @@ function HaggleRailCard({ a }: { a: HaggleSummary }) {
           <span className="absolute left-2 top-2">
             <Badge tone="magenta">Haggle</Badge>
           </span>
-          <span className={`absolute right-2 top-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[11px] tabular-nums ${left <= 10 ? "text-itv-live" : "text-white/85"}`}>
+          <span className={`absolute right-2 top-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[11px] tabular-nums ${left <= 10 ? "text-itv-live" : "text-itv-text"}`}>
             {mmss}
           </span>
         </div>
@@ -278,10 +269,13 @@ export default function HomePage() {
   );
 
   const liveReal = (chData?.channels ?? []).filter((c) => c.status === "active");
-  const live = liveReal.length ? liveReal : MOCK_LIVE;
-  const forYou = fyData?.items?.length ? fyData.items : ROW_FORYOU;
+  const liveIsMock = liveReal.length === 0;
+  const live = liveIsMock ? MOCK_LIVE : liveReal;
+  const forYouIsMock = !fyData?.items?.length;
+  const forYou = forYouIsMock ? ROW_FORYOU : fyData!.items;
   const featured = live[0];
 
+  const leadersAreMock = !lbData?.leaders?.length;
   const leaders =
     lbData?.leaders?.length
       ? lbData.leaders.map((l) => ({
@@ -314,7 +308,7 @@ export default function HomePage() {
               className="h-full w-full"
               style={{
                 background:
-                  "radial-gradient(700px 460px at 68% 38%, rgba(217,70,239,0.4), transparent 66%)",
+                  "radial-gradient(700px 460px at 68% 38%, color-mix(in oklch, var(--itv-magenta) 40%, transparent), transparent 66%)",
               }}
             />
           )}
@@ -348,20 +342,22 @@ export default function HomePage() {
             </Link>
             <Link
               href="/live"
-              className="inline-flex items-center gap-2 rounded-md border border-itv-border bg-white/[0.06] px-5 py-2.5 text-sm font-medium text-itv-text transition-colors hover:bg-white/[0.12]"
+              className="inline-flex items-center gap-2 rounded-md border border-itv-border bg-itv-surface2 px-5 py-2.5 text-sm font-medium text-itv-text transition-colors hover:bg-itv-surface3"
             >
               <Info size={15} /> More Info
             </Link>
-            <span className="font-mono text-xs tabular-nums text-itv-faint">
-              {kfmt(featured?.viewer_count ?? 12480)} watching
-            </span>
+            {!liveIsMock && featured?.viewer_count != null && (
+              <span className="font-mono text-xs tabular-nums text-itv-faint">
+                {kfmt(featured.viewer_count)} watching
+              </span>
+            )}
           </div>
         </div>
       </section>
 
       <div className="space-y-8 px-4">
         {/* -------------------------------------------------------- LIVE NOW */}
-        <Rail title="Live Now" href="/live">
+        <Rail title={<RailTitle demo={liveIsMock}>Live Now</RailTitle>} href="/live">
           {live.map((c) => (
             <LiveCard key={c.id} c={c} />
           ))}
@@ -376,53 +372,29 @@ export default function HomePage() {
           </Rail>
         )}
 
-        {/* -------------------------------------------------------- FLASH SALE */}
-        <Card
-          tone="surface2"
-          className="flex items-center justify-between p-4 ring-1 ring-inset ring-itv-magenta-border"
-        >
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-itv-magenta">
-              <Zap size={18} className="text-white" fill="currentColor" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-itv-magenta">
-                Flash Sale · Live on Influence Drama
-              </p>
-              <p className="text-sm font-semibold text-itv-text">
-                Finale Merch Drop — up to 40% off
-              </p>
-            </div>
-          </div>
-          <Link href="/shop" className="text-right">
-            <FlashCountdown seconds={8 * 60 + 42} />
-            <p className="text-[11px] text-itv-faint">tap to shop</p>
-          </Link>
-        </Card>
-
         {/* -------------------------------------------------------- CONTINUE */}
-        <Rail title="Continue Watching" href="/browse">
+        <Rail title={<RailTitle demo>Continue Watching</RailTitle>} href="/browse">
           {ROW_CONTINUE.map((v) => (
-            <VodCard key={v.id} v={v} />
+            <VodCard key={v.id} v={v} href="/browse" />
           ))}
         </Rail>
 
         {/* -------------------------------------------------------- FOR YOU */}
-        <Rail title="For You" href="/browse">
+        <Rail title={<RailTitle demo={forYouIsMock}>For You</RailTitle>} href="/browse">
           {forYou.map((v) => (
-            <VodCard key={v.id} v={v} />
+            <VodCard key={v.id} v={v} href={forYouIsMock ? "/browse" : undefined} />
           ))}
         </Rail>
 
         {/* -------------------------------------------------------- CREATORS */}
-        <Rail title="Creator Spotlight" href="/browse">
+        <Rail title={<RailTitle demo>Creator Spotlight</RailTitle>} href="/browse">
           {MOCK_CREATORS.map((c) => (
             <CreatorCard key={c.username} c={c} />
           ))}
         </Rail>
 
         {/* -------------------------------------------------------- LEARN */}
-        <Rail title="Learn from Creators" href="/training">
+        <Rail title={<RailTitle demo>Learn from Creators</RailTitle>} href="/training">
           {ROW_LEARN.map((v) => (
             <VodCard key={v.id} v={v} />
           ))}
@@ -431,8 +403,9 @@ export default function HomePage() {
         {/* -------------------------------------------------------- LEADERBOARD */}
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-itv-border px-4 py-3">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-itv-muted">
+            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-itv-muted">
               Community Leaderboard
+              {leadersAreMock && <Badge tone="warn">Demo</Badge>}
             </span>
             <Link
               href="/community"

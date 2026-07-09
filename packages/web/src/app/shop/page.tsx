@@ -3,6 +3,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { ProductCard, type ProductSummary } from "@/components/shop/ProductCard";
+import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Spinner";
 import { Input } from "@/components/ui/Input";
 import { PillFilter } from "@/components/ui/PillFilter";
@@ -16,7 +17,7 @@ export default function ShopPage() {
   const key = `/api/shop/products?${cat !== "All" ? `category=${cat}&` : ""}${
     q ? `q=${encodeURIComponent(q)}` : ""
   }`;
-  const { data, isLoading } = useSWR<{ items: ProductSummary[] }>(key, swrFetcher, {
+  const { data, error, isLoading, mutate } = useSWR<{ items: ProductSummary[] }>(key, swrFetcher, {
     shouldRetryOnError: false,
   });
   const items = data?.items ?? [];
@@ -44,6 +45,13 @@ export default function ShopPage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="aspect-square" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load products.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
         </div>
       ) : items.length ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

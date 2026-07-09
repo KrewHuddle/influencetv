@@ -10,18 +10,18 @@ import { MobileNav } from "@/components/layout/MobileNav";
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
-  variable: "--font-display",
+  variable: "--font-display-face",
   display: "swap",
 });
 const body = Inter({
   subsets: ["latin"],
-  variable: "--font-body",
+  variable: "--font-body-face",
   display: "swap",
 });
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-  variable: "--font-mono",
+  variable: "--font-mono-face",
   display: "swap",
 });
 
@@ -38,9 +38,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body className="min-h-screen bg-itv-bg text-itv-text antialiased">
+        <a
+          href="#content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-toast focus:rounded-md focus:bg-itv-magenta focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+        >
+          Skip to content
+        </a>
         <Providers>
           <Header />
-          <main className="min-h-[calc(100vh-56px)] pb-20 md:pb-0">
+          <main
+            id="content"
+            className="min-h-[calc(100vh-var(--header-h))] pb-20 md:pb-0"
+          >
             {children}
           </main>
           <MobileNav />

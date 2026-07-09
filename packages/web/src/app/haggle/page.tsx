@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
+import { Check } from "lucide-react";
 import { swrFetcher, apiPost } from "@/lib/api";
-import { Tabs, Card, Badge, Skeleton, PriceTag, Button } from "@/components/ui";
+import { Tabs, Card, Badge, Skeleton, PriceTag, Button, useToast } from "@/components/ui";
 
 type HaggleStatus = "live" | "upcoming" | "ended";
 
@@ -14,6 +15,7 @@ interface Auction {
   current_bid_cents: number;
   final_price_cents: number;
   ends_at: string;
+  scheduled_for?: string | null;
   channel_id: string;
   thumbnail_url: string | null;
   product_title: string;
@@ -86,6 +88,7 @@ function AuctionImage({
 }
 
 function WatchButton({ id }: { id: string }) {
+  const { toast } = useToast();
   const [watching, setWatching] = useState(false);
   const [pending, setPending] = useState(false);
 
@@ -95,14 +98,18 @@ function WatchButton({ id }: { id: string }) {
       await apiPost(`/api/haggle/auctions/${id}/watch`, {});
       setWatching(true);
     } catch {
-      // ignore — keep button actionable
+      toast({ title: "Couldn't watch this auction. Try again.", variant: "error" });
     } finally {
       setPending(false);
     }
   }
 
   if (watching) {
-    return <span className="text-sm font-medium text-itv-success">Watching ✓</span>;
+    return (
+      <span className="inline-flex items-center gap-1 text-sm font-medium text-itv-success">
+        <Check size={14} /> Watching
+      </span>
+    );
   }
   return (
     <Button size="sm" variant="ghost" disabled={pending} onClick={watch}>
@@ -142,7 +149,7 @@ function formatStart(iso: string) {
 export default function HagglePage() {
   const [status, setStatus] = useState<HaggleStatus>("live");
 
-  const { data, isLoading } = useSWR<BrowseResponse>(
+  const { data, error, isLoading, mutate } = useSWR<BrowseResponse>(
     `/api/haggle/browse?status=${status}`,
     swrFetcher,
     { shouldRetryOnError: false }
@@ -163,6 +170,13 @@ export default function HagglePage() {
 
       {isLoading ? (
         <LoadingGrid />
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load auctions.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
+        </div>
       ) : !items.length ? (
         <EmptyState
           message={
@@ -192,7 +206,7 @@ export default function HagglePage() {
                       <PriceTag cents={a.current_bid_cents} size="lg" className="text-itv-magenta" />
                     </div>
                     <div className="text-right">
-                      <Badge tone="live">Live</Badge>
+                      <Badge tone="live">On air now</Badge>
                       <div className="mt-1">
                         <Countdown target={a.ends_at} />
                       </div>
@@ -217,7 +231,7 @@ export default function HagglePage() {
                 </h3>
                 <p className="line-clamp-1 text-xs text-itv-faint">{a.product_title}</p>
                 <p className="mt-1 text-xs text-itv-muted">
-                  Starts {formatStart(a.ends_at)}
+                  {a.scheduled_for ? `Starts ${formatStart(a.scheduled_for)}` : "Not scheduled yet"}
                 </p>
               </div>
               <WatchButton id={a.id} />

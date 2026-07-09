@@ -30,14 +30,32 @@ export default function AdminChannelsPage() {
     }
   };
 
+  const [killConfirm, setKillConfirm] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
   const setStatus = async (c: Channel, status: string) => {
-    await api.patch(`/api/admin/channels/${c.id}`, { status });
-    void mutate();
+    setBusyId(c.id);
+    try {
+      await api.patch(`/api/admin/channels/${c.id}`, { status });
+      void mutate();
+    } catch {
+      toast({ title: "Couldn't update channel", variant: "error" });
+    } finally {
+      setBusyId(null);
+    }
   };
   const kill = async (c: Channel) => {
-    await api.post(`/api/admin/channels/${c.id}/kill`);
-    toast({ title: "Kill signal sent" });
-    void mutate();
+    setBusyId(c.id);
+    try {
+      await api.post(`/api/admin/channels/${c.id}/kill`);
+      toast({ title: "Kill signal sent" });
+      void mutate();
+    } catch {
+      toast({ title: "Kill failed", variant: "error" });
+    } finally {
+      setBusyId(null);
+      setKillConfirm(null);
+    }
   };
 
   const channels = data?.channels ?? [];
@@ -50,18 +68,46 @@ export default function AdminChannelsPage() {
         {channels.map((c) => (
           <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
             <div>
-              <p className="text-sm font-bold">{c.name} <span className="text-white/[0.4]">/{c.slug}</span></p>
-              <p className="text-[11px] text-white/[0.45]">{c.genre ?? "—"} · {c.status} · {c.viewer_count} viewers</p>
+              <p className="text-sm font-bold">{c.name} <span className="text-itv-faint">/{c.slug}</span></p>
+              <p className="text-[11px] text-itv-faint">{c.genre ?? "—"} · {c.status} · {c.viewer_count} viewers</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setStatus(c, c.status === "active" ? "offline" : "active")} className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-white/[0.06]">
+              <button
+                onClick={() => setStatus(c, c.status === "active" ? "offline" : "active")}
+                disabled={busyId === c.id}
+                className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-itv-hover disabled:opacity-40"
+              >
                 {c.status === "active" ? "Set offline" : "Set active"}
               </button>
-              <button onClick={() => kill(c)} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white" style={{ background: "#FF3333" }}>Kill</button>
+              {killConfirm === c.id ? (
+                <>
+                  <button
+                    onClick={() => kill(c)}
+                    disabled={busyId === c.id}
+                    className="bg-itv-live px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white disabled:opacity-40"
+                  >
+                    Confirm kill {c.name}?
+                  </button>
+                  <button
+                    onClick={() => setKillConfirm(null)}
+                    aria-label="Cancel kill"
+                    className="border border-itv-border px-2 py-1 text-[11px] font-bold text-itv-muted hover:bg-itv-hover"
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setKillConfirm(c.id)}
+                  className="bg-itv-live px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white"
+                >
+                  Kill
+                </button>
+              )}
             </div>
           </div>
         ))}
-        {!channels.length && <p className="text-sm text-white/[0.42]">No channels.</p>}
+        {!channels.length && <p className="text-sm text-itv-faint">No channels.</p>}
       </div>
 
       <form onSubmit={create} className="max-w-lg space-y-3 border border-itv-border bg-itv-surface p-5">

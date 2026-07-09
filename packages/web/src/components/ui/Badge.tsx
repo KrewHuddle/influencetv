@@ -15,10 +15,13 @@ const tones: Record<Tone, string> = {
 export function Badge({
   children,
   tone = "neutral",
+  dot = false,
   className,
 }: {
   children: ReactNode;
   tone?: Tone;
+  /** Renders a pulsing status dot before the label. */
+  dot?: boolean;
   className?: string;
 }) {
   return (
@@ -29,6 +32,9 @@ export function Badge({
         className
       )}
     >
+      {dot && (
+        <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-current" />
+      )}
       {children}
     </span>
   );

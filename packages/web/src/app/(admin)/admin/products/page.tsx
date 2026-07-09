@@ -28,8 +28,7 @@ export default function AdminProductsPage() {
       <h1 className="mb-4 text-[22px] font-black">Products</h1>
       <div className="mb-4 flex gap-2">
         {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px]"
-            style={tab === t ? { background: "var(--itv-magenta)", color: "#fff" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}>
+          <button key={t} onClick={() => setTab(t)} className={`px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] ${tab === t ? "bg-itv-magenta text-white" : "bg-itv-surface2 text-itv-muted"}`}>
             {t}
           </button>
         ))}
@@ -39,17 +38,17 @@ export default function AdminProductsPage() {
           <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
             <div>
               <p className="text-sm font-bold">{p.title}</p>
-              <p className="text-[11px] text-white/[0.45]">{p.seller_name ?? "seller"} · ${(p.base_price_cents / 100).toFixed(2)}</p>
+              <p className="text-[11px] text-itv-faint">{p.seller_name ?? "seller"} · ${(p.base_price_cents / 100).toFixed(2)}</p>
             </div>
             {tab === "pending" && (
               <div className="flex gap-2">
                 <button onClick={() => act(p.id, "approve")} className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] text-white" style={{ background: "var(--itv-magenta)" }}>Approve</button>
-                <button onClick={() => act(p.id, "reject")} className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-white/[0.06]">Reject</button>
+                <button onClick={() => act(p.id, "reject")} className="border border-itv-border px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] hover:bg-itv-hover">Reject</button>
               </div>
             )}
           </div>
         ))}
-        {!items.length && <p className="text-sm text-white/[0.42]">No {tab} products.</p>}
+        {!items.length && <p className="text-sm text-itv-faint">No {tab} products.</p>}
       </div>
     </div>
   );

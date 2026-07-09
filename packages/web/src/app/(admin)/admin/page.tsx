@@ -50,17 +50,17 @@ export default function AdminOverview() {
           {row.map((t) => (
             <div key={t.label} className="rounded-lg border border-itv-border bg-itv-surface p-4">
               <p className="text-xs uppercase tracking-wide text-itv-muted">{t.label}</p>
-              <p className="mt-2 font-display text-2xl">{t.value}</p>
+              <p className="mt-2 font-mono text-2xl tabular-nums">{t.value}</p>
             </div>
           ))}
         </div>
       ))}
       <div className="mt-4 rounded-lg border border-itv-border bg-itv-surface p-4">
         <p className="text-sm text-itv-muted">
-          MRR: <span className="text-itv-text">{dollars(data?.mtd.mrrCents ?? 0)}</span> ·
-          Pending video review: {data?.queues.pendingVideoReview ?? 0} ·
-          Pending products: {data?.queues.pendingProductReview ?? 0} ·
-          Open DMCA: {data?.queues.openDmcaNotices ?? 0}
+          MRR: <span className="font-mono tabular-nums text-itv-text">{dollars(data?.mtd.mrrCents ?? 0)}</span> ·
+          Pending video review: <span className="font-mono tabular-nums">{data?.queues.pendingVideoReview ?? 0}</span> ·
+          Pending products: <span className="font-mono tabular-nums">{data?.queues.pendingProductReview ?? 0}</span> ·
+          Open DMCA: <span className="font-mono tabular-nums">{data?.queues.openDmcaNotices ?? 0}</span>
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export default function AdminOverview() {
           ].map((t) => (
             <div key={t.label} className="rounded-lg border border-itv-border bg-itv-surface p-4">
               <p className="text-xs uppercase tracking-wide text-itv-muted">{t.label}</p>
-              <p className="mt-2 font-display text-2xl">{t.value}</p>
+              <p className="mt-2 font-mono text-2xl tabular-nums">{t.value}</p>
             </div>
           ))}
         </div>
