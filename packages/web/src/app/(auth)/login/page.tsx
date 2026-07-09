@@ -28,7 +28,9 @@ export default function LoginPage() {
       router.push(u && STAFF.includes(u.role) ? "/admin" : "/");
     } catch (err) {
       const status = err instanceof AxiosError ? err.response?.status : undefined;
-      if (status === 401 || status === 403) {
+      if (status === 429) {
+        toast({ title: "Too many attempts", description: "Sign-in is temporarily locked — wait 15 minutes and try once.", variant: "error" });
+      } else if (status === 401 || status === 403) {
         toast({ title: "Sign in failed", description: "Check your credentials", variant: "error" });
       } else {
         toast({ title: "Sign in failed", description: "Something went wrong — try again.", variant: "error" });

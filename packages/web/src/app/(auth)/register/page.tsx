@@ -41,7 +41,9 @@ export default function RegisterPage() {
       router.push("/");
     } catch (err) {
       const status = err instanceof AxiosError ? err.response?.status : undefined;
-      if (status === 409) {
+      if (status === 429) {
+        toast({ title: "Too many attempts", description: "Registration is temporarily locked — wait 15 minutes and try once.", variant: "error" });
+      } else if (status === 409) {
         toast({ title: "Registration failed", description: "That email is already taken", variant: "error" });
       } else {
         toast({ title: "Registration failed", description: "Something went wrong — try again.", variant: "error" });
