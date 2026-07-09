@@ -87,7 +87,8 @@ export async function uploadFile(
   bucket: string,
   key: string,
   filePath: string,
-  contentType: string
+  contentType: string,
+  acl: "public-read" | "private" = "private"
 ): Promise<void> {
   const { size } = await stat(filePath);
   await spacesClient.send(
@@ -97,6 +98,7 @@ export async function uploadFile(
       Body: createReadStream(filePath),
       ContentLength: size,
       ContentType: contentType,
+      ACL: acl,
     })
   );
 }

@@ -126,8 +126,10 @@ async function processVideo(job: Job<TranscodeJob>): Promise<void> {
 
     // 6. Upload HLS tree + thumbnail.
     await uploadDir(dir, `${videoId}/hls`);
+    // Thumbnails live in the VIDEOS bucket (same as HLS): one CDN hostname can
+    // only front one Spaces bucket, and cdn.* fronts itvn-videos.
     const thumbKey = `thumbnails/${videoId}.jpg`;
-    await uploadFile(buckets.assets, thumbKey, thumb, "image/jpeg");
+    await uploadFile(buckets.videos, thumbKey, thumb, "image/jpeg", "public-read");
 
     // 6.5 Normalized mezzanine for linear playout → PERMANENT assets bucket
     // (the uploads source expires after 24h). 1080p H.264 High + AAC, fixed 2s
@@ -193,7 +195,8 @@ async function uploadDir(localDir: string, keyPrefix: string): Promise<void> {
         buckets.videos,
         `${keyPrefix}/${e.name}`,
         local,
-        contentTypeFor(e.name)
+        contentTypeFor(e.name),
+        "public-read"
       );
     }
   }
