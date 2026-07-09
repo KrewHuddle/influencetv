@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { Trophy, X } from "lucide-react";
 import { useSocket } from "@/hooks/useSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { apiGet, apiPost } from "@/lib/api";
 import { Button, Badge, Input } from "@/components/ui";
+import { formatPrice } from "@/components/ui/PriceTag";
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -102,8 +103,6 @@ interface ActiveResponse {
 /* Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
-const money = (c: number): string => `$${(c / 100).toFixed(2)}`;
-
 function isPaymentRequired(err: unknown): boolean {
   const e = err as {
     response?: { status?: number; data?: { requiresPaymentMethod?: boolean; data?: { requiresPaymentMethod?: boolean } } };
@@ -135,7 +134,10 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
 
   const [showMax, setShowMax] = useState(false);
   const [maxDollars, setMaxDollars] = useState("");
+  const [maxError, setMaxError] = useState<string | null>(null);
   const [bidding, setBidding] = useState(false);
+  const [settingMax, setSettingMax] = useState(false);
+  const [needsCard, setNeedsCard] = useState(false);
 
   const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -158,6 +160,8 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
     setDismissed(false);
     setShowMax(false);
     setNote(null);
+    setMaxError(null);
+    setNeedsCard(false);
     setAuction(next);
   }, []);
 
@@ -255,11 +259,11 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
     const onOutbid = (p: OutbidPayload) => {
       setFlashRed(true);
       setTimeout(() => setFlashRed(false), 1200);
-      flashNote(`You've been outbid — now ${money(p.newAmount)} by @${p.newWinner}`);
+      flashNote(`You've been outbid — now ${formatPrice(p.newAmount)} by @${p.newWinner}`);
     };
 
     const onProxyPlaced = (p: ProxyPlacedPayload) =>
-      flashNote(p.note ?? `Proxy bid placed at ${money(p.amount)}`);
+      flashNote(p.note ?? `Proxy bid placed at ${formatPrice(p.amount)}`);
 
     const onWonConfirmed = (p: WonConfirmedPayload) =>
       finish(
@@ -353,7 +357,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
         amountCents: nextBid,
       });
     } catch (err) {
-      if (isPaymentRequired(err)) router.push("/account/payment");
+      if (isPaymentRequired(err)) setNeedsCard(true);
       else flashNote("Bid failed — try again");
     } finally {
       setBidding(false);
@@ -361,18 +365,26 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
   };
 
   const setMaxBid = async () => {
+    if (settingMax) return;
     const dollars = parseFloat(maxDollars);
-    if (!Number.isFinite(dollars) || dollars <= 0) return;
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+      setMaxError("Enter a valid amount greater than $0.00.");
+      return;
+    }
+    setMaxError(null);
     const maxAmountCents = Math.round(dollars * 100);
+    setSettingMax(true);
     try {
       await apiPost(`/api/haggle/auctions/${auction.auctionId}/proxy-bid`, {
         maxAmountCents,
       });
       setShowMax(false);
-      flashNote(`Max bid set at ${money(maxAmountCents)}`);
+      flashNote(`Max bid set at ${formatPrice(maxAmountCents)}`);
     } catch (err) {
-      if (isPaymentRequired(err)) router.push("/account/payment");
+      if (isPaymentRequired(err)) setNeedsCard(true);
       else flashNote("Could not set max bid");
+    } finally {
+      setSettingMax(false);
     }
   };
 
@@ -427,8 +439,8 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
               <div className="mb-1 flex items-center gap-2">
                 <Badge tone="magenta">HAGGLE LIVE</Badge>
                 {auction.extended && (
-                  <span className="font-mono text-[10px] font-bold text-itv-magenta">
-                    (+ext)
+                  <span className="text-[11px] font-semibold text-itv-magenta">
+                    Extended
                   </span>
                 )}
               </div>
@@ -442,11 +454,6 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
               >
                 {mm}:{ss}
               </span>
-              {auction.extended && (
-                <span className="ml-1 font-mono text-[11px] font-bold text-itv-magenta">
-                  (+Next)
-                </span>
-              )}
             </div>
           </div>
 
@@ -456,7 +463,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
               Current Bid
             </p>
             <p className="font-mono text-[32px] font-black tabular-nums text-itv-magenta">
-              {money(base)}
+              {formatPrice(base)}
             </p>
             <p className="mt-0.5 text-[12px] text-itv-muted">
               {auction.currentWinnerName ? (
@@ -473,6 +480,26 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
             <p className="mt-2 text-[11px] font-semibold text-itv-live">{note}</p>
           )}
 
+          {/* payment method required — let the user choose to leave */}
+          {needsCard && (
+            <div className="mt-2 flex items-center justify-between gap-3 rounded border border-itv-border bg-itv-surface2 px-3 py-2">
+              <p className="text-[11px] font-semibold text-itv-text">
+                Add a card to bid
+              </p>
+              <Button
+                size="sm"
+                variant="subtle"
+                onClick={() =>
+                  router.push(
+                    `/account/payment?returnTo=${encodeURIComponent(window.location.pathname)}`
+                  )
+                }
+              >
+                Add card
+              </Button>
+            </div>
+          )}
+
           {/* bid row */}
           <div className="mt-3 flex flex-col gap-2">
             <Button
@@ -482,7 +509,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
               disabled={isLeader || bidding}
               onClick={placeBid}
             >
-              {isLeader ? "You're leading" : `Bid ${money(nextBid)}`}
+              {isLeader ? "You're leading" : `Bid ${formatPrice(nextBid)}`}
             </Button>
 
             <Button variant="ghost" size="sm" className="w-full" onClick={toggleMax}>
@@ -495,16 +522,23 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
                   label="Your maximum bid"
                   inputMode="decimal"
                   value={maxDollars}
-                  onChange={(e) => setMaxDollars(e.target.value)}
+                  onChange={(e) => {
+                    setMaxDollars(e.target.value);
+                    setMaxError(null);
+                  }}
                   placeholder="0.00"
                 />
+                {maxError && (
+                  <p className="text-xs text-itv-live">{maxError}</p>
+                )}
                 <Button
                   variant="primary"
                   size="md"
                   className="w-full"
+                  disabled={settingMax}
                   onClick={setMaxBid}
                 >
-                  Set Max Bid
+                  {settingMax ? "Setting…" : "Set Max Bid"}
                 </Button>
                 <p className="text-[10px] text-itv-faint">
                   We&apos;ll bid for you up to this amount.
@@ -532,16 +566,19 @@ function EndBanner({
   if (ended.phase === "won") {
     return (
       <div className="flex flex-col items-center gap-2 bg-itv-magenta px-4 py-6 text-center text-white">
-        <p className="font-display text-[22px] font-black">YOU WON 🎉</p>
+        <p className="flex items-center justify-center gap-2 font-display text-[22px] font-black">
+          <Trophy size={20} aria-hidden />
+          YOU WON
+        </p>
         {ended.finalPrice != null && (
           <p className="font-mono text-[20px] font-black tabular-nums">
-            {money(ended.finalPrice)}
+            {formatPrice(ended.finalPrice)}
           </p>
         )}
         <Button
           variant="ghost"
           size="sm"
-          className="mt-1 border-white/40 text-white hover:bg-white/10"
+          className="mt-1 border-itv-border text-white hover:bg-itv-surface2"
           onClick={() =>
             router.push(ended.orderId ? `/orders/${ended.orderId}` : "/account")
           }
@@ -557,7 +594,7 @@ function EndBanner({
       <div className="py-4 text-center">
         <p className="font-display text-[16px] font-bold text-itv-text">
           Sold to @{ended.winnerName ?? "winner"}
-          {ended.finalPrice != null ? ` for ${money(ended.finalPrice)}` : ""}
+          {ended.finalPrice != null ? ` for ${formatPrice(ended.finalPrice)}` : ""}
         </p>
       </div>
     );

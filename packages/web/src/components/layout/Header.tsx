@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Menu, X, ShoppingBag } from "lucide-react";
@@ -8,7 +8,6 @@ import { NAV_LINKS } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useCartStore } from "@/store/cartStore";
 import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 
 export function Header() {
@@ -27,6 +26,16 @@ export function Header() {
   const isActive = (href: string) =>
     href === "/" ? path === "/" : path.startsWith(href);
 
+  // Lock body scroll while the full-screen mobile menu is open.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = query.trim();
@@ -37,7 +46,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-itv-border bg-itv-bg/90 backdrop-blur">
+    <header className="sticky top-0 z-header h-[var(--header-h)] border-b border-itv-border bg-itv-bg/90 backdrop-blur">
       <div className="mx-auto flex h-full max-w-[1400px] items-center px-4">
         {/* wordmark */}
         <Link
@@ -55,7 +64,7 @@ export function Header() {
               <Link
                 key={l.label}
                 href={l.href}
-                className={`flex items-center border-b-2 text-[13px] font-semibold transition-colors ${
+                className={`flex items-center whitespace-nowrap border-b-2 text-[13px] font-semibold transition-colors ${
                   active
                     ? "border-itv-magenta text-itv-text"
                     : "border-transparent text-itv-muted hover:text-itv-text"
@@ -86,7 +95,7 @@ export function Header() {
             <button
               onClick={() => setSearchOpen(true)}
               aria-label="Open search"
-              className="text-itv-muted transition-colors hover:text-itv-text"
+              className="-m-1 grid h-11 w-11 place-items-center text-itv-muted transition-colors hover:text-itv-text"
             >
               <Search size={18} />
             </button>
@@ -96,19 +105,22 @@ export function Header() {
           <button
             onClick={() => openCart(true)}
             aria-label={`Cart${cartCount ? `, ${cartCount} items` : ""}`}
-            className="relative text-itv-muted transition-colors hover:text-itv-text"
+            className="relative -m-1 grid h-11 w-11 place-items-center text-itv-muted transition-colors hover:text-itv-text"
           >
             <ShoppingBag size={18} />
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 grid h-4 min-w-4 place-items-center rounded-full bg-itv-magenta px-1 font-mono text-[10px] font-bold leading-none text-white">
+              <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-itv-magenta px-1 font-mono text-[10px] font-bold leading-none text-white">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
           </button>
 
           {isFree && (
-            <Link href="/plans" className="hidden sm:block">
-              <Button size="sm">Go Ultra</Button>
+            <Link
+              href="/plans"
+              className="hidden whitespace-nowrap rounded-sm bg-itv-magenta px-3 py-1.5 text-xs font-medium text-white transition-[background-color,box-shadow] duration-[--dur-fast] hover:bg-itv-magenta-strong hover:shadow-glow-magenta sm:block"
+            >
+              Go Ultra
             </Link>
           )}
 
@@ -125,7 +137,7 @@ export function Header() {
                 <Dropdown.Content
                   align="end"
                   sideOffset={8}
-                  className="z-50 w-44 rounded-lg border border-itv-border bg-itv-surface p-1 text-sm shadow-card"
+                  className="z-overlay w-44 rounded-lg border border-itv-border bg-itv-surface p-1 text-sm shadow-card"
                 >
                   {[
                     ...(["super_admin", "channel_manager", "moderator"].includes(
@@ -141,7 +153,7 @@ export function Header() {
                     <Dropdown.Item key={i.href} asChild>
                       <Link
                         href={i.href}
-                        className="block rounded px-3 py-2 text-itv-text outline-none hover:bg-white/[0.06]"
+                        className="block rounded px-3 py-2 text-itv-text outline-none hover:bg-itv-hover"
                       >
                         {i.label}
                       </Link>
@@ -149,7 +161,7 @@ export function Header() {
                   ))}
                   <Dropdown.Item
                     onSelect={() => void logout()}
-                    className="cursor-pointer rounded px-3 py-2 text-itv-magenta outline-none hover:bg-white/[0.06]"
+                    className="cursor-pointer rounded px-3 py-2 text-itv-magenta outline-none hover:bg-itv-hover"
                   >
                     Logout
                   </Dropdown.Item>
@@ -170,7 +182,7 @@ export function Header() {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
-            className="text-itv-muted md:hidden"
+            className="-m-1 grid h-11 w-11 place-items-center text-itv-muted md:hidden"
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -179,7 +191,7 @@ export function Header() {
 
       {/* mobile menu — opaque full-screen overlay */}
       {menuOpen && (
-        <nav className="fixed inset-x-0 bottom-0 top-14 z-50 flex flex-col gap-1 bg-itv-bg px-4 py-4 md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 top-[var(--header-h)] z-overlay flex flex-col gap-1 bg-itv-bg px-4 py-4 md:hidden">
           <form onSubmit={submitSearch} className="mb-3">
             <input
               value={query}
@@ -202,8 +214,12 @@ export function Header() {
             </Link>
           ))}
           {isFree && (
-            <Link href="/plans" onClick={() => setMenuOpen(false)} className="mt-3">
-              <Button className="w-full">Go Ultra</Button>
+            <Link
+              href="/plans"
+              onClick={() => setMenuOpen(false)}
+              className="mt-3 block whitespace-nowrap rounded-md bg-itv-magenta px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-itv-magenta-strong"
+            >
+              Go Ultra
             </Link>
           )}
         </nav>

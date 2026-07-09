@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Radio, Play, Users, Check } from "lucide-react";
 import useSWR from "swr";
-import { swrFetcher } from "@/lib/api";
+import { swrFetcher, apiPost } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import { useToast } from "@/components/ui/Toast";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +40,7 @@ const mockHub = (username: string): Hub => ({
     id: "mock",
     displayName: username.replace(/^\w/, (c) => c.toUpperCase()),
     username,
-    bio: "Creator on Influence TV — live shows, on-demand, courses, and drops. (Demo profile — connect a real account to populate.)",
+    bio: "Creator on Influence TV — live shows, on-demand, courses, and drops.",
     avatarUrl: null,
     bannerUrl: null,
   },
@@ -86,9 +89,38 @@ export default function CreatorHubPage({
     { shouldRetryOnError: false }
   );
   const [tab, setTab] = useState<TabKey>("watch");
+  const [joiningTierId, setJoiningTierId] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
+  const user = useAuthStore((s) => s.user);
 
-  // Loading → skeleton. 404 / error → mock so the surface still demos.
-  const hub: Hub | undefined = data ?? (error ? mockHub(username) : undefined);
+  // Loading → skeleton. 404 / error → mock so the surface still demos (labeled below).
+  const isMock = !data && !!error;
+  const hub: Hub | undefined = data ?? (isMock ? mockHub(username) : undefined);
+
+  async function joinTier(tierId: string) {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setJoiningTierId(tierId);
+    try {
+      const res = await apiPost<{ checkoutUrl?: string | null }>(
+        "/api/patrons/subscribe",
+        { tierId }
+      );
+      toast({ title: "Redirecting to checkout" });
+      if (res?.checkoutUrl) window.location.href = res.checkoutUrl;
+    } catch (err) {
+      const e = err as { response?: { data?: { error?: { message?: string } } } };
+      toast({
+        title: e?.response?.data?.error?.message ?? "Couldn't start membership",
+        variant: "error",
+      });
+    } finally {
+      setJoiningTierId(null);
+    }
+  }
 
   if (!hub) return <HubSkeleton />;
 
@@ -105,6 +137,18 @@ export default function CreatorHubPage({
 
   return (
     <div className="pb-12">
+      {/* ---------------------------------------------------------- demo notice */}
+      {isMock && (
+        <div className="mx-auto max-w-5xl px-4 pt-4">
+          <Card tone="surface2" className="flex flex-wrap items-center gap-3 p-4">
+            <Badge tone="warn">Demo profile</Badge>
+            <p className="text-sm text-itv-muted">
+              This creator isn&apos;t live yet — sample data shown.
+            </p>
+          </Card>
+        </div>
+      )}
+
       {/* ---------------------------------------------------------- banner */}
       <div className="relative h-40 overflow-hidden bg-itv-surface2 md:h-56">
         {creator.bannerUrl ? (
@@ -115,7 +159,7 @@ export default function CreatorHubPage({
             className="h-full w-full"
             style={{
               background:
-                "radial-gradient(800px 300px at 30% 0%, rgba(217,70,239,0.35), transparent 60%), radial-gradient(600px 300px at 90% 20%, rgba(245,184,65,0.2), transparent 60%)",
+                "radial-gradient(800px 300px at 30% 0%, color-mix(in oklch, var(--itv-magenta) 35%, transparent), transparent 60%), radial-gradient(600px 300px at 90% 20%, color-mix(in oklch, var(--itv-gold) 20%, transparent), transparent 60%)",
             }}
           />
         )}
@@ -138,21 +182,25 @@ export default function CreatorHubPage({
                 <h1 className="font-display text-2xl font-bold text-itv-text md:text-3xl">
                   {creator.displayName}
                 </h1>
-                {liveChannel && <Badge tone="live">● Live</Badge>}
+                {liveChannel && (
+                  <Badge tone="live">
+                    <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
+                    Live
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-itv-muted">@{creator.username}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {liveChannel && (
+          {liveChannel && (
+            <div className="flex items-center gap-2">
               <Link href={`/live/${liveChannel.slug}`}>
                 <Button variant="live" size="sm">
                   <Radio size={14} /> Watch Live
                 </Button>
               </Link>
-            )}
-            <Button size="sm">Follow</Button>
-          </div>
+            </div>
+          )}
         </div>
 
         {creator.bio && (
@@ -315,7 +363,14 @@ export default function CreatorHubPage({
                     <p className="mt-3 font-mono text-[11px] tabular-nums text-itv-faint">
                       {kfmt(t.subscriber_count)} patrons
                     </p>
-                    <Button variant="gold" className="mt-3 w-full">Join {t.name}</Button>
+                    <Button
+                      variant="gold"
+                      className="mt-3 w-full"
+                      disabled={joiningTierId === t.id}
+                      onClick={() => joinTier(t.id)}
+                    >
+                      {joiningTierId === t.id ? "Starting checkout…" : `Join ${t.name}`}
+                    </Button>
                   </Card>
                 ))}
               </div>

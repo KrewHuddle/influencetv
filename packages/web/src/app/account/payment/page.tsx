@@ -1,6 +1,9 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
+import { Check, X } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -13,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
+import { useToast } from "@/components/ui/Toast";
 
 const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = pk ? loadStripe(pk) : null;
@@ -33,6 +37,9 @@ interface PaymentMethodsResponse {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const pad2 = (n: number) => String(n).padStart(2, "0");
+const serverMessage = (err: unknown, fallback: string) =>
+  (err as { response?: { data?: { error?: { message?: string } } } })
+    ?.response?.data?.error?.message ?? fallback;
 
 function AddCardForm({ onSaved }: { onSaved: () => void }) {
   const stripe = useStripe();
@@ -61,7 +68,7 @@ function AddCardForm({ onSaved }: { onSaved: () => void }) {
   return (
     <form onSubmit={save} className="space-y-4">
       <PaymentElement />
-      {error && <p className="text-sm text-itv-magenta">{error}</p>}
+      {error && <p className="text-sm text-itv-live">{error}</p>}
       <Button type="submit" disabled={!stripe || busy} className="w-full">
         {busy ? "Saving…" : "Save Card"}
       </Button>
@@ -69,15 +76,22 @@ function AddCardForm({ onSaved }: { onSaved: () => void }) {
   );
 }
 
-export default function PaymentMethodsPage() {
+function PaymentMethodsContent() {
   const { data, error, isLoading, mutate } = useSWR<PaymentMethodsResponse>(
     "/api/account/payment-methods",
     swrFetcher,
     { shouldRetryOnError: false }
   );
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const rawReturnTo = searchParams.get("returnTo");
+  const returnTo = rawReturnTo && rawReturnTo.startsWith("/") ? rawReturnTo : null;
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const startAdd = async () => {
     setAdding(true);
@@ -87,24 +101,50 @@ export default function PaymentMethodsPage() {
         {}
       );
       setClientSecret(res.clientSecret);
-    } catch {
+    } catch (err) {
+      toast({
+        title: "Could not start card setup",
+        description: serverMessage(err, "Please try again."),
+        variant: "error",
+      });
       setAdding(false);
     }
   };
 
   const makeDefault = async (id: string) => {
-    await apiPost(`/api/account/payment-methods/${id}/default`, {});
-    mutate();
+    try {
+      await apiPost(`/api/account/payment-methods/${id}/default`, {});
+      mutate();
+    } catch (err) {
+      toast({
+        title: "Could not set default card",
+        description: serverMessage(err, "Please try again."),
+        variant: "error",
+      });
+    }
   };
 
   const remove = async (id: string) => {
-    await api.delete(`/api/account/payment-methods/${id}`);
-    mutate();
+    setRemovingId(id);
+    try {
+      await api.delete(`/api/account/payment-methods/${id}`);
+      mutate();
+    } catch (err) {
+      toast({
+        title: "Could not remove card",
+        description: serverMessage(err, "Please try again."),
+        variant: "error",
+      });
+    } finally {
+      setRemovingId(null);
+      setConfirmingId(null);
+    }
   };
 
   const cardSaved = () => {
     setClientSecret(null);
     setAdding(false);
+    setSaved(true);
     mutate();
   };
 
@@ -116,6 +156,17 @@ export default function PaymentMethodsPage() {
       <p className="mb-6 text-sm text-itv-muted">
         Cards used for Haggle wins and shop checkout.
       </p>
+
+      {returnTo && saved && (
+        <Card className="mb-6 flex items-center justify-between gap-4 p-4">
+          <p className="text-sm text-itv-text">
+            Card saved — you&apos;re ready to bid.
+          </p>
+          <Link href={returnTo}>
+            <Button size="sm">Return to auction</Button>
+          </Link>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -139,6 +190,8 @@ export default function PaymentMethodsPage() {
             ) : (
               data.paymentMethods.map((pm) => {
                 const isDefault = pm.id === data.defaultId;
+                const confirming = confirmingId === pm.id;
+                const removing = removingId === pm.id;
                 return (
                   <Card
                     key={pm.id}
@@ -159,7 +212,7 @@ export default function PaymentMethodsPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      {!isDefault && (
+                      {!isDefault && !confirming && (
                         <Button
                           size="sm"
                           variant="subtle"
@@ -168,13 +221,37 @@ export default function PaymentMethodsPage() {
                           Make Default
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => remove(pm.id)}
-                      >
-                        Remove
-                      </Button>
+                      {confirming ? (
+                        <>
+                          <span className="text-xs text-itv-muted">Remove?</span>
+                          <Button
+                            size="sm"
+                            variant="live"
+                            aria-label="Confirm remove card"
+                            disabled={removing}
+                            onClick={() => remove(pm.id)}
+                          >
+                            {removing ? "Removing…" : <Check size={14} />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label="Cancel remove card"
+                            disabled={removing}
+                            onClick={() => setConfirmingId(null)}
+                          >
+                            <X size={14} />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirmingId(pm.id)}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 );
@@ -189,7 +266,7 @@ export default function PaymentMethodsPage() {
               </Elements>
             </Card>
           ) : adding && !stripePromise ? (
-            <Card className="p-6 text-sm text-itv-magenta">
+            <Card className="p-6 text-sm text-itv-live">
               Stripe is not configured.
             </Card>
           ) : (
@@ -200,5 +277,19 @@ export default function PaymentMethodsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+export default function PaymentMethodsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-12">
+          <Spinner />
+        </div>
+      }
+    >
+      <PaymentMethodsContent />
+    </Suspense>
   );
 }

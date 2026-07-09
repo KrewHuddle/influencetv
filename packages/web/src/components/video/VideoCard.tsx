@@ -26,7 +26,7 @@ export function VideoCard({ video }: { video: VideoSummary }) {
               className="h-full w-full object-cover"
             />
             {video.duration_seconds ? (
-              <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-white/85">
+              <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-itv-text">
                 {formatDuration(video.duration_seconds)}
               </span>
             ) : null}

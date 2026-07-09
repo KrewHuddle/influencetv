@@ -39,29 +39,36 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
         return (
           <div key={ch.id} className="flex border-b border-itv-border last:border-b-0">
             {/* channel rail cell */}
-            <button
-              onClick={() => setActive(ch.id)}
-              className="flex h-16 w-[220px] shrink-0 items-center gap-3 px-4 text-left"
-              style={isActive ? { background: "rgba(217,70,239,0.08)", borderLeft: "2px solid var(--itv-magenta)" } : undefined}
+            <div
+              className={`flex h-16 w-[140px] shrink-0 items-center gap-3 px-4 text-left sm:w-[220px] ${
+                isActive ? "border-l-2 border-itv-magenta bg-itv-magenta-dim" : ""
+              }`}
             >
-              <span className="w-6 text-[13px] font-black text-itv-magenta">
-                {ch.number != null ? String(ch.number).padStart(2, "0") : "—"}
-              </span>
+              <button
+                type="button"
+                onClick={() => setActive(ch.id)}
+                aria-label={`Select ${ch.name}`}
+                className="flex shrink-0 items-center gap-1.5"
+              >
+                <span className="w-6 text-left text-[13px] font-black text-itv-magenta">
+                  {ch.number != null ? String(ch.number).padStart(2, "0") : "—"}
+                </span>
+                {current && <span className="h-1.5 w-1.5 rounded-full bg-itv-magenta" />}
+              </button>
               <span className="min-w-0 flex-1">
                 <Link href={`/live/${ch.slug}`} className="block truncate text-[12px] font-bold hover:text-itv-magenta">
                   {ch.name}
                 </Link>
-                <span className="block truncate text-[10px] text-white/[0.42]">
+                <span className="hidden truncate text-[10px] text-itv-faint sm:block">
                   {current?.title ?? "Off air"}
                 </span>
               </span>
-              {current && <span className="h-1.5 w-1.5 rounded-full bg-itv-magenta" />}
-            </button>
+            </div>
 
             {/* schedule blocks */}
             <div className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex flex-1 items-center gap-1 overflow-x-auto px-2">
               {ch.items.length === 0 && (
-                <span className="text-[10px] text-white/[0.42]">No programming</span>
+                <span className="text-[10px] text-itv-faint">No programming</span>
               )}
               {ch.items.map((it) => {
                 const started = new Date(it.start_time).getTime() <= now;
@@ -70,16 +77,13 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
                 return (
                   <div
                     key={it.id}
-                    className={`h-[56px] shrink-0 px-3 py-2 ${ended ? "opacity-40" : ""}`}
-                    style={{
-                      width: mins(it.start_time, it.end_time) * PX_PER_MIN,
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px dashed rgba(255,255,255,0.08)",
-                      borderLeft: isCurrent ? "2px solid var(--itv-magenta)" : undefined,
-                    }}
+                    className={`h-[56px] shrink-0 border border-dashed border-itv-border2 bg-itv-surface px-3 py-2 ${
+                      ended ? "opacity-40" : ""
+                    } ${isCurrent ? "border-l-2 border-l-itv-magenta" : ""}`}
+                    style={{ width: mins(it.start_time, it.end_time) * PX_PER_MIN }}
                   >
                     <p className="line-clamp-1 text-[11px] font-bold">{it.title}</p>
-                    <p className="text-[9px] text-white/[0.42]">
+                    <p className="text-[9px] text-itv-faint">
                       {it.genre ? `${it.genre} · ` : ""}
                       {timeLabel(it.start_time)}
                     </p>

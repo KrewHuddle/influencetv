@@ -71,12 +71,20 @@ const INCREMENT_OPTIONS: PillOption[] = [
 
 const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
 
+const timeAgo = (at: number) => {
+  const s = Math.floor((Date.now() - at) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  return `${Math.floor(m / 60)}h ago`;
+};
+
 /* ------------------------------- sub-components ---------------------------- */
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <Card tone="surface2" className="p-3">
-      <p className="text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-itv-faint">
         {label}
       </p>
       <p className="mt-1 font-mono text-lg text-itv-text">{value}</p>
@@ -222,7 +230,7 @@ function LaunchForm({
             onChange={(e) => setReserve(e.target.value)}
             placeholder="optional"
           />
-          <p className="mt-1 text-[10px] text-itv-faint">
+          <p className="mt-1 text-[11px] text-itv-faint">
             Hidden from bidders
           </p>
         </div>
@@ -303,6 +311,7 @@ function LiveAuction({
   busy: boolean;
 }) {
   const [remaining, setRemaining] = useState(0);
+  const [confirmEnd, setConfirmEnd] = useState(false);
 
   useEffect(() => {
     if (!endsAt) return;
@@ -318,7 +327,7 @@ function LiveAuction({
   const ss = (remaining % 60).toString().padStart(2, "0");
 
   return (
-    <Card className="space-y-4 p-4">
+    <section className="space-y-4">
       <div className="flex items-center gap-3">
         <ProductThumb
           product={{
@@ -331,9 +340,9 @@ function LiveAuction({
           <div className="mb-1 flex items-center gap-2">
             <Badge tone="live">HAGGLE LIVE</Badge>
           </div>
-          <p className="truncate text-sm font-semibold text-itv-text">
+          <h2 className="truncate text-sm font-semibold text-itv-text">
             {auction.title ?? "Live product"}
-          </p>
+          </h2>
         </div>
         <div
           className={`font-mono text-2xl tabular-nums ${
@@ -345,7 +354,7 @@ function LiveAuction({
       </div>
 
       <div className="rounded-lg border border-itv-border bg-itv-surface2 p-4 text-center">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-itv-faint">
           Current bid
         </p>
         <p className="mt-1 font-mono text-4xl text-itv-magenta">
@@ -357,7 +366,7 @@ function LiveAuction({
       </div>
 
       <div>
-        <p className="mb-2 text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-itv-faint">
           Bid history
         </p>
         {bids.length ? (
@@ -372,7 +381,7 @@ function LiveAuction({
                   <span className="font-mono text-itv-magenta">
                     {fmt(b.amountCents)}
                   </span>
-                  <span className="text-itv-faint">just now</span>
+                  <span className="text-itv-faint">{timeAgo(b.at)}</span>
                 </span>
               </li>
             ))}
@@ -392,17 +401,43 @@ function LiveAuction({
         >
           Extend +30s
         </Button>
-        <Button
-          variant="live"
-          size="md"
-          className="flex-1"
-          onClick={onEnd}
-          disabled={busy}
-        >
-          End Auction
-        </Button>
+        {confirmEnd ? (
+          <>
+            <Button
+              variant="live"
+              size="md"
+              className="flex-1"
+              onClick={() => {
+                setConfirmEnd(false);
+                onEnd();
+              }}
+              disabled={busy}
+            >
+              {busy ? "Cancelling…" : "Confirm cancel?"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="md"
+              aria-label="Keep auction running"
+              onClick={() => setConfirmEnd(false)}
+              disabled={busy}
+            >
+              ✕
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="live"
+            size="md"
+            className="flex-1"
+            onClick={() => setConfirmEnd(true)}
+            disabled={busy}
+          >
+            Cancel Auction
+          </Button>
+        )}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -629,7 +664,6 @@ export default function LiveShopControlPage() {
 
   const endAuction = useCallback(async () => {
     if (!activeAuction) return;
-    if (!window.confirm("End this auction now? This cannot be undone.")) return;
     setActing(true);
     try {
       await apiPost(`/api/haggle/auctions/${activeAuction.id}/cancel`, {});
@@ -778,10 +812,10 @@ export default function LiveShopControlPage() {
               busy={acting}
             />
           ) : (
-            <Card className="p-4">
-              <p className="mb-3 text-sm font-semibold text-itv-text">
+            <section>
+              <h2 className="mb-3 text-sm font-semibold text-itv-text">
                 Pick a product to haggle
-              </p>
+              </h2>
               <ProductGrid
                 products={products}
                 onPick={setSelected}
@@ -795,12 +829,12 @@ export default function LiveShopControlPage() {
                   busy={launching}
                 />
               )}
-            </Card>
+            </section>
           )}
 
           {/* session controls */}
           <Card className="flex flex-wrap items-center gap-2 p-4">
-            <p className="w-full text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+            <p className="w-full text-[11px] font-medium uppercase tracking-wide text-itv-faint">
               Session controls
             </p>
             <Button
@@ -829,10 +863,10 @@ export default function LiveShopControlPage() {
 
         {/* RIGHT — stats */}
         <div className="space-y-4 lg:col-span-2">
-          <Card className="p-4">
-            <p className="mb-3 text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+          <section>
+            <h2 className="mb-3 text-[11px] font-medium uppercase tracking-wide text-itv-faint">
               Session stats
-            </p>
+            </h2>
             <div className="grid grid-cols-2 gap-2">
               <StatCard label="Viewers" value={viewers.toString()} />
               <StatCard label="Total Bids" value={stats.totalBids.toString()} />
@@ -847,18 +881,18 @@ export default function LiveShopControlPage() {
                 value={`${stats.conversion}%`}
               />
             </div>
-          </Card>
+          </section>
 
-          <Card className="p-4">
-            <p className="mb-3 text-[10px] font-medium uppercase tracking-wide text-itv-faint">
+          <section>
+            <h2 className="mb-3 text-[11px] font-medium uppercase tracking-wide text-itv-faint">
               Upcoming Queue
-            </p>
+            </h2>
             <UpcomingQueue
               queue={queue}
               onUpdateBid={updateQueueBid}
               onRemove={removeFromQueue}
             />
-          </Card>
+          </section>
         </div>
       </div>
     </div>

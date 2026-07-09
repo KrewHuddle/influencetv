@@ -4,6 +4,8 @@ import Image from "next/image";
 import { X } from "lucide-react";
 import { useSocket } from "@/hooks/useSocket";
 import { useCartStore } from "@/store/cartStore";
+import { Button } from "@/components/ui/Button";
+import { formatPrice } from "@/components/ui/PriceTag";
 
 interface PinnedProduct {
   productId: string;
@@ -90,8 +92,8 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
       )}
       <div className="flex-1">
         <p className="line-clamp-1 text-sm font-bold text-itv-text">{product.title}</p>
-        <p className="text-sm font-bold text-itv-magenta">${(product.price / 100).toFixed(2)}</p>
-        {isFlash && (
+        <p className="font-mono text-sm font-bold tabular-nums text-itv-magenta">{formatPrice(product.price)}</p>
+        {isFlash && secsLeft !== 0 && (
           <p className="mt-0.5 flex items-center gap-2 text-[11px] font-bold text-itv-magenta">
             {secsLeft != null && (
               <span className="font-mono">
@@ -102,7 +104,8 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
           </p>
         )}
       </div>
-      <button
+      <Button
+        size="sm"
         onClick={() =>
           addToCart({
             productId: product.productId,
@@ -112,14 +115,13 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
             thumbnail: product.thumbnail ?? null,
           })
         }
-        className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110"
       >
         Add to Cart
-      </button>
+      </Button>
       <button
         aria-label="Dismiss"
         onClick={() => setProduct(null)}
-        className="text-white/40 hover:text-itv-text"
+        className="p-2 text-itv-faint transition-colors hover:text-itv-text"
       >
         <X size={16} />
       </button>

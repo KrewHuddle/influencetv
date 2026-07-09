@@ -3,6 +3,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { VideoCard, type VideoSummary } from "@/components/video/VideoCard";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Spinner";
 import { PillFilter } from "@/components/ui/PillFilter";
@@ -22,7 +23,7 @@ export default function BrowsePage() {
   const key = `/api/browse?sort=${sort}${genre !== "All" ? `&genre=${genre}` : ""}${
     q ? `&q=${encodeURIComponent(q)}` : ""
   }`;
-  const { data, isLoading } = useSWR<{ items: VideoSummary[] }>(key, swrFetcher, {
+  const { data, error, isLoading, mutate } = useSWR<{ items: VideoSummary[] }>(key, swrFetcher, {
     shouldRetryOnError: false,
   });
   const items = data?.items ?? [];
@@ -52,6 +53,13 @@ export default function BrowsePage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="aspect-video" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load videos.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
         </div>
       ) : items.length ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

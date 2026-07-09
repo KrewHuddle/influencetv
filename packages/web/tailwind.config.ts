@@ -33,7 +33,8 @@ const config: Config = {
           "success-dim": "rgba(52,211,153,0.15)",
           warn: "var(--itv-warn)",
           "warn-dim": "rgba(245,184,65,0.15)",
-          white: "#FFFFFF",
+          hover: "var(--itv-hover)",
+          scrim: "var(--itv-scrim)",
           text: "var(--itv-text)",
           muted: "var(--itv-muted)",
           faint: "var(--itv-faint)",
@@ -51,6 +52,13 @@ const config: Config = {
         md: "var(--radius)",
         lg: "var(--radius-lg)",
         xl: "var(--radius-xl)",
+      },
+      // Named stacking ladder — don't improvise z values.
+      zIndex: {
+        header: "40",
+        overlay: "50",
+        drawer: "60",
+        toast: "100",
       },
       boxShadow: {
         "glow-magenta": "0 0 0 1px rgba(217,70,239,0.35), 0 8px 40px -12px rgba(217,70,239,0.55)",

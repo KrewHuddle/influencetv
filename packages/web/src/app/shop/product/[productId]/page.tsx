@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/Button";
+import { PriceTag } from "@/components/ui/PriceTag";
 
 interface Product {
   id: string;
@@ -25,12 +26,22 @@ export default function ProductDetailPage({
   const { productId } = params;
   const router = useRouter();
   const add = useCartStore((s) => s.add);
-  const { data } = useSWR<{ product: Product }>(
+  const { data, error, mutate } = useSWR<{ product: Product }>(
     `/api/shop/products/${productId}`,
     swrFetcher,
     { shouldRetryOnError: false }
   );
   const product = data?.product;
+
+  if (error)
+    return (
+      <div className="flex flex-col items-start gap-3 p-8">
+        <p className="text-sm text-itv-muted">Couldn&apos;t load this product.</p>
+        <Button size="sm" variant="subtle" onClick={() => mutate()}>
+          Try again
+        </Button>
+      </div>
+    );
 
   if (!product)
     return <div className="p-8 text-sm text-itv-muted">Loading…</div>;
@@ -49,19 +60,25 @@ export default function ProductDetailPage({
     <div className="mx-auto grid max-w-4xl gap-8 px-6 py-8 md:grid-cols-2">
       <div className="relative aspect-square overflow-hidden rounded-xl bg-itv-surface2">
         {product.thumbnail_url && (
-          <Image src={product.thumbnail_url} alt={product.title} fill sizes="400px" className="object-cover" />
+          <Image
+            src={product.thumbnail_url}
+            alt={product.title}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 480px"
+            className="object-cover"
+          />
         )}
       </div>
       <div>
         <h1 className="font-display text-2xl">{product.title}</h1>
         <p className="mt-1 text-sm text-itv-muted">by {product.seller_name}</p>
-        <p className="my-4 text-2xl">
-          ${(product.base_price_cents / 100).toFixed(2)}
-          {product.compare_at_price_cents && (
-            <span className="ml-2 text-sm text-itv-muted line-through">
-              ${(product.compare_at_price_cents / 100).toFixed(2)}
-            </span>
-          )}
+        <p className="my-4">
+          <PriceTag
+            cents={product.base_price_cents}
+            compareAtCents={product.compare_at_price_cents}
+            size="lg"
+          />
         </p>
         {product.description && (
           <p className="mb-6 text-sm text-itv-muted">{product.description}</p>

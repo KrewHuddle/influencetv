@@ -29,11 +29,11 @@ export function Modal({
             className
           )}
         >
-          {title && (
-            <Dialog.Title className="mb-4 font-display text-lg text-itv-text">
-              {title}
-            </Dialog.Title>
-          )}
+          <Dialog.Title
+            className={title ? "mb-4 font-display text-lg text-itv-text" : undefined}
+          >
+            {title ?? <span className="sr-only">Dialog</span>}
+          </Dialog.Title>
           <Dialog.Close
             aria-label="Close"
             className="absolute right-4 top-4 text-itv-muted transition-colors hover:text-itv-text"

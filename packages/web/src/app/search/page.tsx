@@ -42,7 +42,7 @@ function SearchResults() {
       <h1 className="mb-1 text-[22px] font-black">
         {q ? `Results for “${q}”` : "Search"}
       </h1>
-      <p className="mb-6 text-[12px] text-white/[0.55]">
+      <p className="mb-6 text-[12px] text-itv-muted">
         {q ? `${items.length} result${items.length === 1 ? "" : "s"}` : "Type a query in the header search."}
       </p>
       <VideoGrid items={items} />
@@ -52,7 +52,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="px-6 py-6 text-sm text-white/[0.42]">Searching…</div>}>
+    <Suspense fallback={<div className="px-6 py-6 text-sm text-itv-faint">Searching…</div>}>
       <SearchResults />
     </Suspense>
   );

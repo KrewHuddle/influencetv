@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
+import { AxiosError } from "axios";
 import { api, swrFetcher } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +19,12 @@ export default function StudioCoursesPage() {
   const [title, setTitle] = useState("");
   const [access, setAccess] = useState("free");
   const [busy, setBusy] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  const serverMessage = (err: unknown) =>
+    err instanceof AxiosError
+      ? (err.response?.data as { error?: { message?: string } } | undefined)?.error?.message
+      : undefined;
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +34,31 @@ export default function StudioCoursesPage() {
       toast({ title: "Course created" });
       setTitle("");
       void mutate();
-    } catch {
-      toast({ title: "Failed (creator role required)", variant: "error" });
+    } catch (err) {
+      toast({
+        title: "Couldn't create course",
+        description: serverMessage(err) ?? "Something went wrong",
+        variant: "error",
+      });
     } finally {
       setBusy(false);
     }
   };
 
   const togglePublish = async (c: Course) => {
-    await api.patch(`/api/courses/${c.id}`, { isPublished: !c.is_published });
-    void mutate();
+    setPublishingId(c.id);
+    try {
+      await api.patch(`/api/courses/${c.id}`, { isPublished: !c.is_published });
+      void mutate();
+    } catch (err) {
+      toast({
+        title: c.is_published ? "Couldn't unpublish" : "Couldn't publish",
+        description: serverMessage(err) ?? "Something went wrong",
+        variant: "error",
+      });
+    } finally {
+      setPublishingId(null);
+    }
   };
 
   const courses = data?.courses ?? [];
@@ -50,27 +72,29 @@ export default function StudioCoursesPage() {
           <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
             <div>
               <Link href={`/studio/courses/${c.slug}`} className="text-sm font-bold hover:text-itv-magenta">{c.title}</Link>
-              <p className="text-[11px] text-white/[0.45]">
+              <p className="text-[11px] text-itv-muted">
                 {c.access_level} · {c.lesson_count} lessons · {c.enrollment_count} enrolled
               </p>
             </div>
-            <button
+            <Button
+              variant={c.is_published ? "primary" : "subtle"}
+              size="sm"
               onClick={() => togglePublish(c)}
-              className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px]"
-              style={c.is_published ? { background: "var(--itv-magenta)", color: "#fff" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}
+              disabled={publishingId === c.id}
+              className="text-[11px] font-bold uppercase tracking-[1px]"
             >
-              {c.is_published ? "Published" : "Draft"}
-            </button>
+              {publishingId === c.id ? "Saving…" : c.is_published ? "Published" : "Draft"}
+            </Button>
           </div>
         ))}
-        {!courses.length && <p className="text-sm text-white/[0.42]">No courses yet. Create one below.</p>}
+        {!courses.length && <p className="text-sm text-itv-muted">No courses yet. Create one below.</p>}
       </div>
 
       <form onSubmit={create} className="space-y-4 border border-itv-border bg-itv-surface p-5">
         <h2 className="text-[13px] font-extrabold">New Course</h2>
         <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
         <label className="block">
-          <span className="mb-1.5 block text-xs uppercase tracking-wide text-white/[0.55]">Access</span>
+          <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Access</span>
           <select
             value={access}
             onChange={(e) => setAccess(e.target.value)}

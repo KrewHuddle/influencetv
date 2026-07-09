@@ -5,6 +5,8 @@ import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Spinner";
 import { PillFilter } from "@/components/ui/PillFilter";
 import { CreatorLink } from "@/components/video/VideoCard";
 
@@ -22,7 +24,7 @@ interface Course {
 }
 
 export default function TrainingPage() {
-  const { data } = useSWR<{ courses: Course[] }>("/api/courses", swrFetcher, {
+  const { data, error, isLoading, mutate } = useSWR<{ courses: Course[] }>("/api/courses", swrFetcher, {
     shouldRetryOnError: false,
   });
   const [access, setAccess] = useState("all");
@@ -49,7 +51,20 @@ export default function TrainingPage() {
         onChange={setAccess}
       />
 
-      {courses.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-video" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load courses.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
+        </div>
+      ) : courses.length === 0 ? (
         <div className="rounded-lg border border-dashed border-itv-border p-8 text-center">
           <p className="text-sm text-itv-muted">No courses here yet.</p>
           <Link
@@ -61,7 +76,7 @@ export default function TrainingPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((c) => (
+          {courses.map((c, i) => (
             <div key={c.id}>
               <Link href={`/courses/${c.slug}`} className="group block">
                 <Card interactive className="overflow-hidden">
@@ -70,7 +85,7 @@ export default function TrainingPage() {
                     <img
                       src={c.thumbnail_url || "/placeholder.svg"}
                       alt={c.title}
-                      loading="lazy"
+                      loading={i < 3 ? "eager" : "lazy"}
                       className="h-full w-full object-cover"
                     />
                     <span className="absolute left-2 top-2">

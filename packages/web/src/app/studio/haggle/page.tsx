@@ -284,12 +284,20 @@ export default function StudioHagglePage() {
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={a.thumbnail_url ?? "/placeholder.png"}
-                              alt=""
-                              className="h-9 w-9 shrink-0 rounded object-cover"
-                            />
+                            {a.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={a.thumbnail_url}
+                                alt=""
+                                className="h-9 w-9 shrink-0 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="grid h-9 w-9 shrink-0 place-items-center rounded bg-itv-surface3 text-itv-faint">
+                                <span className="font-display text-xs">
+                                  {(a.product_title ?? a.title ?? "?").slice(0, 1)}
+                                </span>
+                              </div>
+                            )}
                             <span className="text-itv-text">
                               {a.product_title ?? a.title ?? "Untitled"}
                             </span>

@@ -20,7 +20,7 @@ export default function StudioDashboard() {
   });
 
   const tiles = [
-    { label: "Today's Views", value: data?.recentVideos?.reduce((n, v) => n + (v.view_count ?? 0), 0) ?? 0 },
+    { label: "Recent upload views", value: data?.recentVideos?.reduce((n, v) => n + (v.view_count ?? 0), 0) ?? 0 },
     { label: "New Patrons", value: data?.today.newPatrons ?? 0 },
     { label: "Pending Payout", value: dollars(data?.today.pendingPayoutCents ?? 0) },
     { label: "Shop Revenue", value: dollars(data?.today.shopRevenueCents ?? 0) },
@@ -42,8 +42,8 @@ export default function StudioDashboard() {
       <div className="mb-4 grid grid-cols-2 gap-px bg-itv-border md:grid-cols-4">
         {tiles.map((t) => (
           <div key={t.label} className="border border-itv-border bg-itv-surface p-4">
-            <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">{t.label}</p>
-            <p className="mt-2 text-[26px] font-black text-white">{t.value}</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-itv-faint">{t.label}</p>
+            <p className="mt-2 font-mono text-[26px] font-black tabular-nums text-itv-text">{t.value}</p>
           </div>
         ))}
       </div>
@@ -57,7 +57,7 @@ export default function StudioDashboard() {
             className="flex items-center gap-3 border border-itv-border bg-itv-surface px-4 py-[14px] hover:bg-itv-surface2"
           >
             <Icon size={20} className="text-itv-magenta" />
-            <span className="text-[11px] font-bold text-white">{label}</span>
+            <span className="text-[11px] font-bold text-itv-text">{label}</span>
           </Link>
         ))}
       </div>
@@ -71,7 +71,7 @@ export default function StudioDashboard() {
           </div>
         ))}
         {!data?.recentVideos?.length && (
-          <p className="text-sm text-white/[0.42]">No uploads yet.</p>
+          <p className="text-sm text-itv-muted">No uploads yet.</p>
         )}
       </div>
     </div>

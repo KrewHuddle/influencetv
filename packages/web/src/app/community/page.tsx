@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 import { swrFetcher } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Spinner";
 
 interface Community {
   id: string;
@@ -17,7 +19,7 @@ const kfmt = (n?: number | null) =>
   !n ? "0" : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
 
 export default function CommunityIndexPage() {
-  const { data } = useSWR<{ communities: Community[] }>(
+  const { data, error, isLoading, mutate } = useSWR<{ communities: Community[] }>(
     "/api/communities",
     swrFetcher,
     { shouldRetryOnError: false }
@@ -31,7 +33,20 @@ export default function CommunityIndexPage() {
         Join the conversation around channels and creators.
       </p>
 
-      {communities.length ? (
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-36 w-full" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-itv-border py-12 text-center">
+          <p className="text-sm text-itv-muted">Couldn&apos;t load communities.</p>
+          <Button variant="subtle" size="sm" onClick={() => mutate()}>
+            Retry
+          </Button>
+        </div>
+      ) : communities.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {communities.map((c) => (
             <Link key={c.id} href={`/community/${c.id}`}>

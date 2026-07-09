@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { AxiosError } from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +16,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -23,8 +26,13 @@ export default function LoginPage() {
       const u = await login(email, password);
       const STAFF = ["moderator", "channel_manager", "super_admin"];
       router.push(u && STAFF.includes(u.role) ? "/admin" : "/");
-    } catch {
-      toast({ title: "Sign in failed", description: "Check your credentials", variant: "error" });
+    } catch (err) {
+      const status = err instanceof AxiosError ? err.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        toast({ title: "Sign in failed", description: "Check your credentials", variant: "error" });
+      } else {
+        toast({ title: "Sign in failed", description: "Something went wrong — try again.", variant: "error" });
+      }
     } finally {
       setBusy(false);
     }
@@ -40,11 +48,29 @@ export default function LoginPage() {
           </Button>
         </a>
         <div className="my-5 flex items-center gap-3 text-xs text-itv-muted">
-          <span className="h-px flex-1 bg-white/10" /> OR <span className="h-px flex-1 bg-white/10" />
+          <span className="h-px flex-1 bg-itv-border" /> OR <span className="h-px flex-1 bg-itv-border" />
         </div>
         <form onSubmit={submit} className="space-y-4">
-          <Input label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Input label="Password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input label="Email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <div className="relative">
+            <Input
+              label="Password"
+              type={showPw ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              aria-label={showPw ? "Hide password" : "Show password"}
+              onClick={() => setShowPw((v) => !v)}
+              className="absolute bottom-3 right-3 text-itv-muted hover:text-itv-text"
+            >
+              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? "Signing in…" : "Sign In"}
           </Button>

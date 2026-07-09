@@ -7,6 +7,8 @@ type Size = "sm" | "md" | "lg";
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   size?: Size;
+  /** Disables the button, sets aria-busy, and shows an inline spinner. */
+  isLoading?: boolean;
 }
 
 const styles: Record<Variant, string> = {
@@ -15,7 +17,7 @@ const styles: Record<Variant, string> = {
   gold: "bg-itv-gold text-itv-bg hover:brightness-105 hover:shadow-glow-gold",
   live: "bg-itv-live text-white hover:brightness-105 hover:shadow-glow-live",
   ghost:
-    "bg-transparent border border-itv-border text-itv-text hover:bg-white/[0.06]",
+    "bg-transparent border border-itv-border text-itv-text hover:bg-itv-hover",
   subtle: "bg-itv-surface2 text-itv-text hover:bg-itv-surface3",
 };
 
@@ -25,21 +27,48 @@ const sizes: Record<Size, string> = {
   lg: "gap-2.5 rounded-lg px-6 py-3 text-[15px]",
 };
 
+/**
+ * Class builder shared by Button. Use it directly on non-button elements
+ * (e.g. next/link `<Link className={buttonClasses("gold", "sm")}>`) to reuse
+ * Button styling without nesting interactive elements.
+ */
+export function buttonClasses(
+  variant: Variant = "primary",
+  size: Size = "md",
+  className?: string
+): string {
+  return cn(
+    "inline-flex items-center justify-center whitespace-nowrap font-medium",
+    "transition-[background-color,box-shadow,border-color] duration-[--dur-fast] ease-[--ease-out]",
+    "active:translate-y-px active:brightness-95",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itv-magenta",
+    "disabled:pointer-events-none disabled:opacity-40",
+    sizes[size],
+    styles[variant],
+    className
+  );
+}
+
 export const Button = forwardRef<HTMLButtonElement, Props>(
-  ({ variant = "primary", size = "md", className, ...props }, ref) => (
+  (
+    { variant = "primary", size = "md", className, isLoading, disabled, children, ...props },
+    ref
+  ) => (
     <button
       ref={ref}
-      className={cn(
-        "inline-flex items-center justify-center font-medium",
-        "transition-[background-color,box-shadow,border-color] duration-[--dur-fast] ease-[--ease-out]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-itv-magenta focus-visible:ring-offset-2 focus-visible:ring-offset-itv-bg",
-        "disabled:pointer-events-none disabled:opacity-40",
-        sizes[size],
-        styles[variant],
-        className
-      )}
+      className={buttonClasses(variant, size, className)}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       {...props}
-    />
+    >
+      {isLoading && (
+        <span
+          aria-hidden
+          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[color-mix(in_srgb,currentColor_30%,transparent)] border-t-current"
+        />
+      )}
+      {children}
+    </button>
   )
 );
 Button.displayName = "Button";

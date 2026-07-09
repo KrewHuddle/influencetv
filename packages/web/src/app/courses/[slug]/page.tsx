@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Lock, CheckCircle2, Circle, PlayCircle } from "lucide-react";
+import { AxiosError } from "axios";
 import { api, swrFetcher } from "@/lib/api";
 import { VideoPlayer } from "@/components/video/VideoPlayer";
 import { Button } from "@/components/ui/Button";
@@ -45,29 +46,65 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
   const selected = lessons.find((l) => l.id === selectedId) ?? lessons[0] ?? null;
   const enrolled = data?.enrolled ?? false;
 
+  const [enrolling, setEnrolling] = useState(false);
+  const [completing, setCompleting] = useState(false);
+
+  const errInfo = (err: unknown) => {
+    const ax = err instanceof AxiosError ? err : undefined;
+    return {
+      status: ax?.response?.status,
+      message: (ax?.response?.data as { error?: { message?: string } } | undefined)?.error
+        ?.message,
+    };
+  };
+
   const enroll = async () => {
     if (!data) return;
+    setEnrolling(true);
     try {
       await api.post(`/api/courses/${data.course.id}/enroll`);
       toast({ title: "Enrolled" });
       void mutate();
-    } catch {
-      toast({ title: "Upgrade required for this course", variant: "error" });
+    } catch (err) {
+      const { status, message } = errInfo(err);
+      if (status === 403) {
+        toast({ title: "Upgrade required for this course", variant: "error" });
+      } else {
+        toast({
+          title: "Couldn't enroll",
+          description: message ?? "Something went wrong — try again.",
+          variant: "error",
+        });
+      }
+    } finally {
+      setEnrolling(false);
     }
   };
 
   const markComplete = async (lessonId: string) => {
     if (!data) return;
+    setCompleting(true);
     try {
       const res = await api.post(`/api/courses/${data.course.id}/lessons/${lessonId}/progress`, { completed: true });
-      if (res.data?.data?.courseComplete) toast({ title: "Course complete! 🎉" });
+      if (res.data?.data?.courseComplete) toast({ title: "Course complete" });
       void mutate();
-    } catch {
-      toast({ title: "Enroll to track progress", variant: "error" });
+    } catch (err) {
+      const { status, message } = errInfo(err);
+      if (status === 403) {
+        toast({ title: "Enroll to track progress", variant: "error" });
+      } else {
+        toast({
+          title: "Couldn't save progress",
+          description: message ?? "Something went wrong — try again.",
+          variant: "error",
+        });
+      }
+    } finally {
+      setCompleting(false);
     }
   };
 
-  if (!data) return <div className="px-6 py-10 text-sm text-white/[0.42]">Loading…</div>;
+  if (!data) return <div className="px-6 py-10 text-sm text-itv-muted">Loading…</div>;
 
   const { course } = data;
   const completedCount = lessons.filter((l) => done.has(l.id)).length;
@@ -83,13 +120,13 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
     <div className="mx-auto max-w-6xl px-6 py-6">
       <div className="mb-6">
         <h1 className="text-[26px] font-black">{course.title}</h1>
-        <p className="mt-1 text-[12px] text-white/[0.55]">
+        <p className="mt-1 text-[12px] text-itv-muted">
           {course.creator_name ?? "Influence"} · {course.lesson_count} lessons · {course.enrollment_count} enrolled
         </p>
-        {course.description && <p className="mt-3 max-w-2xl text-sm text-white/[0.7]">{course.description}</p>}
+        {course.description && <p className="mt-3 max-w-2xl text-sm text-itv-muted">{course.description}</p>}
         {enrolled ? (
           <div className="mt-4 max-w-md">
-            <div className="mb-1 flex justify-between text-[11px] text-white/[0.55]">
+            <div className="mb-1 flex justify-between text-[11px] text-itv-muted">
               <span>{completedCount}/{course.lesson_count} complete</span><span>{pct}%</span>
             </div>
             <div className="h-1.5 w-full bg-itv-surface2">
@@ -97,7 +134,9 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
             </div>
           </div>
         ) : (
-          <Button className="mt-4" onClick={enroll}>Enroll{course.access_level !== "free" ? ` (${course.access_level})` : ""}</Button>
+          <Button className="mt-4" onClick={enroll} disabled={enrolling}>
+            {enrolling ? "Enrolling…" : `Enroll${course.access_level !== "free" ? ` (${course.access_level})` : ""}`}
+          </Button>
         )}
       </div>
 
@@ -109,13 +148,13 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
               {selected.hls_url ? (
                 <VideoPlayer hlsUrl={selected.hls_url} autoPlay={false} />
               ) : selected.content ? (
-                <div className="whitespace-pre-line border border-itv-border bg-itv-surface p-5 text-sm text-white/[0.8]">
+                <div className="whitespace-pre-line border border-itv-border bg-itv-surface p-5 text-sm text-itv-text">
                   {selected.content}
                 </div>
               ) : (
-                <div className="grid aspect-video place-items-center border border-itv-border bg-itv-surface text-sm text-white/[0.42]">
+                <div className="grid aspect-video place-items-center border border-itv-border bg-itv-surface text-sm text-itv-muted">
                   <div className="text-center">
-                    <Lock className="mx-auto mb-2 text-white/40" size={22} />
+                    <Lock className="mx-auto mb-2 text-itv-faint" size={22} />
                     Enroll to unlock this lesson
                   </div>
                 </div>
@@ -125,16 +164,17 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
                 {enrolled && (selected.hls_url || selected.content) && (
                   <button
                     onClick={() => markComplete(selected.id)}
-                    className="flex items-center gap-1.5 text-[12px] font-semibold text-itv-magenta"
+                    disabled={completing}
+                    className="flex items-center gap-1.5 text-[12px] font-semibold text-itv-magenta disabled:pointer-events-none disabled:opacity-40"
                   >
                     {done.has(selected.id) ? <CheckCircle2 size={16} /> : <Circle size={16} />}
-                    {done.has(selected.id) ? "Completed" : "Mark complete"}
+                    {completing ? "Saving…" : done.has(selected.id) ? "Completed" : "Mark complete"}
                   </button>
                 )}
               </div>
             </>
           ) : (
-            <p className="text-sm text-white/[0.42]">No lessons yet.</p>
+            <p className="text-sm text-itv-muted">No lessons yet.</p>
           )}
         </div>
 
@@ -142,7 +182,7 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
         <aside className="border border-itv-border bg-itv-surface">
           {groups.map((g) => (
             <div key={g.id} className="border-b border-itv-border last:border-b-0">
-              <p className="px-4 py-2 text-[11px] font-extrabold uppercase tracking-[1px] text-white/[0.5]">{g.title}</p>
+              <p className="px-4 py-2 text-[11px] font-extrabold uppercase tracking-[1px] text-itv-muted">{g.title}</p>
               {g.items.map((l) => {
                 const isDone = done.has(l.id);
                 const active = selected?.id === l.id;
@@ -151,17 +191,17 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
                   <button
                     key={l.id}
                     onClick={() => setSelectedId(l.id)}
-                    className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-[13px] ${active ? "bg-white/[0.06]" : ""} hover:bg-white/[0.04]`}
+                    className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-[13px] ${active ? "bg-itv-surface3" : ""} hover:bg-itv-surface2`}
                   >
-                    {locked ? <Lock size={14} className="text-white/35" /> : isDone ? <CheckCircle2 size={14} className="text-itv-magenta" /> : <PlayCircle size={14} className="text-white/55" />}
-                    <span className={locked ? "text-white/45" : ""}>{l.title}</span>
-                    {l.is_preview && !enrolled && <span className="ml-auto text-[9px] uppercase tracking-[1px] text-itv-magenta">Preview</span>}
+                    {locked ? <Lock size={14} className="text-itv-faint" /> : isDone ? <CheckCircle2 size={14} className="text-itv-magenta" /> : <PlayCircle size={14} className="text-itv-muted" />}
+                    <span className={locked ? "text-itv-faint" : ""}>{l.title}</span>
+                    {l.is_preview && !enrolled && <span className="ml-auto text-[11px] uppercase tracking-[1px] text-itv-magenta">Preview</span>}
                   </button>
                 );
               })}
             </div>
           ))}
-          {!groups.length && <p className="p-4 text-sm text-white/[0.42]">Curriculum coming soon.</p>}
+          {!groups.length && <p className="p-4 text-sm text-itv-muted">Curriculum coming soon.</p>}
         </aside>
       </div>
     </div>

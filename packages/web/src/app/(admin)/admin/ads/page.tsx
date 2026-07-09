@@ -70,15 +70,15 @@ export default function AdminAdsPage() {
       {/* totals */}
       <div className="mb-6 grid grid-cols-2 gap-px bg-itv-border md:grid-cols-3">
         <div className="border border-itv-border bg-itv-surface p-4">
-          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">Ad Revenue</p>
+          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-itv-faint">Ad Revenue</p>
           <p className="mt-2 text-[26px] font-black">{dollars(report?.totals.revenueCents)}</p>
         </div>
         <div className="border border-itv-border bg-itv-surface p-4">
-          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">Impressions</p>
+          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-itv-faint">Impressions</p>
           <p className="mt-2 text-[26px] font-black">{(report?.totals.impressions ?? 0).toLocaleString()}</p>
         </div>
         <div className="border border-itv-border bg-itv-surface p-4">
-          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">Campaigns</p>
+          <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-itv-faint">Campaigns</p>
           <p className="mt-2 text-[26px] font-black">{campaigns.length}</p>
         </div>
       </div>
@@ -89,20 +89,19 @@ export default function AdminAdsPage() {
           <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
             <div>
               <p className="text-sm font-bold">{c.advertiser_name}</p>
-              <p className="text-[11px] text-white/[0.45]">
+              <p className="text-[11px] text-itv-faint">
                 {c.creative_title ?? "creative"} · CPM {dollars(c.cpm_cents)} · {c.impressions_served.toLocaleString()} imp · spend {dollars(c.spend_cents)}{c.budget_cents ? ` / ${dollars(c.budget_cents)}` : ""}
               </p>
             </div>
             <button
               onClick={() => toggle(c)}
-              className="px-3 py-1 text-[11px] font-bold uppercase tracking-[1px]"
-              style={c.is_active ? { background: "var(--itv-magenta)", color: "#fff" } : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)" }}
+              className={`px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] ${c.is_active ? "bg-itv-magenta text-white" : "bg-itv-surface2 text-itv-muted"}`}
             >
               {c.is_active ? "Active" : "Paused"}
             </button>
           </div>
         ))}
-        {!campaigns.length && <p className="text-sm text-white/[0.42]">No campaigns yet.</p>}
+        {!campaigns.length && <p className="text-sm text-itv-faint">No campaigns yet.</p>}
       </div>
 
       {/* create */}

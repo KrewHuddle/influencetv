@@ -26,7 +26,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
   const [content, setContent] = useState("");
   const [isPreview, setIsPreview] = useState(false);
 
-  if (!data) return <div className="px-6 py-10 text-sm text-white/[0.42]">Loading…</div>;
+  if (!data) return <div className="px-6 py-10 text-sm text-itv-faint">Loading…</div>;
   const { course, modules, lessons } = data;
 
   const addModule = async (e: React.FormEvent) => {
@@ -67,7 +67,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-[22px] font-black">{course.title}</h1>
-          <p className="text-[11px] text-white/[0.45]">{course.lesson_count} lessons · {course.is_published ? "published" : "draft"}</p>
+          <p className="text-[11px] text-itv-faint">{course.lesson_count} lessons · {course.is_published ? "published" : "draft"}</p>
         </div>
         <Button variant={course.is_published ? "ghost" : "primary"} onClick={publish}>
           {course.is_published ? "Unpublish" : "Publish"}
@@ -80,7 +80,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           <div key={m.id} className="border border-itv-border bg-itv-surface">
             <p className="border-b border-itv-border px-4 py-2 text-[12px] font-extrabold">{m.title}</p>
             {lessons.filter((l) => l.module_id === m.id).map((l) => (
-              <p key={l.id} className="px-4 py-2 text-[13px] text-white/[0.8]">
+              <p key={l.id} className="px-4 py-2 text-[13px] text-itv-text">
                 {l.title}{l.is_preview ? " · preview" : ""}
               </p>
             ))}
@@ -90,11 +90,11 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           <div className="border border-itv-border bg-itv-surface">
             <p className="border-b border-itv-border px-4 py-2 text-[12px] font-extrabold">Ungrouped</p>
             {lessons.filter((l) => !l.module_id).map((l) => (
-              <p key={l.id} className="px-4 py-2 text-[13px] text-white/[0.8]">{l.title}{l.is_preview ? " · preview" : ""}</p>
+              <p key={l.id} className="px-4 py-2 text-[13px] text-itv-text">{l.title}{l.is_preview ? " · preview" : ""}</p>
             ))}
           </div>
         )}
-        {!lessons.length && <p className="text-sm text-white/[0.42]">No lessons yet.</p>}
+        {!lessons.length && <p className="text-sm text-itv-faint">No lessons yet.</p>}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -110,7 +110,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           <h2 className="text-[13px] font-extrabold">Add Lesson</h2>
           <Input label="Lesson title" value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} required />
           <label className="block">
-            <span className="mb-1.5 block text-xs uppercase tracking-wide text-white/[0.55]">Module</span>
+            <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Module</span>
             <select value={lessonModule} onChange={(e) => setLessonModule(e.target.value)} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
               <option value="">Ungrouped</option>
               {modules.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
@@ -118,7 +118,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           </label>
           <Input label="Video ID (optional)" value={videoId} onChange={(e) => setVideoId(e.target.value)} />
           <label className="block">
-            <span className="mb-1.5 block text-xs uppercase tracking-wide text-white/[0.55]">Text content (optional)</span>
+            <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Text content (optional)</span>
             <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={2} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta" />
           </label>
           <label className="flex items-center gap-2 text-sm">

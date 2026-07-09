@@ -24,7 +24,7 @@ export default function NewsPage() {
   return (
     <div className="px-6 py-6">
       <h1 className="mb-1 text-[22px] font-black">News</h1>
-      <p className="mb-6 text-[12px] text-white/[0.55]">
+      <p className="mb-6 text-[12px] text-itv-muted">
         Breaking coverage, market watch, and culture from the Influence newsroom.
       </p>
       <VideoGrid items={items} />

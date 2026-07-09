@@ -34,7 +34,7 @@ export default function AdminRevenuePage() {
       <div className="mb-8 grid grid-cols-2 gap-px bg-itv-border md:grid-cols-3">
         {tiles.map((t) => (
           <div key={t.label} className="border border-itv-border bg-itv-surface p-4">
-            <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-white/[0.38]">{t.label}</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-[2px] text-itv-faint">{t.label}</p>
             <p className="mt-2 text-[24px] font-black">{t.value}</p>
           </div>
         ))}
@@ -50,7 +50,7 @@ export default function AdminRevenuePage() {
                 <span className="font-bold">{s.count}</span>
               </div>
             ))}
-            {!data?.activeSubsByPlan?.length && <p className="text-sm text-white/[0.42]">No active subscriptions.</p>}
+            {!data?.activeSubsByPlan?.length && <p className="text-sm text-itv-faint">No active subscriptions.</p>}
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function AdminRevenuePage() {
                 <span>fees {dollars(s.platform_fees)} · gross {dollars(s.gross)}</span>
               </div>
             ))}
-            {!data?.byStream?.length && <p className="text-sm text-white/[0.42]">No creator revenue yet.</p>}
+            {!data?.byStream?.length && <p className="text-sm text-itv-faint">No creator revenue yet.</p>}
           </div>
         </div>
       </div>
