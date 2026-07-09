@@ -53,6 +53,9 @@ export default function UploadPage() {
     try {
       await api.post("/api/uploads/video", form, {
         headers: { "Content-Type": "multipart/form-data" },
+        // Big files take minutes — the global 10s axios timeout would abort
+        // the upload mid-stream. No timeout here; the server enforces limits.
+        timeout: 0,
         onUploadProgress: (e) =>
           setProgress(Math.round((e.loaded / (e.total ?? 1)) * 100)),
       });
