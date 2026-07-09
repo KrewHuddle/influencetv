@@ -38,11 +38,15 @@ export async function del(key: string): Promise<number> {
 
 // Plain connection options for BullMQ (avoids passing an ioredis instance whose
 // version may differ from the one BullMQ bundles). maxRetriesPerRequest must be null.
+// IMPORTANT: carry username + TLS through — managed Valkey/Redis (rediss://)
+// requires TLS; without it every Queue.add hangs against the TLS port.
 const redisUrl = new URL(env.REDIS_URL);
 export const bullConnection = {
   host: redisUrl.hostname,
   port: Number(redisUrl.port || 6379),
+  username: redisUrl.username || undefined,
   password: redisUrl.password || undefined,
+  ...(redisUrl.protocol === "rediss:" ? { tls: {} } : {}),
   maxRetriesPerRequest: null as null,
 };
 
