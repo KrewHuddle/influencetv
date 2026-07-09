@@ -52,10 +52,40 @@ router.post(
     const file = req.file as (Express.Multer.File & { key: string }) | undefined;
     if (!file) throw badRequest("No video file (mp4/mov/avi/mkv, ≤50GB)");
 
+    // Optional metadata (bulk uploader sends the full set).
+    const VIDEO_TYPES = ["episode", "movie", "clip", "live_recording"];
+    const RATINGS = ["G", "PG", "PG-13", "TV-14", "TV-MA"];
+    const b = (req.body ?? {}) as Record<string, string>;
+    const type = VIDEO_TYPES.includes(b.type) ? b.type : "episode";
+    const rating = RATINGS.includes(b.rating) ? b.rating : "PG";
+    const description = b.description?.slice(0, 5000) || null;
+    const genre = b.genre?.slice(0, 100) || null;
+    const tags = b.tags
+      ? b.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .slice(0, 20)
+      : null;
+    const isPremium = b.isPremium === "true";
+
     const { rows } = await query<{ id: string }>(
-      `INSERT INTO videos (creator_id, title, status, s3_original_key)
-       VALUES ($1,$2,'uploading',$3) RETURNING id`,
-      [req.user!.id, (req.body?.title as string) ?? file.originalname, file.key]
+      `INSERT INTO videos
+         (creator_id, title, description, type, rating, genre, tags, is_premium,
+          status, s3_original_key)
+       VALUES ($1,$2,$3,$4::video_type,$5::content_rating,$6,$7,$8,'uploading',$9)
+       RETURNING id`,
+      [
+        req.user!.id,
+        (b.title as string) || file.originalname,
+        description,
+        type,
+        rating,
+        genre,
+        tags,
+        isPremium,
+        file.key,
+      ]
     );
     const videoId = rows[0].id;
     await enqueueTranscode({
