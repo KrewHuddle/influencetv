@@ -11,6 +11,7 @@ interface Item {
   id: string; title: string; start_time: string; end_time: string;
   is_ad_break: boolean; is_filler: boolean; video_id: string | null;
 }
+interface ReadyVideo { id: string; title: string; duration_seconds?: number | null }
 
 const today = () => new Date().toISOString().slice(0, 10);
 const iso = (local: string) => (local ? new Date(local).toISOString() : "");
@@ -39,6 +40,53 @@ export default function AdminSchedulePage() {
   const [busyAdBreak, setBusyAdBreak] = useState(false);
   const [confirmDelId, setConfirmDelId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Auto-fill
+  const { data: vidData } = useSWR<{ items: ReadyVideo[] }>(
+    "/api/browse?sort=new&limit=100",
+    swrFetcher,
+    { shouldRetryOnError: false }
+  );
+  const readyVideos = vidData?.items ?? [];
+  const [selected, setSelected] = useState<string[]>([]);
+  const [fStart, setFStart] = useState("");
+  const [fEnd, setFEnd] = useState("");
+  const [fLoop, setFLoop] = useState(true);
+  const [fShuffle, setFShuffle] = useState(false);
+  const [fAdEvery, setFAdEvery] = useState("0");
+  const [busyFill, setBusyFill] = useState(false);
+
+  const toggleSel = (id: string) =>
+    setSelected((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const autoFill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected.length) return;
+    setBusyFill(true);
+    try {
+      const r = await api.post(`/api/channels/${active}/schedule/auto-fill`, {
+        videoIds: selected,
+        startTime: iso(fStart),
+        endTime: iso(fEnd),
+        loop: fLoop,
+        shuffle: fShuffle,
+        adBreakEveryMinutes: Number(fAdEvery),
+      });
+      const d = r.data?.data ?? {};
+      toast({
+        title: `Scheduled ${d.programs ?? 0} programs`,
+        description: d.adBreaks ? `+ ${d.adBreaks} ad breaks` : undefined,
+      });
+      setSelected([]);
+      void mutate();
+    } catch (err) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
+      toast({ title: "Auto-fill failed", description: msg ?? "Try again", variant: "error" });
+    } finally {
+      setBusyFill(false);
+    }
+  };
 
   const addProgram = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +181,13 @@ export default function AdminSchedulePage() {
       <div className="grid gap-4 md:grid-cols-2">
         <form onSubmit={addProgram} className="space-y-3 border border-itv-border bg-itv-surface p-4">
           <h2 className="text-[13px] font-extrabold">Schedule Program</h2>
-          <Input label="Video ID (ready)" value={videoId} onChange={(e) => setVideoId(e.target.value)} required />
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-itv-muted">Video</span>
+            <select value={videoId} onChange={(e) => setVideoId(e.target.value)} required className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+              <option value="">Select a ready video…</option>
+              {readyVideos.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
+            </select>
+          </label>
           <Input label="Start" type="datetime-local" value={pStart} onChange={(e) => setPStart(e.target.value)} required />
           <Input label="End" type="datetime-local" value={pEnd} onChange={(e) => setPEnd(e.target.value)} required />
           <Button type="submit" className="w-full" disabled={busyProgram}>
@@ -149,6 +203,50 @@ export default function AdminSchedulePage() {
           </Button>
         </form>
       </div>
+
+      {/* Auto-fill: playlist scheduling */}
+      <form onSubmit={autoFill} className="mt-6 space-y-4 border border-itv-border bg-itv-surface p-4">
+        <div>
+          <h2 className="text-[13px] font-extrabold">Auto-fill from playlist</h2>
+          <p className="text-[12px] text-itv-muted">Pick videos, set a window — programs are placed back-to-back around existing blocks.</p>
+        </div>
+        <div className="max-h-56 overflow-y-auto border border-itv-border">
+          {readyVideos.map((v) => (
+            <label key={v.id} className="flex cursor-pointer items-center gap-3 border-b border-itv-border px-3 py-2 text-[13px] last:border-b-0 hover:bg-itv-hover">
+              <input type="checkbox" checked={selected.includes(v.id)} onChange={() => toggleSel(v.id)} className="accent-[var(--itv-magenta)]" />
+              <span className="flex-1 truncate">{v.title}</span>
+              {v.duration_seconds ? (
+                <span className="font-mono text-[11px] tabular-nums text-itv-faint">{Math.round(v.duration_seconds / 60)} min</span>
+              ) : null}
+            </label>
+          ))}
+          {!readyVideos.length && <p className="p-3 text-sm text-itv-muted">No ready videos yet — upload some first.</p>}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Input label="Start" type="datetime-local" value={fStart} onChange={(e) => setFStart(e.target.value)} required />
+          <Input label="End" type="datetime-local" value={fEnd} onChange={(e) => setFEnd(e.target.value)} required />
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-itv-muted">Ad break every</span>
+            <select value={fAdEvery} onChange={(e) => setFAdEvery(e.target.value)} className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+              <option value="0">Off</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="60">60 min</option>
+            </select>
+          </label>
+          <div className="flex items-end gap-4 pb-1">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-itv-text">
+              <input type="checkbox" checked={fLoop} onChange={(e) => setFLoop(e.target.checked)} className="accent-[var(--itv-magenta)]" /> Loop
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-itv-text">
+              <input type="checkbox" checked={fShuffle} onChange={(e) => setFShuffle(e.target.checked)} className="accent-[var(--itv-magenta)]" /> Shuffle
+            </label>
+          </div>
+        </div>
+        <Button type="submit" disabled={busyFill || !selected.length} isLoading={busyFill}>
+          {busyFill ? "Scheduling…" : `Auto-fill ${selected.length} video${selected.length === 1 ? "" : "s"}`}
+        </Button>
+      </form>
     </div>
   );
 }

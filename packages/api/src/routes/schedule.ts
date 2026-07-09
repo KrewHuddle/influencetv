@@ -1,5 +1,5 @@
 import { Router, type Router as ExpressRouter } from "express";
-import { query } from "../config/database";
+import { query, transaction } from "../config/database";
 import { redisClient } from "../config/redis";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
@@ -94,6 +94,156 @@ router.post(
       }
       throw err;
     }
+  })
+);
+
+// POST /api/channels/:channelId/schedule/auto-fill (channel_manager, super_admin)
+// Fill a time window with a playlist: videos placed back-to-back, skipping
+// around existing blocks. Optional loop, shuffle, and periodic ad breaks.
+router.post(
+  "/channels/:channelId/schedule/auto-fill",
+  authenticate,
+  schedulerRoles,
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const channelId = req.params.channelId;
+    const {
+      videoIds,
+      startTime,
+      endTime,
+      loop = false,
+      shuffle = false,
+      adBreakEveryMinutes = 0,
+      adBreakDurationSeconds = 60,
+    } = req.body as {
+      videoIds: string[];
+      startTime: string;
+      endTime: string;
+      loop?: boolean;
+      shuffle?: boolean;
+      adBreakEveryMinutes?: number;
+      adBreakDurationSeconds?: number;
+    };
+
+    if (!Array.isArray(videoIds) || videoIds.length === 0)
+      throw badRequest("videoIds required");
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+    if (!start || !end || end <= start) throw badRequest("Invalid time window");
+    if (end - start > 7 * 24 * 3600_000) throw badRequest("Window too large (max 7 days)");
+
+    // Ready videos with durations, preserving request order.
+    const vres = await query<{ id: string; title: string; duration_seconds: number | null }>(
+      `SELECT id, title, duration_seconds FROM videos
+       WHERE id = ANY($1::uuid[]) AND status = 'ready'`,
+      [videoIds]
+    );
+    const byId = new Map(vres.rows.map((v) => [v.id, v]));
+    let playlist = videoIds
+      .map((id) => byId.get(id))
+      .filter((v): v is NonNullable<typeof v> => Boolean(v && v.duration_seconds));
+    if (playlist.length === 0)
+      throw badRequest("No ready videos with known duration in the selection");
+    if (shuffle) playlist = [...playlist].sort(() => Math.random() - 0.5);
+
+    // Existing blocks in the window (collision map).
+    const existing = await query<{ s: string; e: string }>(
+      `SELECT start_time AS s, end_time AS e FROM schedule
+       WHERE channel_id = $1 AND end_time > to_timestamp($2/1000.0)
+         AND start_time < to_timestamp($3/1000.0)
+       ORDER BY start_time`,
+      [channelId, start, end]
+    );
+    const blocks = existing.rows.map((b) => ({
+      s: new Date(b.s).getTime(),
+      e: new Date(b.e).getTime(),
+    }));
+
+    // Advance the cursor past any block a placement of durMs would collide with.
+    const place = (cursor: number, durMs: number): number => {
+      let c = cursor;
+      for (const b of blocks) {
+        if (c < b.e && c + durMs > b.s) c = b.e;
+      }
+      return c;
+    };
+
+    interface Row { videoId: string | null; title: string; s: number; e: number; isAd: boolean }
+    const rows: Row[] = [];
+    let cursor = start;
+    let sinceAdMs = 0;
+    const adEveryMs = Math.max(0, adBreakEveryMinutes) * 60_000;
+    const adDurMs = Math.min(600, Math.max(15, adBreakDurationSeconds)) * 1000;
+    const MAX_ROWS = 500;
+
+    outer: for (let pass = 0; pass < (loop ? 1000 : 1); pass++) {
+      let placedThisPass = 0;
+      for (const v of playlist) {
+        if (rows.length >= MAX_ROWS) break outer;
+        const durMs = (v.duration_seconds as number) * 1000;
+        // periodic ad break before the next program
+        if (adEveryMs > 0 && sinceAdMs >= adEveryMs) {
+          const c = place(cursor, adDurMs);
+          if (c + adDurMs <= end) {
+            rows.push({ videoId: null, title: "Ad Break", s: c, e: c + adDurMs, isAd: true });
+            blocks.push({ s: c, e: c + adDurMs });
+            cursor = c + adDurMs;
+            sinceAdMs = 0;
+          }
+        }
+        const c = place(cursor, durMs);
+        if (c + durMs > end) {
+          if (loop) break outer; // window exhausted
+          continue; // non-loop: a shorter later video may still fit
+        }
+        rows.push({ videoId: v.id, title: v.title, s: c, e: c + durMs, isAd: false });
+        blocks.push({ s: c, e: c + durMs });
+        cursor = c + durMs;
+        sinceAdMs += durMs;
+        placedThisPass++;
+      }
+      if (!loop || placedThisPass === 0) break;
+    }
+
+    if (rows.length === 0)
+      throw badRequest("Nothing fits in that window (check existing programming)");
+
+    try {
+      await transaction(async (c) => {
+        for (const r of rows) {
+          await c.query(
+            `INSERT INTO schedule
+               (channel_id, video_id, title, start_time, end_time, is_ad_break, created_by)
+             VALUES ($1,$2,$3,to_timestamp($4/1000.0),to_timestamp($5/1000.0),$6,$7)`,
+            [channelId, r.videoId, r.title, r.s, r.e, r.isAd, req.user!.id]
+          );
+        }
+      });
+    } catch (err) {
+      if ((err as { code?: string }).code === "23P01") {
+        throw badRequest(
+          "Overlap while writing (schedule changed concurrently) — retry",
+          "SCHEDULE_OVERLAP"
+        );
+      }
+      throw err;
+    }
+
+    try {
+      getIo().to(rooms.channel(channelId)).emit("schedule-updated", { channelId });
+    } catch {
+      /* socket optional */
+    }
+    ok(
+      res,
+      {
+        created: rows.length,
+        programs: rows.filter((r) => !r.isAd).length,
+        adBreaks: rows.filter((r) => r.isAd).length,
+        firstStart: new Date(rows[0].s).toISOString(),
+        lastEnd: new Date(rows[rows.length - 1].e).toISOString(),
+      },
+      201
+    );
   })
 );
 
