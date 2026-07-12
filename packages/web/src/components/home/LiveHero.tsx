@@ -31,8 +31,11 @@ const kfmt = (n?: number | null) =>
  * (player unmounts) when the tab is hidden or the hero scrolls away —
  * tune-in offset re-syncs on return. */
 
+/* Natural 16:9 at full width — the whole broadcast frame stays visible (no
+ * side crop). max-h only engages on very wide/short viewports, where the
+ * player's object-cover absorbs the small overflow. */
 const HERO_BOX =
-  "relative w-full overflow-hidden bg-black aspect-video lg:aspect-auto lg:h-[85svh]";
+  "relative w-full overflow-hidden bg-black aspect-video max-h-[88svh]";
 
 export function LiveHero() {
   const { data, isLoading } = useSWR<{ channels: HeroChannel[] }>(
