@@ -5,7 +5,6 @@
  * pre-emit critique: P4 H5 E4 S4 R5 V5 */
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { LiveHero } from "@/components/home/LiveHero";
@@ -39,6 +38,7 @@ interface VideoSummary {
 interface CreatorSummary {
   username: string;
   name: string;
+  tagline: string;
   live?: boolean;
   patron?: boolean;
 }
@@ -80,12 +80,12 @@ const MOCK_ONDEMAND: VideoSummary[] = [
 
 const MOCK_CREATORS: CreatorSummary[] = [
   // First two are real seeded creators — their hubs show live data.
-  { username: "novafields", name: "Nova Fields", live: true, patron: true },
-  { username: "rexmarlow", name: "Rex Marlow", patron: true },
-  { username: "marsonair", name: "Mars", live: true },
-  { username: "theblend", name: "The Blend", patron: true },
-  { username: "dcole", name: "D. Cole" },
-  { username: "jheneb", name: "Jhene B" },
+  { username: "novafields", name: "Nova Fields", tagline: "Drama · Live TV · Shop", live: true, patron: true },
+  { username: "rexmarlow", name: "Rex Marlow", tagline: "News · Talk", patron: true },
+  { username: "marsonair", name: "Mars", tagline: "Late-night · Cypher", live: true },
+  { username: "theblend", name: "The Blend", tagline: "Morning show", patron: true },
+  { username: "dcole", name: "D. Cole", tagline: "Docuseries" },
+  { username: "jheneb", name: "Jhene B", tagline: "Lifestyle · Shop" },
 ];
 
 /* ------------------------------------------------------------------ format */
@@ -168,26 +168,24 @@ function VodCard({ v, href, lead }: { v: VideoSummary; href?: string; lead?: boo
   );
 }
 
-/* ------------------------------------------------------------------ creator pill — avatar + name, lightest voice on the page */
-function CreatorPill({ c }: { c: CreatorSummary }) {
+/* ------------------------------------------------------------------ creator card — avatar + tagline + badges */
+function CreatorCard({ c }: { c: CreatorSummary }) {
   return (
-    <Link
-      href={`/creator/${c.username}`}
-      className="group flex shrink-0 snap-start items-center gap-2.5 rounded-full border border-itv-border2 bg-itv-surface py-1.5 pl-1.5 pr-4 transition-colors hover:border-itv-accent-border hover:bg-itv-surface2"
-    >
-      <Avatar
-        name={c.name}
-        size="sm"
-        ring={c.live ? "live" : c.patron ? "gold" : "accent"}
-      />
-      <span className="text-[13px] font-semibold text-itv-text">{c.name}</span>
-      {c.live && (
-        <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
-      )}
-      <ArrowUpRight
-        size={13}
-        className="text-itv-faint transition-colors group-hover:text-itv-accent"
-      />
+    <Link href={`/creator/${c.username}`} className="w-[180px] shrink-0 snap-start">
+      <Card interactive className="flex flex-col items-center p-4 text-center">
+        <Avatar
+          name={c.name}
+          size="lg"
+          ring={c.live ? "live" : c.patron ? "gold" : "accent"}
+        />
+        <p className="mt-3 truncate text-sm font-semibold text-itv-text">{c.name}</p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-itv-muted">{c.tagline}</p>
+        <div className="mt-2 flex gap-1">
+          {c.live && <Badge tone="live">Live</Badge>}
+          {c.patron && <Badge tone="gold">Patron</Badge>}
+        </div>
+        <span className="mt-3 text-xs font-medium text-itv-accent">View Hub →</span>
+      </Card>
     </Link>
   );
 }
@@ -333,7 +331,7 @@ export default function HomePage() {
           </div>
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
             {MOCK_CREATORS.map((c) => (
-              <CreatorPill key={c.username} c={c} />
+              <CreatorCard key={c.username} c={c} />
             ))}
           </div>
         </section>
