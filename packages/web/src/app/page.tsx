@@ -10,6 +10,17 @@ import { Avatar } from "@/components/ui/Avatar";
 import { formatDuration } from "@/lib/constants";
 
 /* ------------------------------------------------------------------ types */
+interface ChannelSummary {
+  id: string;
+  name: string;
+  slug: string;
+  status?: string;
+  number?: number | null;
+  current_show?: string | null;
+  viewer_count?: number | null;
+  thumbnail_url?: string | null;
+  live_shop_active?: boolean;
+}
 interface VideoSummary {
   id: string;
   title: string;
@@ -29,6 +40,14 @@ interface CreatorSummary {
 }
 
 /* ------------------------------------------------------------------ mock fallbacks (endpoints not yet wired) */
+const MOCK_LIVE: ChannelSummary[] = [
+  { id: "m1", name: "Influence Drama", slug: "drama", number: 4, current_show: "The Last Broadcast", viewer_count: 12480, live_shop_active: true },
+  { id: "m2", name: "Influence News", slug: "news", number: 7, current_show: "Evening Desk", viewer_count: 6120 },
+  { id: "m3", name: "Influence Ent.", slug: "ent", number: 11, current_show: "Late Set", viewer_count: 3940 },
+  { id: "m4", name: "Culture 24", slug: "culture", number: 2, current_show: "Open Mic", viewer_count: 2210 },
+  { id: "m5", name: "The Blend", slug: "blend", number: 19, current_show: "Morning Blend", viewer_count: 1180 },
+];
+
 const MOCK_ONDEMAND: VideoSummary[] = [
   "Backstage: Making the Finale",
   "Live Shopping Recap",
@@ -71,10 +90,47 @@ function SectionTitle({ children, demo }: { children: React.ReactNode; demo?: bo
   );
 }
 
-/* ------------------------------------------------------------------ on-demand grid card */
-function GridVodCard({ v, href }: { v: VideoSummary; href?: string }) {
+/* ------------------------------------------------------------------ live channel card */
+function LiveCard({ c }: { c: ChannelSummary }) {
   return (
-    <Link href={href ?? `/watch/${v.id}`} className="block">
+    <Link href={`/live/${c.slug}`} className="w-[260px] shrink-0 snap-start">
+      <Card interactive className="overflow-hidden">
+        <div className="relative aspect-video bg-itv-surface3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={c.thumbnail_url || "/placeholder.svg"}
+            alt={c.name}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute left-2 top-2 flex gap-1.5">
+            <Badge tone="live">
+              <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
+              Live
+            </Badge>
+            {c.live_shop_active && <Badge tone="accent">Shop</Badge>}
+          </div>
+        </div>
+        <div className="p-3">
+          <p className="truncate text-sm font-semibold text-itv-text">
+            {c.current_show ?? c.name}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-itv-muted">
+            CH {c.number ?? "—"} · {c.name}
+          </p>
+          <p className="mt-1 font-mono text-[11px] tabular-nums text-itv-faint">
+            {kfmt(c.viewer_count)} watching
+          </p>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ on-demand rail card */
+function VodCard({ v, href }: { v: VideoSummary; href?: string }) {
+  return (
+    <Link href={href ?? `/watch/${v.id}`} className="w-[220px] shrink-0 snap-start">
       <Card interactive className="overflow-hidden">
         <div className="relative aspect-video bg-itv-surface3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -131,48 +187,57 @@ function CreatorCard({ c }: { c: CreatorSummary }) {
 }
 
 /* ================================================================== page
- * Top half: the network channel playing live (LiveHero).
- * Bottom half: on-demand library grid + creator channels rail. Kept to two
- * sections on purpose — bold, clean, not busy. */
+ * Dropout-style: the network channel plays full-bleed at the top (LiveHero),
+ * then horizontal shelves — Live Channels / On Demand / Creator Channels. */
 export default function HomePage() {
+  // Same SWR key as LiveHero — deduped, one request.
+  const { data: chData } = useSWR<{ channels: ChannelSummary[] }>(
+    "/api/channels",
+    swrFetcher,
+    { shouldRetryOnError: false }
+  );
   const { data: fyData } = useSWR<{ items: VideoSummary[] }>(
     "/api/browse?sort=new",
     swrFetcher,
     { shouldRetryOnError: false }
   );
 
+  const liveReal = (chData?.channels ?? []).filter((c) => c.status === "active");
+  const liveIsMock = liveReal.length === 0;
+  const live = liveIsMock ? MOCK_LIVE : liveReal;
+
   const onDemandIsMock = !fyData?.items?.length;
-  const onDemand = (onDemandIsMock ? MOCK_ONDEMAND : fyData!.items).slice(0, 8);
+  const onDemand = (onDemandIsMock ? MOCK_ONDEMAND : fyData!.items).slice(0, 12);
 
   return (
     <div className="pb-12">
-      {/* ---------------------------------------------------- LIVE, TOP HALF */}
+      {/* ---------------------------------------------------- FULL-SCREEN LIVE */}
       <LiveHero />
 
-      <div className="mx-auto max-w-[1400px] space-y-10 px-4 pt-10">
+      <div className="mx-auto max-w-[1400px] space-y-8 px-4 pt-8">
+        {/* ---------------------------------------------------- LIVE CHANNELS */}
+        <Rail
+          title={<SectionTitle demo={liveIsMock}>Live Channels</SectionTitle>}
+          href="/live"
+        >
+          {live.map((c) => (
+            <LiveCard key={c.id} c={c} />
+          ))}
+        </Rail>
+
         {/* ---------------------------------------------------- ON DEMAND */}
-        <section>
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="font-display text-lg font-bold tracking-tight text-itv-text">
-              <SectionTitle demo={onDemandIsMock}>On Demand</SectionTitle>
-            </h2>
-            <Link
-              href="/browse"
-              className="text-xs font-medium text-itv-accent hover:underline"
-            >
-              Browse all →
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {onDemand.map((v) => (
-              <GridVodCard
-                key={v.id}
-                v={v}
-                href={onDemandIsMock ? "/browse" : undefined}
-              />
-            ))}
-          </div>
-        </section>
+        <Rail
+          title={<SectionTitle demo={onDemandIsMock}>On Demand</SectionTitle>}
+          href="/browse"
+        >
+          {onDemand.map((v) => (
+            <VodCard
+              key={v.id}
+              v={v}
+              href={onDemandIsMock ? "/browse" : undefined}
+            />
+          ))}
+        </Rail>
 
         {/* ---------------------------------------------------- CREATOR CHANNELS */}
         <Rail

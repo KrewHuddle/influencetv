@@ -14,6 +14,9 @@ interface Props {
   onTimeUpdate?: (t: number) => void;
   /** When set, requests a VOD pre-roll ad and plays it before the content. */
   vodVideoId?: string;
+  /** Cover the parent box (absolute inset-0 + object-cover) instead of the
+   * default self-sized 16:9 frame — for full-bleed hero placements. */
+  fill?: boolean;
 }
 
 interface VodAd {
@@ -29,6 +32,7 @@ export function VideoPlayer({
   autoPlay = true,
   onTimeUpdate,
   vodVideoId,
+  fill = false,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [levels, setLevels] = useState<string[]>([]);
@@ -166,13 +170,13 @@ export function VideoPlayer({
   };
 
   return (
-    <div className="relative aspect-video w-full bg-black">
+    <div className={fill ? "absolute inset-0 bg-black" : "relative aspect-video w-full bg-black"}>
       <video
         ref={videoRef}
         poster={adPhase ? undefined : posterUrl}
         controls={!adPhase}
         playsInline
-        className="h-full w-full"
+        className={fill ? "h-full w-full object-cover" : "h-full w-full"}
         onEnded={handleEnded}
         onTimeUpdate={(e) => onTimeUpdate?.(e.currentTarget.currentTime)}
         aria-label="Video player"
