@@ -60,7 +60,15 @@ api.interceptors.response.use(
         return api(original);
       }
       useAuthStore.getState().clearAuth();
-      if (typeof window !== "undefined") window.location.href = "/login";
+      // Only bounce to /login from areas that require auth — public pages
+      // (home, browse, live, watch) must stay browsable for guests and
+      // expired sessions.
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        if (/^\/(account|studio|admin|shop\/checkout)/.test(path)) {
+          window.location.href = "/login";
+        }
+      }
     }
 
     // 403 upgrade-required → send to plans.
