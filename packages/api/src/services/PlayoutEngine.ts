@@ -88,19 +88,25 @@ export class PlayoutEngine {
             await this.playItem(item);
           }
         } else {
-          // Gap: fill if the next item is far enough out.
+          // Gap. Long gaps get filler; short gaps (or no suitable filler) get
+          // the slate — the output never goes dark.
           const next = await this.nextScheduleItem();
-          const filler = await this.pickFiller();
-          if (filler) {
-            const untilNext = next
-              ? (new Date(next.start_time).getTime() - Date.now()) / 1000
-              : Infinity;
-            if (untilNext > GAP_FILLER_THRESHOLD) {
+          const nextStartMs = next ? new Date(next.start_time).getTime() : null;
+          const untilNext = nextStartMs ? (nextStartMs - Date.now()) / 1000 : Infinity;
+          if (untilNext > GAP_FILLER_THRESHOLD) {
+            const filler = await this.pickFiller();
+            if (filler) {
               await this.playItem(filler, true);
               continue;
             }
           }
-          await sleep(2000);
+          // Hold slate until the next item starts; with nothing scheduled,
+          // re-check the schedule every 60s.
+          const holdUntil = Math.min(
+            nextStartMs ?? Date.now() + 60_000,
+            Date.now() + 5 * 60_000
+          );
+          await this.playSlate(holdUntil);
         }
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -139,7 +145,25 @@ export class PlayoutEngine {
     return rows[0] ?? null;
   }
 
+  /** Curated filler first (channels.filler_playlist_id), then any free ready
+   *  video. Premium / patron-exclusive content never airs as filler. */
   private async pickFiller(): Promise<ScheduleItem | null> {
+    const { rows: curated } = await query<ScheduleItem>(
+      `SELECT v.id AS video_id, v.title, v.s3_original_key, v.s3_mezzanine_key,
+              v.hls_url, v.thumbnail_url, c.slug,
+              NOW() AS start_time, NOW() + interval '5 minutes' AS end_time,
+              gen_random_uuid() AS id
+       FROM channels c
+       JOIN playlist_items pi ON pi.playlist_id = c.filler_playlist_id
+       JOIN videos v ON v.id = pi.video_id
+       WHERE c.id = $1 AND v.status='ready'
+         AND NOT v.is_premium AND NOT v.is_patron_exclusive
+         AND (v.s3_mezzanine_key IS NOT NULL OR v.s3_original_key IS NOT NULL)
+       ORDER BY random() LIMIT 1`,
+      [this.channelId]
+    );
+    if (curated[0]) return curated[0];
+
     const { rows } = await query<ScheduleItem>(
       `SELECT v.id AS video_id, v.title, v.s3_original_key, v.s3_mezzanine_key,
               v.hls_url, v.thumbnail_url, c.slug,
@@ -147,6 +171,7 @@ export class PlayoutEngine {
               gen_random_uuid() AS id
        FROM videos v CROSS JOIN channels c
        WHERE c.id = $1 AND v.status='ready'
+         AND NOT v.is_premium AND NOT v.is_patron_exclusive
          AND (v.s3_mezzanine_key IS NOT NULL OR v.s3_original_key IS NOT NULL)
        ORDER BY random() LIMIT 1`,
       [this.channelId]
@@ -170,7 +195,11 @@ export class PlayoutEngine {
   private async playItem(item: ScheduleItem, isFiller = false): Promise<void> {
     const src = this.sourceFor(item);
     if (!item.video_id || !src) {
-      await sleep(2000);
+      // Broken/missing asset — slate through the item (capped so we re-check
+      // in case the asset becomes available mid-slot).
+      await this.playSlate(
+        Math.min(new Date(item.end_time).getTime(), Date.now() + 5 * 60_000)
+      );
       return;
     }
     const localPath = await this.downloadVOD(item.video_id, src.key, src.bucket);
@@ -202,7 +231,7 @@ export class PlayoutEngine {
         const p = await this.downloadVOD(filler.video_id, fillerSrc.key, fillerSrc.bucket);
         await this.streamFile(p, 0, endMs, item.id);
       } else {
-        await sleep(Math.min(2000, Math.max(0, endMs - Date.now())));
+        await this.playSlate(endMs);
       }
       return;
     }
@@ -218,6 +247,91 @@ export class PlayoutEngine {
       const p = await this.downloadVOD(sel.creativeVideoId, sel.s3OriginalKey);
       await this.streamFile(p, 0, endMs, item.id);
     }
+  }
+
+  /**
+   * Push a branded stand-by slate to the RTMP target until `untilMs`. The
+   * slate is synthesized with lavfi (solid card + silent audio) so it needs no
+   * asset and keeps HLS segments advancing — a frozen output means stale
+   * segments and broken players. Set SLATE_PATH to a local MP4 for a custom
+   * branded slate instead. drawtext depends on ffmpeg's fontconfig build; if
+   * the text pass dies instantly we fall back to a plain card for the rest of
+   * the process lifetime.
+   */
+  private async playSlate(untilMs: number): Promise<void> {
+    const remaining = untilMs - Date.now();
+    if (remaining < 1500) {
+      await sleep(Math.max(0, remaining));
+      return;
+    }
+    const startedAt = Date.now();
+    await new Promise<void>((resolve) => {
+      const proc = spawn("ffmpeg", this.buildSlateArgs(PlayoutEngine.slateTextOk), {
+        stdio: ["ignore", "ignore", "ignore"],
+      });
+      this.currentProcess = proc;
+
+      const watchdog = setInterval(() => {
+        if (!this.isRunning || Date.now() >= untilMs) {
+          clearInterval(watchdog);
+          proc.kill("SIGTERM");
+        }
+      }, 1000);
+
+      const done = () => {
+        clearInterval(watchdog);
+        this.currentProcess = null;
+        resolve();
+      };
+      proc.on("close", done);
+      proc.on("error", done);
+    });
+
+    // Died within 3s with time still left → likely the drawtext/fontconfig
+    // pass failing. Retry once without text; remember for future slates.
+    if (
+      PlayoutEngine.slateTextOk &&
+      !process.env.SLATE_PATH &&
+      Date.now() - startedAt < 3000 &&
+      Date.now() < untilMs - 1500 &&
+      this.isRunning
+    ) {
+      PlayoutEngine.slateTextOk = false;
+      await this.playSlate(untilMs);
+    }
+  }
+
+  private static slateTextOk = true;
+
+  private buildSlateArgs(withText: boolean): string[] {
+    const out = `rtmp://localhost/vod/${this.slug}`;
+    const custom = process.env.SLATE_PATH;
+    if (custom && existsSync(custom)) {
+      return [
+        "-stream_loop", "-1", "-re", "-i", custom,
+        "-c:v", "libx264", "-preset", "veryfast", "-b:v", "800k", "-g", "60",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "96k",
+        "-f", "flv", out,
+      ];
+    }
+    const text = withText
+      ? [
+          "-vf",
+          "drawtext=text='INFLUENCE TV':fontcolor=white@0.92:fontsize=56:x=(w-text_w)/2:y=(h-text_h)/2-44," +
+            "drawtext=text='BE RIGHT BACK':fontcolor=white@0.55:fontsize=26:x=(w-text_w)/2:y=(h-text_h)/2+40",
+        ]
+      : [];
+    return [
+      "-re",
+      "-f", "lavfi", "-i", "color=c=0x141417:s=1280x720:r=30",
+      "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+      ...text,
+      "-c:v", "libx264", "-preset", "veryfast", "-b:v", "800k", "-g", "60",
+      "-pix_fmt", "yuv420p",
+      "-c:a", "aac", "-b:a", "96k",
+      "-f", "flv", out,
+    ];
   }
 
   /** Spawn ffmpeg to push a local file to the channel's RTMP target, resolving

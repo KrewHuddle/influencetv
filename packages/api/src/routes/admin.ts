@@ -211,6 +211,113 @@ router.get(
   })
 );
 
+// ─────────────────────── filler playlists ───────────────────────
+// Curated playlists consumed by PlayoutEngine.pickFiller via
+// channels.filler_playlist_id. Invalid video ids are silently dropped by the
+// INSERT..SELECT join; premium exclusion happens at playout time.
+
+router.get(
+  "/playlists",
+  asyncHandler(async (_req, res) => {
+    const { rows } = await query(
+      `SELECT p.id, p.name, p.created_at, COUNT(pi.id)::int AS item_count
+       FROM playlists p
+       LEFT JOIN playlist_items pi ON pi.playlist_id = p.id
+       GROUP BY p.id ORDER BY p.created_at DESC`
+    );
+    ok(res, { playlists: rows });
+  })
+);
+
+router.get(
+  "/playlists/:id",
+  asyncHandler(async (req, res) => {
+    const { rows: pl } = await query("SELECT id, name, created_at FROM playlists WHERE id=$1", [req.params.id]);
+    if (!pl[0]) throw notFound("playlist not found");
+    const { rows: items } = await query(
+      `SELECT pi.video_id, pi.position, v.title, v.duration_seconds, v.status,
+              v.is_premium, v.is_patron_exclusive
+       FROM playlist_items pi JOIN videos v ON v.id = pi.video_id
+       WHERE pi.playlist_id = $1 ORDER BY pi.position ASC`,
+      [req.params.id]
+    );
+    ok(res, { playlist: pl[0], items });
+  })
+);
+
+async function replacePlaylistItems(playlistId: string, videoIds: string[]): Promise<void> {
+  await query("DELETE FROM playlist_items WHERE playlist_id=$1", [playlistId]);
+  if (videoIds.length === 0) return;
+  await query(
+    `INSERT INTO playlist_items (playlist_id, video_id, position)
+     SELECT $1, v.id, x.ord - 1
+     FROM unnest($2::uuid[]) WITH ORDINALITY AS x(vid, ord)
+     JOIN videos v ON v.id = x.vid
+     ON CONFLICT (playlist_id, video_id) DO NOTHING`,
+    [playlistId, videoIds]
+  );
+}
+
+router.post(
+  "/playlists",
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const { name, videoIds } = req.body as { name?: string; videoIds?: string[] };
+    if (!name?.trim()) throw badRequest("name required");
+    const { rows } = await query<{ id: string }>(
+      "INSERT INTO playlists (name, created_by) VALUES ($1,$2) RETURNING id",
+      [name.trim(), req.user!.id]
+    );
+    await replacePlaylistItems(rows[0].id, Array.isArray(videoIds) ? videoIds : []);
+    await logAudit(req, "playlist.create", "playlist", rows[0].id, { name, count: videoIds?.length ?? 0 });
+    ok(res, { id: rows[0].id }, 201);
+  })
+);
+
+router.put(
+  "/playlists/:id",
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const { name, videoIds } = req.body as { name?: string; videoIds?: string[] };
+    const { rows } = await query<{ id: string }>(
+      "UPDATE playlists SET name=COALESCE($1,name) WHERE id=$2 RETURNING id",
+      [name?.trim() || null, req.params.id]
+    );
+    if (!rows[0]) throw notFound("playlist not found");
+    if (Array.isArray(videoIds)) await replacePlaylistItems(req.params.id, videoIds);
+    await logAudit(req, "playlist.update", "playlist", req.params.id, { name, count: videoIds?.length });
+    ok(res, { id: req.params.id });
+  })
+);
+
+router.delete(
+  "/playlists/:id",
+  asyncHandler(async (req: AuthedRequest, res) => {
+    // channels.filler_playlist_id has ON DELETE SET NULL — channels fall back
+    // to the free-content filler pool.
+    const { rowCount } = await query("DELETE FROM playlists WHERE id=$1", [req.params.id]);
+    if (!rowCount) throw notFound("playlist not found");
+    await logAudit(req, "playlist.delete", "playlist", req.params.id);
+    ok(res, { success: true });
+  })
+);
+
+router.post(
+  "/channels/:id/filler",
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const { playlistId } = req.body as { playlistId?: string | null };
+    if (playlistId) {
+      const { rows } = await query("SELECT id FROM playlists WHERE id=$1", [playlistId]);
+      if (!rows[0]) throw badRequest("unknown playlist");
+    }
+    const { rows } = await query<{ id: string }>(
+      "UPDATE channels SET filler_playlist_id=$1, updated_at=NOW() WHERE id=$2 RETURNING id",
+      [playlistId ?? null, req.params.id]
+    );
+    if (!rows[0]) throw notFound("channel not found");
+    await logAudit(req, "channel.filler", "channel", req.params.id, { playlistId: playlistId ?? null });
+    ok(res, { success: true });
+  })
+);
+
 // ─────────────────────── users ───────────────────────
 router.get(
   "/users",

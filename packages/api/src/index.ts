@@ -15,6 +15,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { logger } from "./config/logger";
 import { registry } from "./config/metrics";
 import { initSockets } from "./sockets";
+import { channelMonitor } from "./services/ChannelMonitor";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
 import streamRoutes from "./routes/streams";
@@ -125,6 +126,12 @@ async function bootstrap(): Promise<void> {
   server.listen(env.PORT, () => {
     logger.info({ port: env.PORT, env: env.NODE_ENV }, "Apex API listening");
   });
+
+  // Synthetic playout monitoring — runs here (API droplet) so it observes the
+  // streaming droplet from outside. MONITOR_DISABLED=true to opt out.
+  if (process.env.MONITOR_DISABLED !== "true") {
+    channelMonitor.start();
+  }
 }
 
 process.on("unhandledRejection", (reason) => {
