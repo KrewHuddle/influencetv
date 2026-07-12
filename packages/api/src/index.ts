@@ -45,7 +45,8 @@ async function bootstrap(): Promise<void> {
   const app = express();
   const server = http.createServer(app);
 
-  app.set("trust proxy", 1);
+  // Two proxy hops in prod: DO load balancer -> droplet nginx -> express.
+  app.set("trust proxy", 2);
   app.use(helmet());
   app.use(
     cors({

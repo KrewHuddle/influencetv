@@ -14,9 +14,11 @@ function store(prefix: string) {
 /** Global limiter: 100 requests / 15 min per IP. */
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  // Never throttle LB health checks — a 429 here marks the droplet down (503s).
+  skip: (req) => req.path === "/health",
   store: store("global"),
   message: {
     data: null,
