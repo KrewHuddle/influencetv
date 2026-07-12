@@ -75,9 +75,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </nav>
       <div className="flex">
         <aside className="hidden w-56 shrink-0 border-r border-itv-border bg-itv-surface p-4 md:block">
-          <p className="mb-4 flex items-center gap-2 px-2 font-display text-sm">
+          <Link href="/" className="mb-4 flex items-center gap-2 px-2 font-display text-sm hover:text-itv-accent">
             <span className="h-2 w-2 animate-pulse rounded-full bg-itv-accent" /> INFLUENCE TV ADMIN
-          </p>
+          </Link>
           {SECTIONS.map((s) => (
             <div key={s.label} className="mb-4">
               <p className="mb-1 px-2 text-[10px] uppercase tracking-wider text-itv-muted">

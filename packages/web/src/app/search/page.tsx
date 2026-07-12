@@ -1,6 +1,7 @@
 "use client";
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { VideoGrid } from "@/components/video/VideoGrid";
@@ -19,7 +20,15 @@ const POOL: VideoSummary[] = [
 
 function SearchResults() {
   const params = useSearchParams();
+  const router = useRouter();
   const q = (params.get("q") ?? "").trim();
+  const [draft, setDraft] = useState(q);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = draft.trim();
+    if (next) router.push(`/search?q=${encodeURIComponent(next)}`);
+  };
 
   const { data } = useSWR<{ items: VideoSummary[] }>(
     q ? `/api/browse?q=${encodeURIComponent(q)}` : null,
@@ -39,11 +48,25 @@ function SearchResults() {
 
   return (
     <div className="px-6 py-6">
+      <form onSubmit={submit} className="relative mb-5 max-w-xl">
+        <Search
+          size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itv-faint"
+        />
+        <input
+          autoFocus={!q}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Search shows, creators…"
+          aria-label="Search"
+          className="w-full rounded-md bg-itv-surface2 py-2.5 pl-9 pr-3 text-sm text-itv-text outline-none placeholder:text-itv-faint focus:ring-1 focus:ring-itv-accent"
+        />
+      </form>
       <h1 className="mb-1 text-[22px] font-black">
         {q ? `Results for “${q}”` : "Search"}
       </h1>
       <p className="mb-6 text-[12px] text-itv-muted">
-        {q ? `${items.length} result${items.length === 1 ? "" : "s"}` : "Type a query in the header search."}
+        {q ? `${items.length} result${items.length === 1 ? "" : "s"}` : "Find shows, videos, and creators."}
       </p>
       <VideoGrid items={items} />
     </div>

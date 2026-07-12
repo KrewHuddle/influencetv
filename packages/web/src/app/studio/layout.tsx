@@ -41,6 +41,9 @@ export default function StudioLayout({
       </nav>
       <div className="flex">
         <aside className="hidden w-52 shrink-0 border-r border-itv-border p-4 md:block">
+          <Link href="/" className="mb-4 block px-2 font-display text-[11px] uppercase tracking-[2px] text-itv-muted hover:text-itv-accent">
+            ← Influence TV
+          </Link>
           <p className="mb-4 px-2 font-display text-sm">Creator Studio</p>
           <nav className="space-y-1">
             {NAV.map((n) => (
