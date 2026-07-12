@@ -1,5 +1,11 @@
 "use client";
+/* Hallmark · redesign (section scope): Home lower half · theme: Lemon Signal (locked)
+ * rhythm: typographic guide strip → conditional live-commerce banner →
+ *         image-led shelf w/ lead card → avatar pills
+ * pre-emit critique: P4 H5 E4 S4 R5 V5 */
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import useSWR from "swr";
 import { swrFetcher } from "@/lib/api";
 import { LiveHero } from "@/components/home/LiveHero";
@@ -18,7 +24,6 @@ interface ChannelSummary {
   number?: number | null;
   current_show?: string | null;
   viewer_count?: number | null;
-  thumbnail_url?: string | null;
   live_shop_active?: boolean;
 }
 interface VideoSummary {
@@ -34,9 +39,16 @@ interface VideoSummary {
 interface CreatorSummary {
   username: string;
   name: string;
-  tagline: string;
   live?: boolean;
   patron?: boolean;
+}
+interface HaggleSummary {
+  id: string;
+  title: string;
+  product_title?: string | null;
+  current_bid_cents?: number | null;
+  ends_at?: string | null;
+  bid_count?: number | null;
 }
 
 /* ------------------------------------------------------------------ mock fallbacks (endpoints not yet wired) */
@@ -68,12 +80,12 @@ const MOCK_ONDEMAND: VideoSummary[] = [
 
 const MOCK_CREATORS: CreatorSummary[] = [
   // First two are real seeded creators — their hubs show live data.
-  { username: "novafields", name: "Nova Fields", tagline: "Drama · Live TV · Shop", live: true, patron: true },
-  { username: "rexmarlow", name: "Rex Marlow", tagline: "News · Talk", patron: true },
-  { username: "marsonair", name: "Mars", tagline: "Late-night · Cypher", live: true },
-  { username: "theblend", name: "The Blend", tagline: "Morning show", patron: true },
-  { username: "dcole", name: "D. Cole", tagline: "Docuseries" },
-  { username: "jheneb", name: "Jhene B", tagline: "Lifestyle · Shop" },
+  { username: "novafields", name: "Nova Fields", live: true, patron: true },
+  { username: "rexmarlow", name: "Rex Marlow", patron: true },
+  { username: "marsonair", name: "Mars", live: true },
+  { username: "theblend", name: "The Blend", patron: true },
+  { username: "dcole", name: "D. Cole" },
+  { username: "jheneb", name: "Jhene B" },
 ];
 
 /* ------------------------------------------------------------------ format */
@@ -81,56 +93,44 @@ const kfmt = (n?: number | null) =>
   !n ? "0" : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
 
 /* ------------------------------------------------------------------ demo label for mock-backed sections */
-function SectionTitle({ children, demo }: { children: React.ReactNode; demo?: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      {children}
-      {demo && <Badge tone="warn">Demo</Badge>}
-    </span>
-  );
+function DemoTag() {
+  return <Badge tone="warn">Demo</Badge>;
 }
 
-/* ------------------------------------------------------------------ live channel card */
-function LiveCard({ c }: { c: ChannelSummary }) {
+/* ------------------------------------------------------------------ live guide tile — typographic, no thumbnail */
+function GuideTile({ c }: { c: ChannelSummary }) {
   return (
-    <Link href={`/live/${c.slug}`} className="w-[260px] shrink-0 snap-start">
-      <Card interactive className="overflow-hidden">
-        <div className="relative aspect-video bg-itv-surface3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={c.thumbnail_url || "/placeholder.svg"}
-            alt={c.name}
-            loading="lazy"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute left-2 top-2 flex gap-1.5">
-            <Badge tone="live">
-              <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
-              Live
-            </Badge>
-            {c.live_shop_active && <Badge tone="accent">Shop</Badge>}
-          </div>
-        </div>
-        <div className="p-3">
-          <p className="truncate text-sm font-semibold text-itv-text">
+    <Link
+      href={`/live/${c.slug}`}
+      className="group flex w-[248px] shrink-0 snap-start items-center gap-4 rounded-lg border border-itv-border2 bg-itv-surface px-4 py-3.5 transition-colors hover:border-itv-accent-border hover:bg-itv-surface2"
+    >
+      <span className="font-display text-3xl font-black tabular-nums leading-none text-itv-faint transition-colors group-hover:text-itv-accent">
+        {String(c.number ?? 0).padStart(2, "0")}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 shrink-0 animate-live-pulse rounded-full bg-itv-live" />
+          <span className="truncate text-[13px] font-semibold text-itv-text">
             {c.current_show ?? c.name}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-itv-muted">
-            CH {c.number ?? "—"} · {c.name}
-          </p>
-          <p className="mt-1 font-mono text-[11px] tabular-nums text-itv-faint">
-            {kfmt(c.viewer_count)} watching
-          </p>
-        </div>
-      </Card>
+          </span>
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] text-itv-muted">
+          {c.name} ·{" "}
+          <span className="font-mono tabular-nums">{kfmt(c.viewer_count)}</span>{" "}
+          watching
+        </span>
+      </span>
     </Link>
   );
 }
 
-/* ------------------------------------------------------------------ on-demand rail card */
-function VodCard({ v, href }: { v: VideoSummary; href?: string }) {
+/* ------------------------------------------------------------------ on-demand shelf card (lead = first item, larger) */
+function VodCard({ v, href, lead }: { v: VideoSummary; href?: string; lead?: boolean }) {
   return (
-    <Link href={href ?? `/watch/${v.id}`} className="w-[220px] shrink-0 snap-start">
+    <Link
+      href={href ?? `/watch/${v.id}`}
+      className={`${lead ? "w-[320px] md:w-[400px]" : "w-[220px]"} shrink-0 snap-start`}
+    >
       <Card interactive className="overflow-hidden">
         <div className="relative aspect-video bg-itv-surface3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -152,7 +152,11 @@ function VodCard({ v, href }: { v: VideoSummary; href?: string }) {
           ) : null}
         </div>
         <div className="p-3">
-          <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-itv-text">
+          <p
+            className={`line-clamp-2 font-semibold leading-snug text-itv-text ${
+              lead ? "text-[15px]" : "text-[13px]"
+            }`}
+          >
             {v.title}
           </p>
           <p className="mt-1 truncate text-xs text-itv-muted">
@@ -164,31 +168,80 @@ function VodCard({ v, href }: { v: VideoSummary; href?: string }) {
   );
 }
 
-/* ------------------------------------------------------------------ creator channel card */
-function CreatorCard({ c }: { c: CreatorSummary }) {
+/* ------------------------------------------------------------------ creator pill — avatar + name, lightest voice on the page */
+function CreatorPill({ c }: { c: CreatorSummary }) {
   return (
-    <Link href={`/creator/${c.username}`} className="w-[180px] shrink-0 snap-start">
-      <Card interactive className="flex flex-col items-center p-4 text-center">
-        <Avatar
-          name={c.name}
-          size="lg"
-          ring={c.live ? "live" : c.patron ? "gold" : "accent"}
-        />
-        <p className="mt-3 truncate text-sm font-semibold text-itv-text">{c.name}</p>
-        <p className="mt-0.5 line-clamp-1 text-xs text-itv-muted">{c.tagline}</p>
-        <div className="mt-2 flex gap-1">
-          {c.live && <Badge tone="live">Live</Badge>}
-          {c.patron && <Badge tone="gold">Patron</Badge>}
-        </div>
-        <span className="mt-3 text-xs font-medium text-itv-accent">View Hub →</span>
+    <Link
+      href={`/creator/${c.username}`}
+      className="group flex shrink-0 snap-start items-center gap-2.5 rounded-full border border-itv-border2 bg-itv-surface py-1.5 pl-1.5 pr-4 transition-colors hover:border-itv-accent-border hover:bg-itv-surface2"
+    >
+      <Avatar
+        name={c.name}
+        size="sm"
+        ring={c.live ? "live" : c.patron ? "gold" : "accent"}
+      />
+      <span className="text-[13px] font-semibold text-itv-text">{c.name}</span>
+      {c.live && (
+        <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
+      )}
+      <ArrowUpRight
+        size={13}
+        className="text-itv-faint transition-colors group-hover:text-itv-accent"
+      />
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ live haggle banner — renders only on real data */
+function HaggleBanner({ a }: { a: HaggleSummary }) {
+  const [left, setLeft] = useState(() =>
+    a.ends_at
+      ? Math.max(0, Math.round((new Date(a.ends_at).getTime() - Date.now()) / 1000))
+      : 0
+  );
+  useEffect(() => {
+    const t = setInterval(
+      () =>
+        setLeft(
+          a.ends_at
+            ? Math.max(0, Math.round((new Date(a.ends_at!).getTime() - Date.now()) / 1000))
+            : 0
+        ),
+      1000
+    );
+    return () => clearInterval(t);
+  }, [a.ends_at]);
+  const mmss = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+  return (
+    <Link href="/haggle" className="block">
+      <Card
+        interactive
+        className="flex flex-wrap items-center gap-x-4 gap-y-2 border-itv-accent-border px-5 py-4"
+      >
+        <Badge tone="accent">Live Haggle</Badge>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-itv-text">
+          {a.product_title ?? a.title}
+        </span>
+        <span className="font-mono text-sm font-bold tabular-nums text-itv-accent">
+          {kfmt(a.bid_count)} bids · ${(Number(a.current_bid_cents) || 0) / 100}
+        </span>
+        <span
+          className={`rounded bg-black/60 px-2 py-0.5 font-mono text-sm tabular-nums ${
+            left <= 10 ? "text-itv-live" : "text-itv-text"
+          }`}
+        >
+          {mmss}
+        </span>
       </Card>
     </Link>
   );
 }
 
 /* ================================================================== page
- * Dropout-style: the network channel plays full-bleed at the top (LiveHero),
- * then horizontal shelves — Live Channels / On Demand / Creator Channels. */
+ * Top: the network channel playing full-width (LiveHero, natural 16:9).
+ * Lower half — three voices, not three identical rails:
+ *   guide strip (type-led) → haggle banner (real data only) →
+ *   On Demand shelf w/ lead card (image-led) → creator pills (lightest). */
 export default function HomePage() {
   // Same SWR key as LiveHero — deduped, one request.
   const { data: chData } = useSWR<{ channels: ChannelSummary[] }>(
@@ -201,6 +254,11 @@ export default function HomePage() {
     swrFetcher,
     { shouldRetryOnError: false }
   );
+  const { data: haggleData } = useSWR<{ items: HaggleSummary[] }>(
+    "/api/haggle/browse?status=live",
+    swrFetcher,
+    { shouldRetryOnError: false }
+  );
 
   const liveReal = (chData?.channels ?? []).filter((c) => c.status === "active");
   const liveIsMock = liveReal.length === 0;
@@ -208,46 +266,77 @@ export default function HomePage() {
 
   const onDemandIsMock = !fyData?.items?.length;
   const onDemand = (onDemandIsMock ? MOCK_ONDEMAND : fyData!.items).slice(0, 12);
+  const haggle = haggleData?.items?.[0] ?? null;
 
   return (
-    <div className="pb-12">
-      {/* ---------------------------------------------------- FULL-SCREEN LIVE */}
+    <div className="pb-14">
       <LiveHero />
 
-      <div className="mx-auto max-w-[1400px] space-y-8 px-4 pt-8">
-        {/* ---------------------------------------------------- LIVE CHANNELS */}
-        <Rail
-          title={<SectionTitle demo={liveIsMock}>Live Channels</SectionTitle>}
-          href="/live"
-        >
-          {live.map((c) => (
-            <LiveCard key={c.id} c={c} />
-          ))}
-        </Rail>
+      <div className="mx-auto max-w-[1400px] space-y-12 px-4 pt-10">
+        {/* ------------------------------------------ MORE LIVE TV — guide strip */}
+        <section aria-label="More live TV">
+          <div className="mb-3 flex items-baseline gap-3 px-1">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-itv-text">
+              More Live TV
+            </h2>
+            {liveIsMock && <DemoTag />}
+            <Link
+              href="/live"
+              className="ml-auto text-xs font-medium text-itv-muted transition-colors hover:text-itv-accent"
+            >
+              Full guide →
+            </Link>
+          </div>
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+            {live.map((c) => (
+              <GuideTile key={c.id} c={c} />
+            ))}
+          </div>
+        </section>
 
-        {/* ---------------------------------------------------- ON DEMAND */}
-        <Rail
-          title={<SectionTitle demo={onDemandIsMock}>On Demand</SectionTitle>}
-          href="/browse"
-        >
-          {onDemand.map((v) => (
-            <VodCard
-              key={v.id}
-              v={v}
-              href={onDemandIsMock ? "/browse" : undefined}
-            />
-          ))}
-        </Rail>
+        {/* ------------------------------------------ LIVE HAGGLE — real data only */}
+        {haggle && <HaggleBanner a={haggle} />}
 
-        {/* ---------------------------------------------------- CREATOR CHANNELS */}
-        <Rail
-          title={<SectionTitle demo>Creator Channels</SectionTitle>}
-          href="/browse"
-        >
-          {MOCK_CREATORS.map((c) => (
-            <CreatorCard key={c.username} c={c} />
-          ))}
-        </Rail>
+        {/* ------------------------------------------ ON DEMAND — image-led shelf */}
+        <section aria-label="On demand">
+          <div className="mb-4 flex items-baseline gap-3 px-1">
+            <h2 className="font-display text-2xl font-black tracking-tight text-itv-text lg:text-3xl">
+              On Demand
+            </h2>
+            {onDemandIsMock && <DemoTag />}
+            <Link
+              href="/browse"
+              className="ml-auto text-xs font-medium text-itv-muted transition-colors hover:text-itv-accent"
+            >
+              Browse all →
+            </Link>
+          </div>
+          <Rail>
+            {onDemand.map((v, i) => (
+              <VodCard
+                key={v.id}
+                v={v}
+                lead={i === 0}
+                href={onDemandIsMock ? "/browse" : undefined}
+              />
+            ))}
+          </Rail>
+        </section>
+
+        {/* ------------------------------------------ CREATORS — pill row */}
+        <section aria-label="Creators">
+          <div className="mb-3 flex items-baseline gap-3 px-1">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-itv-text">
+              Creators
+            </h2>
+            <DemoTag />
+          </div>
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+            {MOCK_CREATORS.map((c) => (
+              <CreatorPill key={c.username} c={c} />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
