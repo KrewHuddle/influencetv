@@ -111,7 +111,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           <Input label="Lesson title" value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} required />
           <label className="block">
             <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Module</span>
-            <select value={lessonModule} onChange={(e) => setLessonModule(e.target.value)} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+            <select value={lessonModule} onChange={(e) => setLessonModule(e.target.value)} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-itv-accent">
               <option value="">Ungrouped</option>
               {modules.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}
             </select>
@@ -119,7 +119,7 @@ export default function CourseBuilderPage({ params }: { params: { slug: string }
           <Input label="Video ID (optional)" value={videoId} onChange={(e) => setVideoId(e.target.value)} />
           <label className="block">
             <span className="mb-1.5 block text-xs uppercase tracking-wide text-itv-muted">Text content (optional)</span>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={2} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta" />
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={2} className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-accent" />
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={isPreview} onChange={(e) => setIsPreview(e.target.checked)} /> Free preview

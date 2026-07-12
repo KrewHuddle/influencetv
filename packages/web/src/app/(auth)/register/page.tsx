@@ -15,7 +15,7 @@ function strength(pw: string): { label: string; cls: string } {
   if (/[A-Z]/.test(pw)) score++;
   if (/[0-9]/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (score <= 1) return { label: "Weak", cls: "text-itv-magenta" };
+  if (score <= 1) return { label: "Weak", cls: "text-itv-accent" };
   if (score === 2) return { label: "Medium", cls: "text-itv-gold" };
   return { label: "Strong", cls: "text-itv-success" };
 }

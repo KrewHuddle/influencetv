@@ -24,7 +24,7 @@ export function MobileNav() {
             key={href}
             href={href}
             className={`flex h-full flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-[0.5px] transition-colors ${
-              active ? "text-itv-magenta" : "text-itv-faint hover:text-itv-muted"
+              active ? "text-itv-accent" : "text-itv-faint hover:text-itv-muted"
             }`}
           >
             <Icon size={19} />

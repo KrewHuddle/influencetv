@@ -179,7 +179,7 @@ export function VideoPlayer({
       />
 
       {adPhase && (
-        <div className="absolute left-3 top-3 flex items-center gap-2 bg-itv-magenta px-2 py-1 text-[11px] font-extrabold uppercase tracking-[1px] text-white">
+        <div className="absolute left-3 top-3 flex items-center gap-2 bg-itv-accent px-2 py-1 text-[11px] font-extrabold uppercase tracking-[1px] text-itv-bg">
           Ad{ad?.advertiserName ? ` · ${ad.advertiserName}` : ""}
         </div>
       )}
@@ -224,7 +224,7 @@ export function VideoPlayer({
           aria-label="Play"
           className="absolute inset-0 grid place-items-center bg-black/50"
         >
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-itv-magenta text-white shadow-glow-magenta">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-itv-accent text-itv-bg shadow-glow-accent">
             <Play size={26} fill="currentColor" />
           </span>
         </button>
@@ -234,7 +234,7 @@ export function VideoPlayer({
         <select
           aria-label="Quality"
           onChange={(e) => setLevel(Number(e.target.value))}
-          className="absolute bottom-3 right-3 rounded-sm bg-black/70 px-2 py-1 text-xs text-white outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-itv-magenta"
+          className="absolute bottom-3 right-3 rounded-sm bg-black/70 px-2 py-1 text-xs text-white outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-itv-accent"
         >
           {levels.map((l, i) => (
             <option key={l} value={i}>

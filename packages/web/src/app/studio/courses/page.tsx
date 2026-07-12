@@ -71,7 +71,7 @@ export default function StudioCoursesPage() {
         {courses.map((c) => (
           <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
             <div>
-              <Link href={`/studio/courses/${c.slug}`} className="text-sm font-bold hover:text-itv-magenta">{c.title}</Link>
+              <Link href={`/studio/courses/${c.slug}`} className="text-sm font-bold hover:text-itv-accent">{c.title}</Link>
               <p className="text-[11px] text-itv-muted">
                 {c.access_level} · {c.lesson_count} lessons · {c.enrollment_count} enrolled
               </p>
@@ -98,7 +98,7 @@ export default function StudioCoursesPage() {
           <select
             value={access}
             onChange={(e) => setAccess(e.target.value)}
-            className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-itv-magenta"
+            className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-itv-accent"
           >
             <option value="free">Free</option>
             <option value="premium">Premium</option>

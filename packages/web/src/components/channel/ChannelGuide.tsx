@@ -41,7 +41,7 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
             {/* channel rail cell */}
             <div
               className={`flex h-16 w-[140px] shrink-0 items-center gap-3 px-4 text-left sm:w-[220px] ${
-                isActive ? "border-l-2 border-itv-magenta bg-itv-magenta-dim" : ""
+                isActive ? "border-l-2 border-itv-accent bg-itv-accent-dim" : ""
               }`}
             >
               <button
@@ -50,13 +50,13 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
                 aria-label={`Select ${ch.name}`}
                 className="flex shrink-0 items-center gap-1.5"
               >
-                <span className="w-6 text-left text-[13px] font-black text-itv-magenta">
+                <span className="w-6 text-left text-[13px] font-black text-itv-accent">
                   {ch.number != null ? String(ch.number).padStart(2, "0") : "—"}
                 </span>
-                {current && <span className="h-1.5 w-1.5 rounded-full bg-itv-magenta" />}
+                {current && <span className="h-1.5 w-1.5 rounded-full bg-itv-accent" />}
               </button>
               <span className="min-w-0 flex-1">
-                <Link href={`/live/${ch.slug}`} className="block truncate text-[12px] font-bold hover:text-itv-magenta">
+                <Link href={`/live/${ch.slug}`} className="block truncate text-[12px] font-bold hover:text-itv-accent">
                   {ch.name}
                 </Link>
                 <span className="hidden truncate text-[10px] text-itv-faint sm:block">
@@ -79,7 +79,7 @@ export function ChannelGuide({ channels }: { channels: GuideChannel[] }) {
                     key={it.id}
                     className={`h-[56px] shrink-0 border border-dashed border-itv-border2 bg-itv-surface px-3 py-2 ${
                       ended ? "opacity-40" : ""
-                    } ${isCurrent ? "border-l-2 border-l-itv-magenta" : ""}`}
+                    } ${isCurrent ? "border-l-2 border-l-itv-accent" : ""}`}
                     style={{ width: mins(it.start_time, it.end_time) * PX_PER_MIN }}
                   >
                     <p className="line-clamp-1 text-[11px] font-bold">{it.title}</p>

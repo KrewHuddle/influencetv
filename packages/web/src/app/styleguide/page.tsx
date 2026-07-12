@@ -48,7 +48,7 @@ export default function StyleGuide() {
       <Section title="Badges">
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Neutral</Badge>
-          <Badge tone="magenta">New</Badge>
+          <Badge tone="accent">New</Badge>
           <Badge tone="gold">Patron</Badge>
           <Badge tone="live">● Live</Badge>
           <Badge tone="success">Paid</Badge>
@@ -60,7 +60,7 @@ export default function StyleGuide() {
         <div className="flex flex-wrap items-center gap-4">
           <Avatar name="Nova Fields" size="xs" />
           <Avatar name="Nova Fields" size="sm" />
-          <Avatar name="Nova Fields" size="md" ring="magenta" />
+          <Avatar name="Nova Fields" size="md" ring="accent" />
           <Avatar name="Nova Fields" size="lg" ring="gold" />
           <Avatar name="Nova Fields" size="xl" ring="live" />
         </div>

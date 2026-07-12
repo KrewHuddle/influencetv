@@ -159,7 +159,7 @@ export default function CreatorHubPage({
             className="h-full w-full"
             style={{
               background:
-                "radial-gradient(800px 300px at 30% 0%, color-mix(in oklch, var(--itv-magenta) 35%, transparent), transparent 60%), radial-gradient(600px 300px at 90% 20%, color-mix(in oklch, var(--itv-gold) 20%, transparent), transparent 60%)",
+                "radial-gradient(800px 300px at 30% 0%, color-mix(in oklch, var(--itv-accent) 35%, transparent), transparent 60%), radial-gradient(600px 300px at 90% 20%, color-mix(in oklch, var(--itv-gold) 20%, transparent), transparent 60%)",
             }}
           />
         )}
@@ -174,7 +174,7 @@ export default function CreatorHubPage({
               name={creator.displayName}
               src={creator.avatarUrl}
               size="xl"
-              ring={liveChannel ? "live" : "magenta"}
+              ring={liveChannel ? "live" : "accent"}
               className="border-4 border-itv-bg"
             />
             <div className="pb-1">
@@ -381,7 +381,7 @@ export default function CreatorHubPage({
           {tab === "community" &&
             (community ? (
               <Card className="flex flex-col items-start gap-3 p-6">
-                <Users size={24} className="text-itv-magenta" />
+                <Users size={24} className="text-itv-accent" />
                 <h3 className="font-display text-lg font-semibold text-itv-text">{community.name}</h3>
                 {community.description && <p className="text-sm text-itv-muted">{community.description}</p>}
                 <p className="font-mono text-xs tabular-nums text-itv-faint">
@@ -412,7 +412,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
   return (
     <section>
       <h2 className="mb-3 flex items-center gap-2 font-display text-base font-semibold text-itv-text">
-        <span className="text-itv-magenta">{icon}</span>
+        <span className="text-itv-accent">{icon}</span>
         {title}
       </h2>
       {children}

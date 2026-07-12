@@ -35,7 +35,7 @@ function VerifyInner() {
         )}
         {state === "error" && (
           <>
-            <h1 className="mb-2 font-display text-2xl text-itv-magenta">Link invalid</h1>
+            <h1 className="mb-2 font-display text-2xl text-itv-accent">Link invalid</h1>
             <p className="mb-6 text-itv-muted">This verification link is invalid or expired.</p>
             <Link href="/login"><Button variant="ghost">Back to Sign In</Button></Link>
           </>

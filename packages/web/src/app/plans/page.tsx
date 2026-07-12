@@ -56,7 +56,7 @@ export default function PlansPage() {
               key={plan.id}
               className={
                 featured
-                  ? "border border-itv-border border-t-2 border-t-itv-magenta bg-itv-surface px-6 py-7"
+                  ? "border border-itv-border border-t-2 border-t-itv-accent bg-itv-surface px-6 py-7"
                   : "border border-itv-border bg-itv-bg px-6 py-7"
               }
             >

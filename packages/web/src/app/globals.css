@@ -1,7 +1,7 @@
-/* Hallmark · custom theme: Broadcast Bloom · tone: cinematic-electric-warm
+/* Hallmark · custom theme: Lemon Signal · tone: graphic-electric-neutral
  * creator-network dark — TV (Tubi/HBO) × learning (Skool) × live commerce
- * (TikTok Shop) × membership (Patreon). paper: dark · display: grotesque ·
- * accent: electric-magenta + amber-gold + live-coral
+ * (TikTok Shop) × membership (Patreon). paper: charcoal · display: grotesque ·
+ * accent: lemon-yellow + burnt-amber + live-coral
  * pre-emit critique: P5 H4 E4 S5 R4 V5 */
 
 @tailwind base;
@@ -14,33 +14,32 @@
   --font-body: var(--font-body-face, "Inter"), "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-mono-face, "JetBrains Mono"), ui-monospace, monospace;
 
-  /* ── surfaces (warm near-black, layered) ── */
-  --itv-bg: oklch(15% 0.012 320);
-  --itv-surface: oklch(19% 0.014 320);
-  --itv-surface2: oklch(23% 0.016 320);
-  --itv-surface3: oklch(28% 0.018 320);
+  /* ── surfaces (charcoal, layered) ── */
+  --itv-bg: oklch(15% 0.005 260);
+  --itv-surface: oklch(19% 0.006 260);
+  --itv-surface2: oklch(23% 0.007 260);
+  --itv-surface3: oklch(28% 0.008 260);
   --itv-border: rgba(255, 255, 255, 0.09);
   --itv-border2: rgba(255, 255, 255, 0.05);
 
   /* ── signature accents ── */
-  --itv-magenta: oklch(67% 0.26 330);          /* electric magenta — primary */
-  --itv-magenta-strong: oklch(72% 0.27 330);
-  --itv-gold: oklch(82% 0.14 78);              /* amber-gold — membership / patron */
+  --itv-accent: oklch(88% 0.185 102);          /* lemon yellow — primary. LIGHT: pair with dark text */
+  --itv-accent-strong: oklch(92% 0.2 104);     /* hover = brighter on dark theme */
+  --itv-gold: oklch(74% 0.155 60);             /* burnt amber — membership / patron */
   --itv-live: oklch(64% 0.23 22);              /* hot coral — on-air / live */
   --itv-success: oklch(74% 0.17 152);
-  --itv-warn: oklch(80% 0.15 70);
-
-  /* ── text ── */
-  --itv-text: oklch(96% 0.004 320);
-  --itv-muted: rgba(244, 241, 245, 0.55);
-  --itv-faint: rgba(244, 241, 245, 0.3);
+  --itv-warn: oklch(78% 0.15 60);
+  --itv-text: oklch(96% 0.002 260);
+  --itv-muted: rgba(243, 244, 246, 0.55);
+  --itv-faint: rgba(243, 244, 246, 0.3);
 
   /* ── overlays / interaction ── */
-  --itv-scrim: oklch(15% 0.012 320 / 0.8);   /* dialog + drawer backdrop */
+  --itv-scrim: oklch(15% 0.005 260 / 0.8);   /* dialog + drawer backdrop */
   --itv-hover: rgba(255, 255, 255, 0.06);    /* ghost-hover wash */
 
   /* ── layout ── */
-  --header-h: 56px;
+  --sidebar-w: 240px;
+  --topbar-h: 56px;
 
   /* ── radii ── */
   --radius-sm: 6px;
@@ -69,16 +68,17 @@ body {
 /* next/font sets --font-*-face on <html> (layout.tsx); the :root tokens above
  * consume them with static fallbacks — no reverse wiring. */
 
+/* lemon is light — selection text must be dark or it disappears */
 *::selection {
-  background: var(--itv-magenta);
-  color: var(--itv-text);
+  background: var(--itv-accent);
+  color: var(--itv-bg);
 }
 
 /* a11y: consistent keyboard focus ring app-wide. Components that set their own
  * focus-visible ring opt out via outline-none. No border-radius override —
  * outlines follow the element's own radius. */
 :focus-visible {
-  outline: 2px solid var(--itv-magenta);
+  outline: 2px solid var(--itv-accent);
   outline-offset: 2px;
 }
 

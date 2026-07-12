@@ -16,7 +16,7 @@ export const Card = forwardRef<HTMLDivElement, Props>(
         "rounded-lg border border-itv-border",
         tone === "surface2" ? "bg-itv-surface2" : "bg-itv-surface",
         interactive &&
-          "cursor-pointer transition-[transform,border-color,box-shadow] duration-[--dur] ease-[--ease-out] hover:-translate-y-0.5 hover:border-itv-magenta-border hover:shadow-card",
+          "cursor-pointer transition-[transform,border-color,box-shadow] duration-[--dur] ease-[--ease-out] hover:-translate-y-0.5 hover:border-itv-accent-border hover:shadow-card",
         className
       )}
       {...props}

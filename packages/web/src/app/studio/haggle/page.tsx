@@ -42,11 +42,11 @@ const dollars = (c: number | null | undefined) => `$${((c ?? 0) / 100).toFixed(2
 
 const STATUS_TONE: Record<
   string,
-  "success" | "neutral" | "magenta" | "warn" | "live"
+  "success" | "neutral" | "accent" | "warn" | "live"
 > = {
   sold: "success",
   unsold: "neutral",
-  live: "magenta",
+  live: "accent",
   cancelled: "warn",
   payment_failed: "live",
 };
@@ -170,7 +170,7 @@ export default function StudioHagglePage() {
               <select
                 value={productId}
                 onChange={(e) => setProductId(e.target.value)}
-                className="w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5 text-sm text-itv-text focus:border-itv-magenta focus:outline-none"
+                className="w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5 text-sm text-itv-text focus:border-itv-accent focus:outline-none"
               >
                 <option value="">Select a product…</option>
                 {products.map((p) => (

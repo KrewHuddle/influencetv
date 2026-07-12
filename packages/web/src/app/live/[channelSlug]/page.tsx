@@ -61,13 +61,13 @@ export default function ChannelPlayerPage({
 
           {/* top-left: channel number + show */}
           <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 text-[11px] font-bold">
-            <span className="text-itv-magenta">CH {channel?.number ?? "—"}</span>
+            <span className="text-itv-accent">CH {channel?.number ?? "—"}</span>
             <span className="text-itv-text">{currentItem?.title ?? channel?.name ?? channelSlug}</span>
           </div>
 
           {/* top-right: viewer count */}
           <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-1.5 rounded-[2px] bg-black/60 px-2 py-1 text-[11px]">
-            <span className="h-1.5 w-1.5 rounded-full bg-itv-magenta" />
+            <span className="h-1.5 w-1.5 rounded-full bg-itv-accent" />
             {kfmt(channel?.viewer_count)}
           </div>
 
@@ -100,7 +100,7 @@ export default function ChannelPlayerPage({
             <p className="text-sm text-itv-muted">Live chat is a Premium feature.</p>
             <Link
               href="/plans"
-              className="bg-itv-magenta px-4 py-2 text-[11px] font-extrabold uppercase tracking-[1px] text-white"
+              className="bg-itv-accent px-4 py-2 text-[11px] font-extrabold uppercase tracking-[1px] text-itv-bg"
             >
               Go Premium
             </Link>

@@ -53,7 +53,7 @@ export function Header() {
           href="/"
           className="shrink-0 font-display text-[15px] font-extrabold uppercase tracking-[2px]"
         >
-          INFLUENCE<span className="text-itv-magenta">TV</span>
+          INFLUENCE<span className="text-itv-accent">TV</span>
         </Link>
 
         {/* pillar nav (desktop) */}
@@ -66,7 +66,7 @@ export function Header() {
                 href={l.href}
                 className={`flex items-center whitespace-nowrap border-b-2 text-[13px] font-semibold transition-colors ${
                   active
-                    ? "border-itv-magenta text-itv-text"
+                    ? "border-itv-accent text-itv-text"
                     : "border-transparent text-itv-muted hover:text-itv-text"
                 }`}
               >
@@ -88,7 +88,7 @@ export function Header() {
                 onBlur={() => !query && setSearchOpen(false)}
                 placeholder="Search shows, creators…"
                 aria-label="Search"
-                className="w-40 rounded-md bg-itv-surface2 px-3 py-1.5 text-[13px] text-itv-text outline-none placeholder:text-itv-faint focus:ring-1 focus:ring-itv-magenta sm:w-56"
+                className="w-40 rounded-md bg-itv-surface2 px-3 py-1.5 text-[13px] text-itv-text outline-none placeholder:text-itv-faint focus:ring-1 focus:ring-itv-accent sm:w-56"
               />
             </form>
           ) : (
@@ -109,7 +109,7 @@ export function Header() {
           >
             <ShoppingBag size={18} />
             {cartCount > 0 && (
-              <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-itv-magenta px-1 font-mono text-[10px] font-bold leading-none text-white">
+              <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-itv-accent px-1 font-mono text-[10px] font-bold leading-none text-itv-bg">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
             )}
@@ -118,7 +118,7 @@ export function Header() {
           {isFree && (
             <Link
               href="/plans"
-              className="hidden whitespace-nowrap rounded-sm bg-itv-magenta px-3 py-1.5 text-xs font-medium text-white transition-[background-color,box-shadow] duration-[--dur-fast] hover:bg-itv-magenta-strong hover:shadow-glow-magenta sm:block"
+              className="hidden whitespace-nowrap rounded-sm bg-itv-accent px-3 py-1.5 text-xs font-medium text-itv-bg transition-[background-color,box-shadow] duration-[--dur-fast] hover:bg-itv-accent-strong hover:shadow-glow-accent sm:block"
             >
               Go Ultra
             </Link>
@@ -130,7 +130,7 @@ export function Header() {
                 <Avatar
                   name={user.displayName ?? user.email}
                   size="sm"
-                  ring="magenta"
+                  ring="accent"
                 />
               </Dropdown.Trigger>
               <Dropdown.Portal>
@@ -161,7 +161,7 @@ export function Header() {
                   ))}
                   <Dropdown.Item
                     onSelect={() => void logout()}
-                    className="cursor-pointer rounded px-3 py-2 text-itv-magenta outline-none hover:bg-itv-hover"
+                    className="cursor-pointer rounded px-3 py-2 text-itv-accent outline-none hover:bg-itv-hover"
                   >
                     Logout
                   </Dropdown.Item>
@@ -198,7 +198,7 @@ export function Header() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search shows, creators…"
               aria-label="Search"
-              className="w-full rounded-md bg-itv-surface2 px-3 py-2 text-sm text-itv-text outline-none placeholder:text-itv-faint focus:ring-1 focus:ring-itv-magenta"
+              className="w-full rounded-md bg-itv-surface2 px-3 py-2 text-sm text-itv-text outline-none placeholder:text-itv-faint focus:ring-1 focus:ring-itv-accent"
             />
           </form>
           {NAV_LINKS.map((l) => (
@@ -207,7 +207,7 @@ export function Header() {
               href={l.href}
               onClick={() => setMenuOpen(false)}
               className={`py-2 text-[15px] font-semibold ${
-                isActive(l.href) ? "text-itv-magenta" : "text-itv-muted"
+                isActive(l.href) ? "text-itv-accent" : "text-itv-muted"
               }`}
             >
               {l.label}
@@ -217,7 +217,7 @@ export function Header() {
             <Link
               href="/plans"
               onClick={() => setMenuOpen(false)}
-              className="mt-3 block whitespace-nowrap rounded-md bg-itv-magenta px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-itv-magenta-strong"
+              className="mt-3 block whitespace-nowrap rounded-md bg-itv-accent px-4 py-2.5 text-center text-sm font-medium text-itv-bg hover:bg-itv-accent-strong"
             >
               Go Ultra
             </Link>

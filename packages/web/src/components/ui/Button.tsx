@@ -13,7 +13,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const styles: Record<Variant, string> = {
   primary:
-    "bg-itv-magenta text-white hover:bg-itv-magenta-strong hover:shadow-glow-magenta",
+    "bg-itv-accent text-itv-bg hover:bg-itv-accent-strong hover:shadow-glow-accent",
   gold: "bg-itv-gold text-itv-bg hover:brightness-105 hover:shadow-glow-gold",
   live: "bg-itv-live text-white hover:brightness-105 hover:shadow-glow-live",
   ghost:
@@ -41,7 +41,7 @@ export function buttonClasses(
     "inline-flex items-center justify-center whitespace-nowrap font-medium",
     "transition-[background-color,box-shadow,border-color] duration-[--dur-fast] ease-[--ease-out]",
     "active:translate-y-px active:brightness-95",
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itv-magenta",
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itv-accent",
     "disabled:pointer-events-none disabled:opacity-40",
     sizes[size],
     styles[variant],

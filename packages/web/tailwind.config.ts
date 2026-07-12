@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-/* Broadcast Bloom — creator-network dark. Colours reference the OKLCH token
+/* Lemon Signal — creator-network dark. Colours reference the OKLCH token
  * source of truth in globals.css :root. Alpha-tint variants stay explicit so
  * existing classes keep resolving. */
 const config: Config = {
@@ -20,19 +20,19 @@ const config: Config = {
           border: "var(--itv-border)",
           border2: "var(--itv-border2)",
           // signature accents
-          magenta: "var(--itv-magenta)",
-          "magenta-strong": "var(--itv-magenta-strong)",
-          "magenta-dim": "rgba(217,70,239,0.15)",
-          "magenta-border": "rgba(217,70,239,0.28)",
+          accent: "var(--itv-accent)",
+          "accent-strong": "var(--itv-accent-strong)",
+          "accent-dim": "rgba(240,225,60,0.13)",
+          "accent-border": "rgba(240,225,60,0.3)",
           gold: "var(--itv-gold)",
-          "gold-dim": "rgba(245,184,65,0.14)",
-          "gold-border": "rgba(245,184,65,0.3)",
+          "gold-dim": "rgba(233,150,70,0.14)",
+          "gold-border": "rgba(233,150,70,0.3)",
           live: "var(--itv-live)",
           "live-dim": "rgba(255,77,94,0.14)",
           success: "var(--itv-success)",
           "success-dim": "rgba(52,211,153,0.15)",
           warn: "var(--itv-warn)",
-          "warn-dim": "rgba(245,184,65,0.15)",
+          "warn-dim": "rgba(233,150,70,0.15)",
           hover: "var(--itv-hover)",
           scrim: "var(--itv-scrim)",
           text: "var(--itv-text)",
@@ -61,8 +61,8 @@ const config: Config = {
         toast: "100",
       },
       boxShadow: {
-        "glow-magenta": "0 0 0 1px rgba(217,70,239,0.35), 0 8px 40px -12px rgba(217,70,239,0.55)",
-        "glow-gold": "0 0 0 1px rgba(245,184,65,0.35), 0 8px 40px -14px rgba(245,184,65,0.5)",
+        "glow-accent": "0 0 0 1px rgba(240,225,60,0.35), 0 8px 40px -12px rgba(240,225,60,0.45)",
+        "glow-gold": "0 0 0 1px rgba(233,150,70,0.35), 0 8px 40px -14px rgba(233,150,70,0.5)",
         "glow-live": "0 0 0 1px rgba(255,77,94,0.4), 0 6px 30px -10px rgba(255,77,94,0.55)",
         card: "0 2px 8px -2px rgba(0,0,0,0.5), 0 12px 40px -18px rgba(0,0,0,0.7)",
       },

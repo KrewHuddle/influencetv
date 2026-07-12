@@ -32,8 +32,8 @@ export const Input = forwardRef<HTMLInputElement, Props>(
           className={cn(
             "w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5",
             "text-sm text-itv-text placeholder:text-itv-faint",
-            "transition-colors duration-[--dur-fast] focus:border-itv-magenta",
-            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-itv-magenta",
+            "transition-colors duration-[--dur-fast] focus:border-itv-accent",
+            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-itv-accent",
             "disabled:opacity-40 disabled:pointer-events-none",
             error && "border-itv-live",
             className

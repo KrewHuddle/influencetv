@@ -76,7 +76,7 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
       className="absolute bottom-0 left-1/2 z-20 flex w-4/5 -translate-x-1/2 items-center gap-3 p-3"
       style={{
         background: "var(--itv-surface)",
-        borderTop: "2px solid var(--itv-magenta)",
+        borderTop: "2px solid var(--itv-accent)",
         transform: `translate(-50%, ${shown ? "0" : "100%"})`,
         transition: "transform 200ms ease-out",
       }}
@@ -92,9 +92,9 @@ export function ProductOverlay({ channelId }: { channelId: string }) {
       )}
       <div className="flex-1">
         <p className="line-clamp-1 text-sm font-bold text-itv-text">{product.title}</p>
-        <p className="font-mono text-sm font-bold tabular-nums text-itv-magenta">{formatPrice(product.price)}</p>
+        <p className="font-mono text-sm font-bold tabular-nums text-itv-accent">{formatPrice(product.price)}</p>
         {isFlash && secsLeft !== 0 && (
-          <p className="mt-0.5 flex items-center gap-2 text-[11px] font-bold text-itv-magenta">
+          <p className="mt-0.5 flex items-center gap-2 text-[11px] font-bold text-itv-accent">
             {secsLeft != null && (
               <span className="font-mono">
                 {Math.floor(secsLeft / 60)}:{String(secsLeft % 60).padStart(2, "0")}

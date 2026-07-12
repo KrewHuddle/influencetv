@@ -17,7 +17,7 @@ export default function AdminAuditPage() {
       <div className="border border-itv-border">
         {items.map((e) => (
           <div key={e.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-itv-border px-4 py-2.5 text-[12px] last:border-b-0">
-            <span className="font-mono text-itv-magenta">{e.action}</span>
+            <span className="font-mono text-itv-accent">{e.action}</span>
             <span className="text-itv-muted">{e.target_type} · {e.target_id?.slice(0, 8)}</span>
             <span className="text-itv-faint">{e.admin_name ?? "system"}</span>
             <span className="text-itv-faint">{new Date(e.created_at).toLocaleString()}</span>

@@ -85,14 +85,14 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
 
         {/* time-synced shoppable overlay */}
         {active && (
-          <div className="absolute bottom-4 left-1/2 z-20 flex w-[85%] max-w-md -translate-x-1/2 items-center gap-3 border-t-2 border-itv-magenta bg-itv-surface p-3">
+          <div className="absolute bottom-4 left-1/2 z-20 flex w-[85%] max-w-md -translate-x-1/2 items-center gap-3 border-t-2 border-itv-accent bg-itv-surface p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={active.thumbnail_url || "/placeholder.svg"} alt={active.title} className="h-12 w-12 object-cover" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{active.title}</p>
-              <p className="text-sm font-bold text-itv-magenta">${(active.base_price_cents / 100).toFixed(2)}</p>
+              <p className="text-sm font-bold text-itv-accent">${(active.base_price_cents / 100).toFixed(2)}</p>
             </div>
-            <button onClick={() => addToCart(active)} className="bg-itv-magenta px-3 py-2 text-xs font-extrabold text-white hover:brightness-110">Add</button>
+            <button onClick={() => addToCart(active)} className="bg-itv-accent px-3 py-2 text-xs font-extrabold text-itv-bg hover:brightness-110">Add</button>
             <button aria-label="Dismiss" onClick={() => setDismissed(active.product_id)} className="p-2 text-itv-faint hover:text-itv-text"><X size={16} /></button>
           </div>
         )}
@@ -111,7 +111,7 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
       {products.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 flex items-center gap-2 text-[13px] font-extrabold">
-            <ShoppingBag size={15} className="text-itv-magenta" /> Shop this video
+            <ShoppingBag size={15} className="text-itv-accent" /> Shop this video
           </h2>
           <div className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex gap-3 overflow-x-auto pb-2">
             {products.map((p) => (
@@ -120,8 +120,8 @@ export default function WatchPage({ params }: { params: { videoId: string } }) {
                 <img src={p.thumbnail_url || "/placeholder.svg"} alt={p.title} loading="lazy" className="h-[100px] w-full object-cover" />
                 <div className="p-2">
                   <p className="line-clamp-1 text-[12px] font-bold">{p.title}</p>
-                  <p className="text-[12px] font-bold text-itv-magenta">${(p.base_price_cents / 100).toFixed(2)}</p>
-                  <button onClick={() => addToCart(p)} className="mt-1.5 w-full bg-itv-magenta py-2 text-xs font-extrabold uppercase tracking-[1px] text-white">Add to cart</button>
+                  <p className="text-[12px] font-bold text-itv-accent">${(p.base_price_cents / 100).toFixed(2)}</p>
+                  <button onClick={() => addToCart(p)} className="mt-1.5 w-full bg-itv-accent py-2 text-xs font-extrabold uppercase tracking-[1px] text-itv-bg">Add to cart</button>
                 </div>
               </div>
             ))}

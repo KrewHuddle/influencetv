@@ -135,10 +135,10 @@ export default function AdminSchedulePage() {
       <p className="mb-5 text-[12px] text-itv-muted">Schedule programs and ad breaks per channel. Ad breaks are filled live by the ad engine.</p>
 
       <div className="mb-5 flex flex-wrap gap-3">
-        <select value={active} onChange={(e) => setChannelId(e.target.value)} className="border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+        <select value={active} onChange={(e) => setChannelId(e.target.value)} className="border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-accent">
           {channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta" />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-accent" />
       </div>
 
       <div className="mb-8 border border-itv-border">
@@ -146,7 +146,7 @@ export default function AdminSchedulePage() {
           <div key={it.id} className="flex items-center justify-between border-b border-itv-border px-4 py-2.5 text-[13px] last:border-b-0">
             <div className="flex items-center gap-3">
               <span className="font-mono text-itv-muted">{hm(it.start_time)}–{hm(it.end_time)}</span>
-              <span className={it.is_ad_break ? "flex items-center gap-1.5 font-bold text-itv-magenta" : "font-medium"}>
+              <span className={it.is_ad_break ? "flex items-center gap-1.5 font-bold text-itv-accent" : "font-medium"}>
                 {it.is_ad_break ? (
                   <>
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-itv-live" aria-hidden />
@@ -183,7 +183,7 @@ export default function AdminSchedulePage() {
           <h2 className="text-[13px] font-extrabold">Schedule Program</h2>
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-itv-muted">Video</span>
-            <select value={videoId} onChange={(e) => setVideoId(e.target.value)} required className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+            <select value={videoId} onChange={(e) => setVideoId(e.target.value)} required className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-accent">
               <option value="">Select a ready video…</option>
               {readyVideos.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
             </select>
@@ -213,7 +213,7 @@ export default function AdminSchedulePage() {
         <div className="max-h-56 overflow-y-auto border border-itv-border">
           {readyVideos.map((v) => (
             <label key={v.id} className="flex cursor-pointer items-center gap-3 border-b border-itv-border px-3 py-2 text-[13px] last:border-b-0 hover:bg-itv-hover">
-              <input type="checkbox" checked={selected.includes(v.id)} onChange={() => toggleSel(v.id)} className="accent-[var(--itv-magenta)]" />
+              <input type="checkbox" checked={selected.includes(v.id)} onChange={() => toggleSel(v.id)} className="accent-[var(--itv-accent)]" />
               <span className="flex-1 truncate">{v.title}</span>
               {v.duration_seconds ? (
                 <span className="font-mono text-[11px] tabular-nums text-itv-faint">{Math.round(v.duration_seconds / 60)} min</span>
@@ -227,7 +227,7 @@ export default function AdminSchedulePage() {
           <Input label="End" type="datetime-local" value={fEnd} onChange={(e) => setFEnd(e.target.value)} required />
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-itv-muted">Ad break every</span>
-            <select value={fAdEvery} onChange={(e) => setFAdEvery(e.target.value)} className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-magenta">
+            <select value={fAdEvery} onChange={(e) => setFAdEvery(e.target.value)} className="w-full border border-itv-border bg-itv-surface2 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-itv-accent">
               <option value="0">Off</option>
               <option value="15">15 min</option>
               <option value="30">30 min</option>
@@ -236,10 +236,10 @@ export default function AdminSchedulePage() {
           </label>
           <div className="flex items-end gap-4 pb-1">
             <label className="flex cursor-pointer items-center gap-2 text-sm text-itv-text">
-              <input type="checkbox" checked={fLoop} onChange={(e) => setFLoop(e.target.checked)} className="accent-[var(--itv-magenta)]" /> Loop
+              <input type="checkbox" checked={fLoop} onChange={(e) => setFLoop(e.target.checked)} className="accent-[var(--itv-accent)]" /> Loop
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-itv-text">
-              <input type="checkbox" checked={fShuffle} onChange={(e) => setFShuffle(e.target.checked)} className="accent-[var(--itv-magenta)]" /> Shuffle
+              <input type="checkbox" checked={fShuffle} onChange={(e) => setFShuffle(e.target.checked)} className="accent-[var(--itv-accent)]" /> Shuffle
             </label>
           </div>
         </div>

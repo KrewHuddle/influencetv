@@ -125,7 +125,7 @@ function LiveCard({ c }: { c: ChannelSummary }) {
               <span className="h-1.5 w-1.5 animate-live-pulse rounded-full bg-itv-live" />
               Live
             </Badge>
-            {c.live_shop_active && <Badge tone="magenta">Shop</Badge>}
+            {c.live_shop_active && <Badge tone="accent">Shop</Badge>}
           </div>
         </div>
         <div className="p-3">
@@ -194,7 +194,7 @@ function CreatorCard({ c }: { c: CreatorSummary }) {
         <Avatar
           name={c.name}
           size="lg"
-          ring={c.live ? "live" : c.patron ? "gold" : "magenta"}
+          ring={c.live ? "live" : c.patron ? "gold" : "accent"}
         />
         <p className="mt-3 truncate text-sm font-semibold text-itv-text">{c.name}</p>
         <p className="mt-0.5 line-clamp-1 text-xs text-itv-muted">{c.tagline}</p>
@@ -202,7 +202,7 @@ function CreatorCard({ c }: { c: CreatorSummary }) {
           {c.live && <Badge tone="live">Live</Badge>}
           {c.patron && <Badge tone="gold">Patron</Badge>}
         </div>
-        <span className="mt-3 text-xs font-medium text-itv-magenta">View Hub →</span>
+        <span className="mt-3 text-xs font-medium text-itv-accent">View Hub →</span>
       </Card>
     </Link>
   );
@@ -240,7 +240,7 @@ function HaggleRailCard({ a }: { a: HaggleSummary }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={a.thumbnail_url || "/placeholder.svg"} alt={a.title} loading="lazy" className="h-full w-full object-cover" />
           <span className="absolute left-2 top-2">
-            <Badge tone="magenta">Haggle</Badge>
+            <Badge tone="accent">Haggle</Badge>
           </span>
           <span className={`absolute right-2 top-2 rounded bg-black/75 px-1.5 py-0.5 font-mono text-[11px] tabular-nums ${left <= 10 ? "text-itv-live" : "text-itv-text"}`}>
             {mmss}
@@ -248,7 +248,7 @@ function HaggleRailCard({ a }: { a: HaggleSummary }) {
         </div>
         <div className="p-3">
           <p className="line-clamp-1 text-[13px] font-semibold text-itv-text">{a.product_title ?? a.title}</p>
-          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-itv-magenta">
+          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-itv-accent">
             {kfmt(a.bid_count)} bids · ${(Number(a.current_bid_cents) || 0) / 100}
           </p>
         </div>
@@ -308,7 +308,7 @@ export default function HomePage() {
               className="h-full w-full"
               style={{
                 background:
-                  "radial-gradient(700px 460px at 68% 38%, color-mix(in oklch, var(--itv-magenta) 40%, transparent), transparent 66%)",
+                  "radial-gradient(700px 460px at 68% 38%, color-mix(in oklch, var(--itv-accent) 40%, transparent), transparent 66%)",
               }}
             />
           )}
@@ -336,7 +336,7 @@ export default function HomePage() {
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link
               href={featured ? `/live/${featured.slug}` : "/live"}
-              className="inline-flex items-center gap-2 rounded-md bg-itv-magenta px-5 py-2.5 text-sm font-medium text-white transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
+              className="inline-flex items-center gap-2 rounded-md bg-itv-accent px-5 py-2.5 text-sm font-medium text-itv-bg transition-[background-color,box-shadow] hover:bg-itv-accent-strong hover:shadow-glow-accent"
             >
               <Play size={15} fill="currentColor" /> Watch Now
             </Link>
@@ -409,7 +409,7 @@ export default function HomePage() {
             </span>
             <Link
               href="/community"
-              className="text-xs font-medium text-itv-magenta hover:underline"
+              className="text-xs font-medium text-itv-accent hover:underline"
             >
               Join Community →
             </Link>
@@ -422,7 +422,7 @@ export default function HomePage() {
                   i < 2 ? "border-b border-itv-border sm:border-b-0" : ""
                 } ${i === 2 ? "sm:border-r" : ""}`}
               >
-                <Badge tone={i === 0 ? "gold" : "magenta"}>{l.rank}</Badge>
+                <Badge tone={i === 0 ? "gold" : "accent"}>{l.rank}</Badge>
                 <p className="mt-1.5 text-sm font-bold text-itv-text">{l.user}</p>
                 <p className="font-mono text-[11px] tabular-nums text-itv-faint">
                   {l.pts}

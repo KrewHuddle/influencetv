@@ -37,7 +37,7 @@ export default function AdminContentPage() {
             key={t}
             onClick={() => setTab(t)}
             className={`rounded-full px-3 py-1 text-xs capitalize ${
-              tab === t ? "bg-itv-magenta text-white" : "border border-itv-border text-itv-muted"
+              tab === t ? "bg-itv-accent text-itv-bg" : "border border-itv-border text-itv-muted"
             }`}
           >
             {t}
@@ -54,7 +54,7 @@ export default function AdminContentPage() {
             <div className="flex items-center gap-2">
               <Badge>{v.status}</Badge>
               <Button variant="ghost" className="text-xs" onClick={() => act(v.id, "approve")}>Approve</Button>
-              <Button variant="ghost" className="text-xs text-itv-magenta" onClick={() => act(v.id, "reject")}>Reject</Button>
+              <Button variant="ghost" className="text-xs text-itv-accent" onClick={() => act(v.id, "reject")}>Reject</Button>
             </div>
           </div>
         ))}

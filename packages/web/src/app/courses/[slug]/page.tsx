@@ -130,7 +130,7 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
               <span>{completedCount}/{course.lesson_count} complete</span><span>{pct}%</span>
             </div>
             <div className="h-1.5 w-full bg-itv-surface2">
-              <div className="h-full bg-itv-magenta" style={{ width: `${pct}%` }} />
+              <div className="h-full bg-itv-accent" style={{ width: `${pct}%` }} />
             </div>
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
                   <button
                     onClick={() => markComplete(selected.id)}
                     disabled={completing}
-                    className="flex items-center gap-1.5 text-[12px] font-semibold text-itv-magenta disabled:pointer-events-none disabled:opacity-40"
+                    className="flex items-center gap-1.5 text-[12px] font-semibold text-itv-accent disabled:pointer-events-none disabled:opacity-40"
                   >
                     {done.has(selected.id) ? <CheckCircle2 size={16} /> : <Circle size={16} />}
                     {completing ? "Saving…" : done.has(selected.id) ? "Completed" : "Mark complete"}
@@ -193,9 +193,9 @@ export default function CoursePage({ params }: { params: { slug: string } }) {
                     onClick={() => setSelectedId(l.id)}
                     className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-[13px] ${active ? "bg-itv-surface3" : ""} hover:bg-itv-surface2`}
                   >
-                    {locked ? <Lock size={14} className="text-itv-faint" /> : isDone ? <CheckCircle2 size={14} className="text-itv-magenta" /> : <PlayCircle size={14} className="text-itv-muted" />}
+                    {locked ? <Lock size={14} className="text-itv-faint" /> : isDone ? <CheckCircle2 size={14} className="text-itv-accent" /> : <PlayCircle size={14} className="text-itv-muted" />}
                     <span className={locked ? "text-itv-faint" : ""}>{l.title}</span>
-                    {l.is_preview && !enrolled && <span className="ml-auto text-[11px] uppercase tracking-[1px] text-itv-magenta">Preview</span>}
+                    {l.is_preview && !enrolled && <span className="ml-auto text-[11px] uppercase tracking-[1px] text-itv-accent">Preview</span>}
                   </button>
                 );
               })}

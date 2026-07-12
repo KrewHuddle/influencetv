@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-type Tone = "neutral" | "magenta" | "gold" | "live" | "success" | "warn";
+type Tone = "neutral" | "accent" | "gold" | "live" | "success" | "warn";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-itv-surface2 text-itv-muted",
-  magenta: "bg-itv-magenta-dim text-itv-magenta ring-1 ring-inset ring-itv-magenta-border",
+  accent: "bg-itv-accent-dim text-itv-accent ring-1 ring-inset ring-itv-accent-border",
   gold: "bg-itv-gold-dim text-itv-gold ring-1 ring-inset ring-itv-gold-border",
   live: "bg-itv-live-dim text-itv-live",
   success: "bg-itv-success-dim text-itv-success",
