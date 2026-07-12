@@ -203,7 +203,7 @@ export default function HagglePage() {
                       <p className="text-[11px] uppercase tracking-wide text-itv-muted">
                         Current bid
                       </p>
-                      <PriceTag cents={a.current_bid_cents} size="lg" className="text-itv-magenta" />
+                      <PriceTag cents={a.current_bid_cents} size="lg" className="text-itv-accent" />
                     </div>
                     <div className="text-right">
                       <Badge tone="live">On air now</Badge>

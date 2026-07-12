@@ -55,7 +55,7 @@ export function CreatorLink({
   const label = name ?? "Influence TV";
   if (!username) return <span>{label}</span>;
   return (
-    <Link href={`/creator/${username}`} className="transition-colors hover:text-itv-magenta">
+    <Link href={`/creator/${username}`} className="transition-colors hover:text-itv-accent">
       {label}
     </Link>
   );

@@ -35,7 +35,7 @@ export function Rail({
             (href && (
               <Link
                 href={href}
-                className="inline-flex items-center gap-0.5 text-xs font-medium text-itv-muted transition-colors hover:text-itv-magenta"
+                className="inline-flex items-center gap-0.5 text-xs font-medium text-itv-muted transition-colors hover:text-itv-accent"
               >
                 See all
                 <ChevronRight size={14} />

@@ -31,12 +31,12 @@ export function Avatar({
   name?: string;
   size?: Size;
   /** highlight ring — e.g. live creator or patron tier */
-  ring?: "magenta" | "gold" | "live";
+  ring?: "accent" | "gold" | "live";
   className?: string;
 }) {
   const ringCls =
-    ring === "magenta"
-      ? "ring-2 ring-itv-magenta ring-offset-2 ring-offset-itv-bg"
+    ring === "accent"
+      ? "ring-2 ring-itv-accent ring-offset-2 ring-offset-itv-bg"
       : ring === "gold"
         ? "ring-2 ring-itv-gold ring-offset-2 ring-offset-itv-bg"
         : ring === "live"

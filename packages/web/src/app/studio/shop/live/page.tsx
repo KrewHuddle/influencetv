@@ -139,7 +139,7 @@ function ProductGrid({
           interactive
           onClick={() => onPick(p)}
           className={`overflow-hidden ${
-            selectedId === p.id ? "border-itv-magenta" : ""
+            selectedId === p.id ? "border-itv-accent" : ""
           }`}
         >
           <ProductThumb product={p} className="h-24 w-full object-cover" />
@@ -357,7 +357,7 @@ function LiveAuction({
         <p className="text-[11px] font-medium uppercase tracking-wide text-itv-faint">
           Current bid
         </p>
-        <p className="mt-1 font-mono text-4xl text-itv-magenta">
+        <p className="mt-1 font-mono text-4xl text-itv-accent">
           {fmt(currentBidCents)}
         </p>
         <p className="mt-1 text-xs text-itv-muted">
@@ -378,7 +378,7 @@ function LiveAuction({
               >
                 <span className="font-medium text-itv-text">@{b.username}</span>
                 <span className="flex items-center gap-2">
-                  <span className="font-mono text-itv-magenta">
+                  <span className="font-mono text-itv-accent">
                     {fmt(b.amountCents)}
                   </span>
                   <span className="text-itv-faint">{timeAgo(b.at)}</span>

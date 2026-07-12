@@ -69,7 +69,7 @@ export default function TrainingPage() {
           <p className="text-sm text-itv-muted">No courses here yet.</p>
           <Link
             href="/studio/courses"
-            className="mt-2 inline-block text-sm font-semibold text-itv-magenta"
+            className="mt-2 inline-block text-sm font-semibold text-itv-accent"
           >
             Create a course in Studio →
           </Link>

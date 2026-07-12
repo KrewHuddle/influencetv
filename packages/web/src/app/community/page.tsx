@@ -51,7 +51,7 @@ export default function CommunityIndexPage() {
           {communities.map((c) => (
             <Link key={c.id} href={`/community/${c.id}`}>
               <Card interactive className="h-full p-5">
-                <div className="mb-2 grid h-9 w-9 place-items-center rounded-md bg-itv-magenta-dim text-itv-magenta">
+                <div className="mb-2 grid h-9 w-9 place-items-center rounded-md bg-itv-accent-dim text-itv-accent">
                   <Users size={16} />
                 </div>
                 <h2 className="font-semibold text-itv-text">{c.name}</h2>

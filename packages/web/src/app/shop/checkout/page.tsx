@@ -106,7 +106,7 @@ function CheckoutContent() {
           )}
           <p className="text-sm text-itv-muted">Thanks! Your order is on its way.</p>
         </div>
-        <Link href="/" className="text-sm font-medium text-itv-magenta hover:underline">
+        <Link href="/" className="text-sm font-medium text-itv-accent hover:underline">
           Back to home
         </Link>
       </div>

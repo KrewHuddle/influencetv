@@ -205,7 +205,7 @@ function PaymentMethodsContent() {
                         <span className="font-mono text-sm text-itv-muted">
                           •••• {pm.last4}
                         </span>
-                        {isDefault && <Badge tone="magenta">Default</Badge>}
+                        {isDefault && <Badge tone="accent">Default</Badge>}
                       </div>
                       <p className="mt-0.5 text-xs text-itv-faint">
                         exp {pad2(pm.expMonth)}/{String(pm.expYear).slice(-2)}

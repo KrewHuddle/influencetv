@@ -95,7 +95,7 @@ export default function AdminAdsPage() {
             </div>
             <button
               onClick={() => toggle(c)}
-              className={`px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] ${c.is_active ? "bg-itv-magenta text-white" : "bg-itv-surface2 text-itv-muted"}`}
+              className={`px-3 py-1 text-[11px] font-bold uppercase tracking-[1px] ${c.is_active ? "bg-itv-accent text-itv-bg" : "bg-itv-surface2 text-itv-muted"}`}
             >
               {c.is_active ? "Active" : "Paused"}
             </button>

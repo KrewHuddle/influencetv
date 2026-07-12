@@ -65,9 +65,9 @@ export function Tabs({
             onKeyDown={(e) => handleKeyDown(e, i)}
             className={cn(
               "relative -mb-px whitespace-nowrap border-b-2 px-0.5 py-3 text-sm font-medium transition-colors duration-[--dur-fast]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-itv-magenta focus-visible:rounded-sm",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-itv-accent focus-visible:rounded-sm",
               active
-                ? "border-itv-magenta text-itv-text"
+                ? "border-itv-accent text-itv-text"
                 : "border-transparent text-itv-muted hover:text-itv-text"
             )}
           >

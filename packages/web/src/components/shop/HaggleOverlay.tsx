@@ -345,7 +345,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
     secsLeft < 10
       ? "text-itv-live animate-pulse"
       : secsLeft < 30
-        ? "text-itv-magenta"
+        ? "text-itv-accent"
         : "text-itv-text";
 
   /* --- actions --- */
@@ -403,7 +403,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
       className={[
         "absolute inset-x-0 bottom-0 z-30 border-t-2 bg-itv-surface p-4",
         "transition-transform duration-200 ease-out",
-        flashRed ? "border-itv-live" : "border-itv-magenta",
+        flashRed ? "border-itv-live" : "border-itv-accent",
         shown ? "translate-y-0" : "translate-y-full",
       ].join(" ")}
     >
@@ -437,9 +437,9 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
             )}
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <Badge tone="magenta">HAGGLE LIVE</Badge>
+                <Badge tone="accent">HAGGLE LIVE</Badge>
                 {auction.extended && (
-                  <span className="text-[11px] font-semibold text-itv-magenta">
+                  <span className="text-[11px] font-semibold text-itv-accent">
                     Extended
                   </span>
                 )}
@@ -462,7 +462,7 @@ export function HaggleOverlay({ channelId }: { channelId: string }) {
             <p className="text-[9px] uppercase tracking-widest text-itv-faint">
               Current Bid
             </p>
-            <p className="font-mono text-[32px] font-black tabular-nums text-itv-magenta">
+            <p className="font-mono text-[32px] font-black tabular-nums text-itv-accent">
               {formatPrice(base)}
             </p>
             <p className="mt-0.5 text-[12px] text-itv-muted">
@@ -565,7 +565,7 @@ function EndBanner({
 }) {
   if (ended.phase === "won") {
     return (
-      <div className="flex flex-col items-center gap-2 bg-itv-magenta px-4 py-6 text-center text-white">
+      <div className="flex flex-col items-center gap-2 bg-itv-accent px-4 py-6 text-center text-itv-bg">
         <p className="flex items-center justify-center gap-2 font-display text-[22px] font-black">
           <Trophy size={20} aria-hidden />
           YOU WON

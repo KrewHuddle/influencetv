@@ -179,7 +179,7 @@ export default function UploadPage() {
 
       {/* picker */}
       <label
-        className="grid h-32 cursor-pointer place-items-center rounded-xl border border-dashed border-itv-border2 text-center text-sm text-itv-muted hover:border-itv-magenta-border"
+        className="grid h-32 cursor-pointer place-items-center rounded-xl border border-dashed border-itv-border2 text-center text-sm text-itv-muted hover:border-itv-accent-border"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -241,7 +241,7 @@ export default function UploadPage() {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
-                <FileVideo size={16} className="shrink-0 text-itv-magenta" />
+                <FileVideo size={16} className="shrink-0 text-itv-accent" />
                 <span className="truncate text-xs text-itv-muted">
                   {item.file.name} · {(item.file.size / 1e6).toFixed(1)} MB
                 </span>
@@ -369,7 +369,7 @@ function MetaSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-itv-border bg-itv-surface px-3 py-2.5 text-sm text-itv-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-itv-magenta"
+        className="rounded-md border border-itv-border bg-itv-surface px-3 py-2.5 text-sm text-itv-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-itv-accent"
       >
         {options.map((o) => (
           <option key={o} value={o}>

@@ -126,7 +126,7 @@ export default function AdminUsersPage() {
                       )
                     }
                     disabled={roleBusy && staged?.id === u.id}
-                    className="border border-itv-border bg-itv-surface2 px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-itv-magenta disabled:opacity-40"
+                    className="border border-itv-border bg-itv-surface2 px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-itv-accent disabled:opacity-40"
                   >
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
@@ -155,7 +155,7 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="p-3">{u.subscription_plan}</td>
                 <td className="p-3">
-                  <span className={u.is_active ? "text-itv-success" : "text-itv-magenta"}>
+                  <span className={u.is_active ? "text-itv-success" : "text-itv-accent"}>
                     {u.is_active ? "Active" : "Suspended"}
                   </span>
                 </td>

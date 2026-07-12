@@ -66,9 +66,9 @@ export function PillFilter({
             onKeyDown={(e) => handleKeyDown(e, i)}
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors duration-[--dur-fast]",
-              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itv-magenta",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itv-accent",
               active
-                ? "border-transparent bg-itv-magenta text-white"
+                ? "border-transparent bg-itv-accent text-itv-bg"
                 : "border-itv-border bg-itv-surface text-itv-muted hover:border-itv-border2 hover:text-itv-text"
             )}
           >

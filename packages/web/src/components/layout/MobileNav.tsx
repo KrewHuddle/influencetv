@@ -3,8 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Radio, Play, GraduationCap, User } from "lucide-react";
 
-// Bottom bar surfaces the pillars most useful on mobile. Shop/Community live
-// in the header + hamburger; the cart is in the header.
+// Bottom bar surfaces the pillars most useful on mobile (<lg). Shop/Haggle/
+// Community are reachable via home sections and in-page links; cart is in TopBar.
 const items = [
   { href: "/", label: "Home", Icon: Home },
   { href: "/live", label: "Live", Icon: Radio },
@@ -16,7 +16,7 @@ const items = [
 export function MobileNav() {
   const path = usePathname();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-header flex h-14 items-center justify-around border-t border-itv-border bg-itv-bg/95 backdrop-blur md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-header flex h-14 items-center justify-around border-t border-itv-border bg-itv-bg/95 backdrop-blur lg:hidden">
       {items.map(({ href, label, Icon }) => {
         const active = href === "/" ? path === "/" : path.startsWith(href);
         return (
@@ -24,7 +24,7 @@ export function MobileNav() {
             key={href}
             href={href}
             className={`flex h-full flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium uppercase tracking-[0.5px] transition-colors ${
-              active ? "text-itv-magenta" : "text-itv-faint hover:text-itv-muted"
+              active ? "text-itv-accent" : "text-itv-faint hover:text-itv-muted"
             }`}
           >
             <Icon size={19} />

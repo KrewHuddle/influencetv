@@ -77,7 +77,7 @@ export default function SettingsPage() {
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             disabled={!loaded}
-            className="w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5 text-sm focus:border-itv-magenta focus:outline-none disabled:opacity-40"
+            className="w-full rounded-md border border-itv-border bg-itv-surface px-3.5 py-2.5 text-sm focus:border-itv-accent focus:outline-none disabled:opacity-40"
           />
         </label>
         <Button type="submit" disabled={busy || !loaded}>

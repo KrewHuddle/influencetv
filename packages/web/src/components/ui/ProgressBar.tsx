@@ -1,9 +1,9 @@
 import { cn } from "@/lib/cn";
 
-type Tone = "magenta" | "gold" | "live" | "success";
+type Tone = "accent" | "gold" | "live" | "success";
 
 const fills: Record<Tone, string> = {
-  magenta: "bg-itv-magenta",
+  accent: "bg-itv-accent",
   gold: "bg-itv-gold",
   live: "bg-itv-live",
   success: "bg-itv-success",
@@ -12,7 +12,7 @@ const fills: Record<Tone, string> = {
 /** Thin determinate progress bar. `value` is 0–100. */
 export function ProgressBar({
   value,
-  tone = "magenta",
+  tone = "accent",
   className,
   label,
 }: {

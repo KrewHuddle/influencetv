@@ -65,7 +65,7 @@ export default function AdminPlayoutPage() {
           return (
             <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 border border-itv-border bg-itv-surface p-3">
               <div className="flex items-center gap-3">
-                <span className={`h-2 w-2 rounded-full ${live ? "bg-itv-magenta" : "bg-itv-faint"}`} />
+                <span className={`h-2 w-2 rounded-full ${live ? "bg-itv-accent" : "bg-itv-faint"}`} />
                 <div>
                   <p className="text-sm font-bold">{c.name}</p>
                   <p className="text-[11px] text-itv-muted">

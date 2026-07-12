@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
-import { Header } from "@/components/layout/Header";
-import { MobileNav } from "@/components/layout/MobileNav";
+import { AppShell } from "@/components/layout/AppShell";
 
-// Broadcast Bloom type system: characterful display + clean body + mono for
+// Lemon Signal type system: characterful display + clean body + mono for
 // timecodes / prices / countdowns.
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -40,19 +39,12 @@ export default function RootLayout({
       <body className="min-h-screen bg-itv-bg text-itv-text antialiased">
         <a
           href="#content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-toast focus:rounded-md focus:bg-itv-magenta focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-toast focus:rounded-md focus:bg-itv-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-itv-bg"
         >
           Skip to content
         </a>
         <Providers>
-          <Header />
-          <main
-            id="content"
-            className="min-h-[calc(100vh-var(--header-h))] pb-20 md:pb-0"
-          >
-            {children}
-          </main>
-          <MobileNav />
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

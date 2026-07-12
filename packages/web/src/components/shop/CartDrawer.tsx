@@ -90,14 +90,14 @@ export function CartDrawer() {
         >
           <div className="flex items-center justify-between border-b border-itv-border px-5 py-4">
             <Dialog.Title className="flex items-center gap-2 font-display text-lg text-itv-text">
-              <ShoppingBag size={18} className="text-itv-magenta" />
+              <ShoppingBag size={18} className="text-itv-accent" />
               {view === "done"
                 ? "Order confirmed"
                 : view === "processing"
                   ? "Payment processing"
                   : "Cart"}
               {view === "cart" && count > 0 && (
-                <span className="grid min-w-[1.25rem] place-items-center rounded-full bg-itv-magenta px-1.5 font-mono text-xs font-semibold text-itv-text">
+                <span className="grid min-w-[1.25rem] place-items-center rounded-full bg-itv-accent px-1.5 font-mono text-xs font-semibold text-itv-bg">
                   {count}
                 </span>
               )}
@@ -262,7 +262,7 @@ function PayView({
           <Dialog.Close asChild>
             <Link
               href="/shop/checkout"
-              className="block w-full rounded-md bg-itv-magenta py-3 text-center text-sm font-medium text-itv-text transition-[background-color,box-shadow] hover:bg-itv-magenta-strong hover:shadow-glow-magenta"
+              className="block w-full rounded-md bg-itv-accent py-3 text-center text-sm font-medium text-itv-bg transition-[background-color,box-shadow] hover:bg-itv-accent-strong hover:shadow-glow-accent"
             >
               Go to checkout
             </Link>

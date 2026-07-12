@@ -18,7 +18,7 @@ export function PostCard({ post }: { post: PostSummary }) {
   return (
     <Card className="p-4">
       <div className="mb-1 flex items-center gap-2 text-xs text-itv-faint">
-        {post.is_pinned && <Pin size={12} className="text-itv-magenta" />}
+        {post.is_pinned && <Pin size={12} className="text-itv-accent" />}
         <span className="text-itv-muted">{post.author_name ?? "Member"}</span>
         <span>·</span>
         <span>{new Date(post.created_at).toLocaleDateString()}</span>

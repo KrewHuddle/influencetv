@@ -56,7 +56,7 @@ export default function StudioDashboard() {
             href={href}
             className="flex items-center gap-3 border border-itv-border bg-itv-surface px-4 py-[14px] hover:bg-itv-surface2"
           >
-            <Icon size={20} className="text-itv-magenta" />
+            <Icon size={20} className="text-itv-accent" />
             <span className="text-[11px] font-bold text-itv-text">{label}</span>
           </Link>
         ))}

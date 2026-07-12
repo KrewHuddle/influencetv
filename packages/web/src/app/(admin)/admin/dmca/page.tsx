@@ -41,7 +41,7 @@ export default function AdminDmcaPage() {
               <Badge>{n.status}</Badge>
             </div>
             <div className="mt-3 flex gap-2">
-              <Button variant="ghost" className="text-xs text-itv-magenta" onClick={() => act(n.id, "remove")}>Remove Content</Button>
+              <Button variant="ghost" className="text-xs text-itv-accent" onClick={() => act(n.id, "remove")}>Remove Content</Button>
               <Button variant="ghost" className="text-xs" onClick={() => act(n.id, "restore")}>Restore</Button>
               <Button variant="ghost" className="text-xs" onClick={() => act(n.id, "reject")}>Reject Notice</Button>
             </div>

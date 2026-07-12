@@ -69,7 +69,7 @@ export default function StudioShopPage() {
     <div className="mx-auto max-w-3xl px-6 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-[22px] font-black">Shop</h1>
-        <Link href="/studio/shop/orders" className="text-[12px] font-semibold text-itv-magenta">
+        <Link href="/studio/shop/orders" className="text-[12px] font-semibold text-itv-accent">
           View Orders →
         </Link>
       </div>
@@ -106,7 +106,7 @@ export default function StudioShopPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3.5 py-2.5 text-sm text-itv-text outline-none focus:ring-1 focus:ring-itv-magenta"
+            className="w-full rounded-[4px] border border-itv-border bg-itv-surface2 px-3.5 py-2.5 text-sm text-itv-text outline-none focus:ring-1 focus:ring-itv-accent"
           />
         </label>
         <label className="flex items-center gap-2 text-sm">

@@ -55,7 +55,7 @@ function ActivateInner() {
               maxLength={6}
             />
             {state === "error" && (
-              <p className="text-xs text-itv-magenta">Invalid or expired code.</p>
+              <p className="text-xs text-itv-accent">Invalid or expired code.</p>
             )}
             <Button type="submit" disabled={state === "busy" || code.length < 6} className="w-full">
               {state === "busy" ? "Activating…" : "Activate"}
