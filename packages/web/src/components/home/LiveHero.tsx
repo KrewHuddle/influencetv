@@ -38,7 +38,11 @@ export function LiveHero() {
     (data?.channels ?? []).find(
       (c) => c.status === "active" && c.hls_output_url
     ) ?? null;
-  const { currentItem, elapsedSeconds } = useTuneIn(channel?.id ?? null);
+  const {
+    currentItem,
+    elapsedSeconds,
+    isLoading: tuneLoading,
+  } = useTuneIn(channel?.id ?? null);
 
   const ref = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(true);
@@ -50,6 +54,8 @@ export function LiveHero() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
+  // re-runs when the live branch mounts (the early-return branches don't
+  // carry the ref, so a mount-only effect would observe nothing)
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -59,7 +65,21 @@ export function LiveHero() {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [channel?.id]);
+
+  const playing = Boolean(channel) && inView && tabVisible;
+
+  // Freeze the tune-in offset for the lifetime of one player mount:
+  // VideoPlayer's source effect depends on startOffset, so feeding it the
+  // 30s-polling elapsedSeconds would rebuild the stream every refresh.
+  const [mountOffset, setMountOffset] = useState<number | null>(null);
+  useEffect(() => {
+    if (playing && !tuneLoading && mountOffset === null) {
+      setMountOffset(elapsedSeconds);
+    } else if (!playing && mountOffset !== null) {
+      setMountOffset(null);
+    }
+  }, [playing, tuneLoading, elapsedSeconds, mountOffset]);
 
   const showTitle = currentItem?.title ?? channel?.current_show ?? null;
 
@@ -105,18 +125,16 @@ export function LiveHero() {
     );
   }
 
-  const playing = inView && tabVisible;
-
   return (
     <section ref={ref} className="w-full bg-black">
       {/* width-capped so 16:9 height ≈ top half of the viewport; letterboxed
           gutters on ultra-wide stay pure black */}
       <div className="mx-auto w-full max-w-[calc(56vh*1.7778)]">
-        {playing ? (
+        {playing && mountOffset !== null ? (
           <VideoPlayer
             hlsUrl={channel.hls_output_url!}
             posterUrl={channel.thumbnail_url ?? undefined}
-            startOffset={elapsedSeconds}
+            startOffset={mountOffset}
           />
         ) : (
           <div className="relative aspect-video w-full bg-black">

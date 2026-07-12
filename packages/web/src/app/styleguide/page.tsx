@@ -16,7 +16,7 @@ import {
 } from "@/components/ui";
 
 /**
- * Dev-only visual reference for the Broadcast Bloom component kit.
+ * Dev-only visual reference for the Lemon Signal component kit.
  * Not linked in nav. Visit /styleguide.
  */
 export default function StyleGuide() {
@@ -27,7 +27,7 @@ export default function StyleGuide() {
     <div className="mx-auto max-w-5xl space-y-12 px-6 py-12">
       <header className="space-y-1">
         <h1 className="font-display text-3xl font-bold tracking-tight text-itv-text">
-          Broadcast Bloom
+          Lemon Signal
         </h1>
         <p className="text-sm text-itv-muted">Component kit — design system reference</p>
       </header>
